@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto');
+
+/* Reset CSS */
+* {
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;
+  background: #f5f5dc; /* Cor bege para o fundo da página */
+}
+
+/* Layout do Dashboard */
+.dashboardPage {
+  display: flex;
+  min-height: 100vh; /* Garante que a página ocupe a altura total da tela */
+  flex-direction: column;
+}
+
+/* Barra Superior */
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: #12a3c0;  /* Azul mais forte */
+  color: #fff;
+  padding: 30px 30px;  /* Aumenta o padding para uma barra superior maior */
+  position: fixed;
+  width: 100%;         /* Ajusta a largura para ocupar toda a largura da tela */
+  top: 0;
+  left: 0;             /* Alinha a barra superior à esquerda */
+  z-index: 1000;       /* Garante que a barra esteja no topo do conteúdo */
+}
+
+/* Ajuste o conteúdo principal para baixo */
+.mainContent {
+  flex: 1;
+  margin-top: 60px; /* Adiciona espaço para a barra superior */
+  padding: 20px;
+}
+
+/* Barra Lateral */
+.sidebar {
+  width: 250px;
+  height: calc(90vh - 10px); /* Ajusta a altura para deixar espaço para a barra superior */
+  background: #e0f0f8; /* Azul suave */
+  position: fixed; /* Fixa a barra lateral */
+  top: 117px; /* Distância da parte superior da página para baixo da barra superior */
+  left: 0;
+  transition: transform 0.3s ease;
+  border-top-right-radius: 10px; /* Arredondamento do canto superior direito */
+  border-bottom-right-radius: 10px; /* Arredondamento do canto inferior direito */
+  z-index: 999; /* Garante que a barra lateral fique atrás da barra superior */
+  overflow-y: auto; /* Permite rolar a barra lateral se necessário */
+}
+
+/* Cabeçalho da barra lateral */
+.sidebarHeader {
+  padding: 20px 15px;
+  background: #005f73; /* Azul mais forte */
+  color: #fff;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border-bottom: 1px solid #ddd;
+}
+
+/* Nome do Painel */
+.painelName {
+  margin-top: 10px;
+  font-size: 19px;
+}
+
+/* Lista de Menus e Submenus */
+.sidebarMenu {
+  list-style-type: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Estilo do item do menu */
+.menuItem {
+  padding: 15px;
+  border-bottom: 1px solid #ddd;
+  display: flex;
+  align-items: center;
+  color: #333;
+  position: relative;
+  cursor: pointer;
+  justify-content: space-between; /* Espaça o título e a seta */
+  transition: background 0.3s ease;
+}
+
+.menuItem:hover,
+.menuItem.active {
+  background: #57bfb8;
+  color: #fff;
+}
+
+/* Submenu */
+.submenu {
+  list-style-type: none;
+  padding-left: 20px; /* Alinhamento correto dos submenus abaixo do menu */
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease, padding 0.5s ease;
+}
+
+.submenu.show {
+  max-height: 500px; /* Expande o submenu quando ativado */
+}
+
+/* Estilo dos itens do submenu */
+.submenu li {
+  padding: 10px 15px;
+  cursor: pointer;
+  color: #333;
+}
+
+.submenu li:hover {
+  background: #f0f0f0; /* Fundo leve ao passar o mouse */
+  color: #57bfb8;
+}
+
+/* Setas para menus com animação de rotação */
+.arrow {
+  transition: transform 0.3s ease;
+}
+
+.menuItem.active .arrow {
+  transform: rotate(90deg);
+}
+
+/* Animação para os submenus */
+.submenuTransition {
+  transition: max-height 0.5s ease, padding 0.5s ease;
+}
+
+/* Botão de logout */
+.logoutButton {
+  background: #ff4c4c;
+  border: none;
+  color: #fff;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 5px;
+  position: absolute;
+  right: 15px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+.logoutButton:hover {
+  background: #ff1a1a;
+}
+
+/* Centralização do texto na barra superior */
+.welcomeText {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  top: 50%;
+  cursor: pointer;
+  border-radius: 5px;
+}

@@ -1,0 +1,102 @@
+/* Estilo para a página de cadastro */
+.cadastroPage {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    background: url('https://img.freepik.com/fotos-gratis/pesos-de-exercicios-dumbbell-de-ferro-com-placas-extra_1423-223.jpg?w=1380&t=st=1725332864~exp=1725333464~hmac=d2461272ed0b3cd9ac37bac66d892d8d62f97c39fc30a9bb9da299fd2f824f8f') no-repeat center center;
+    background-size: cover;
+}
+
+/* Container para o formulário de cadastro */
+.cadastroContainer {
+    width: 80vw;
+    max-width: 600px;
+    background: rgba(255, 255, 255, 0.1);
+    padding: 35px;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(6px);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Aumenta o espaçamento entre os grupos de campos */
+}
+
+/* Estilo para o cabeçalho */
+.cadastroHeading {
+    font-size: 36px;
+    text-align: center;
+    margin-bottom: 0px;
+}
+
+/* Estilo para os grupos de campos do formulário */
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0px; /* Aumenta o espaçamento entre o label e o campo */
+}
+
+/* Estilo para os rótulos */
+.formGroup label {
+    font-size: 17px;
+    font-weight: 500;
+    color: #fff;
+    margin-bottom: 0px; /* Adiciona espaçamento inferior aos rótulos para separar dos campos */
+    line-height: 30px; /* Ajusta o alinhamento vertical da label */
+}
+
+/* Estilo para os campos de input e select */
+.formGroup input,
+.formGroup select {
+    padding: 5px; /* Ajusta o padding para melhorar a aparência e o alinhamento */
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 5px;
+    background: rgba(0, 0, 0, 0.2);
+    color: #fff;
+    font-size: 16px;
+    outline: none;
+    height: 30px; /* Ajusta a altura dos campos para melhorar o alinhamento com a label */
+}
+
+/* Placeholder em branco */
+.formGroup input::placeholder {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Estilo para o botão de submit */
+button[type="submit"] {
+    width: 100%;
+    padding: 10px; /* Aumenta o tamanho do botão */
+    background: #1e90ff;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 20px; /* Aumenta o espaçamento entre o último campo e o botão */
+}
+
+button[type="submit"]:hover {
+    background: #4682b4;
+}
+/* Estilo para o botão de voltar ao dashboard */
+.backButton {
+    width: 100%;
+    padding: 10px;
+    background: #ff4500;
+    border: none;
+    border-radius: 5px;
+    color: #fff;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.3s ease;
+    margin-top: 20px; /* Espaçamento entre o botão de voltar e o formulário */
+}
+
+.backButton:hover {
+    background: #ff6347;
+}
