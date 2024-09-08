@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import styles from '../styles/Dashboard.module.css'; // Importa o CSS
+import styles from '../styles/Dashboard.module.css';
 
 const DashboardProfessor = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true); // Ajuste para iniciar a barra aberta
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 767);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -45,8 +45,17 @@ const DashboardProfessor = () => {
     fetchData();
   }, [navigate]);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setSidebarOpen(window.innerWidth > 767);
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const toggleSubmenu = (menu) => {
-    setActiveMenu(activeMenu === menu ? null : menu);
+    setActiveMenu((prevMenu) => (prevMenu === menu ? null : menu));
   };
 
   const handleLogout = async () => {
@@ -58,57 +67,46 @@ const DashboardProfessor = () => {
     }
   };
 
-  const handleSidebarToggle = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   if (loading) return <p>Carregando...</p>;
   if (error) return <p>{error}</p>;
 
   return (
     <div className={styles.dashboardPage}>
-      <div className={`${styles.sidebar} ${sidebarOpen ? styles.open : ''}`}>
+      <div className={styles.sidebar}>
         <div className={styles.sidebarHeader}>
           <div className={styles.painelName}>Painel do Professor</div>
         </div>
-        <ul className={`${styles.sidebarMenu} ${sidebarOpen ? styles.scroll : ''}`}>
+        <ul className={styles.sidebarMenu}>
           <li 
             className={`${styles.menuItem} ${activeMenu === 'aluno' ? styles.active : ''}`} 
             onClick={() => toggleSubmenu('aluno')}
           >
-            {/* Texto do menu de Aluno */}
             Aluno
-            <i className={`${styles.arrow} bx bx-chevron-right`}></i>
             <ul className={`${styles.submenu} ${activeMenu === 'aluno' ? styles.show : ''}`}>
               <li><button onClick={() => navigate('/cadastro-aluno')}>Cadastrar Aluno</button></li>
               <li><button onClick={() => navigate('/aluno-cadastrado')}>Alunos Cadastrados</button></li>
             </ul>
           </li>
           <li 
-           className={`${styles.menuItem} ${activeMenu === 'treino' ? styles.active : ''}`} 
-           onClick={() => toggleSubmenu('treino')}
+            className={`${styles.menuItem} ${activeMenu === 'treino' ? styles.active : ''}`} 
+            onClick={() => toggleSubmenu('treino')}
           >
-            {/* Texto do menu de Treino */}
             Treino
-            <i className={`${styles.arrow} bx bx-chevron-right`}></i>
             <ul className={`${styles.submenu} ${activeMenu === 'treino' ? styles.show : ''}`}>
               <li><button onClick={() => navigate('/cadastro-equipamento')}>Cadastrar Equipamento</button></li>
               <li><button onClick={() => navigate('/cadastro-series')}>Cadastrar Séries</button></li>
               <li><button onClick={() => navigate('/cadastro-repeticoes')}>Cadastrar Repetições</button></li>
               <li><button onClick={() => navigate('/cadastro-tipo-treino')}>Cadastrar Tipo de Treino</button></li>
-              <li><button onClick={() => navigate('/treino')}>Criar Treino</button></li>
+              <li><button onClick={() => navigate('/Pagina-treino')}>Criar Treino</button></li>
             </ul>
           </li>
-
           <li 
-            className={`${styles.menuItem} ${activeMenu === 'relatorios' ? styles.active : ''}`} 
-            onClick={() => toggleSubmenu('relatorios')}
+            className={`${styles.menuItem} ${activeMenu === 'relatorio' ? styles.active : ''}`} 
+            onClick={() => toggleSubmenu('relatorio')}
           >
-            {/* Texto do menu de Relatórios */}
             Relatórios
-            <i className={`${styles.arrow} bx bx-chevron-right`}></i>
-            <ul className={`${styles.submenu} ${activeMenu === 'relatorios' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/relatorio-treinos')}>Treinos</button></li>
+            <ul className={`${styles.submenu} ${activeMenu === 'relatorio' ? styles.show : ''}`}>
+              <li><button onClick={() => navigate('/relatorio-treinos')}>Relatório de Treinos</button></li>
             </ul>
           </li>
         </ul>
@@ -116,17 +114,11 @@ const DashboardProfessor = () => {
       <div className={styles.mainContent}>
         <div className={styles.topbar}>
           <div className={styles.topbarContent}>
-            <div className={styles.logoContainer}>
-              <img src="" alt="Logo da Empresa" className={styles.logo} />
-              <h1 className={styles.topbarTitle}>Catus</h1>
-            </div>
-            <h1 className={styles.welcomeText}>Bem-vindo, {userData?.nomeCompleto}</h1>
-            <button className={styles.logoutButton} onClick={handleLogout}>Deslogar</button>
+            <div className={styles.welcomeText}>Bem-vindo, {userData?.nomeCompleto}</div>
+            <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
           </div>
         </div>
-        <div className={styles.content}>
-          {/* Conteúdo principal do dashboard */}
-        </div>
+        {/* Conteúdo principal do dashboard */}
       </div>
     </div>
   );

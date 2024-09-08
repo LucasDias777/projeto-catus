@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore'; // Importar onSnapshot
 import { useNavigate } from 'react-router-dom';
 
 const GerenciarEquipamentos = () => {
@@ -17,20 +17,32 @@ const GerenciarEquipamentos = () => {
     };
 
     fetchEquipamentos();
+
+    // Listener para atualizações em tempo real
+    const unsubscribe = onSnapshot(collection(db, 'equipamentos'), (snapshot) => {
+      const updatedEquipamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setEquipamentos(updatedEquipamentos);
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleEdit = async (id) => {
+    if (!editNome.trim()) {
+      alert('O nome do equipamento não pode estar vazio.');
+      return;
+    }
     const docRef = doc(db, 'equipamentos', id);
     await updateDoc(docRef, { nome: editNome });
     setEditId(null);
     setEditNome('');
-    const updatedEquipamentos = equipamentos.map(e => e.id === id ? { ...e, nome: editNome } : e);
-    setEquipamentos(updatedEquipamentos);
   };
 
   const handleDelete = async (id) => {
-    await deleteDoc(doc(db, 'equipamentos', id));
-    setEquipamentos(equipamentos.filter(e => e.id !== id));
+    if (window.confirm('Você realmente deseja remover este equipamento?')) {
+      await deleteDoc(doc(db, 'equipamentos', id));
+      setEquipamentos(equipamentos.filter(e => e.id !== id));
+    }
   };
 
   return (

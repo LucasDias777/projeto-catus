@@ -1,167 +1,171 @@
-@import url('https://fonts.googleapis.com/css?family=Roboto');
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap");
 
-/* Reset CSS */
-* {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
-}
-
-body {
-  font-family: 'Roboto', sans-serif;
-  background: #f5f5dc; /* Cor bege para o fundo da página */
-}
-
-/* Layout do Dashboard */
 .dashboardPage {
-  display: flex;
-  min-height: 100vh; /* Garante que a página ocupe a altura total da tela */
-  flex-direction: column;
+    --c-gray-900: #000000;
+    --c-gray-800: #1f1f1f;
+    --c-gray-700: #2e2e2e;
+    --c-gray-600: #313131;
+    --c-gray-500: #969593;
+    --c-gray-400: #a6a6a6;
+    --c-gray-300: #bdbbb7;
+    --c-gray-200: #f1f1f1;
+    --c-gray-100: #ffffff;
+
+    --c-green-500: #45ffbc;
+    --c-olive-500: #e3ffa8;
+
+    --c-white: var(--c-gray-100);
+
+    --c-text-primary: var(--c-gray-100);
+    --c-text-secondary: var(--c-gray-200);
+    --c-text-tertiary: var(--c-gray-500);
+
+    font-family: 'Be Vietnam Pro', sans-serif;
+    color: var(--c-text-primary);
+    background-color: var(--c-gray-900);
+    min-height: 100vh;
+    display: flex;
+    overflow: hidden;
 }
 
-/* Barra Superior */
-.topbar {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  background: #12a3c0;  /* Azul mais forte */
-  color: #fff;
-  padding: 30px 30px;  /* Aumenta o padding para uma barra superior maior */
-  position: fixed;
-  width: 100%;         /* Ajusta a largura para ocupar toda a largura da tela */
-  top: 0;
-  left: 0;             /* Alinha a barra superior à esquerda */
-  z-index: 1000;       /* Garante que a barra esteja no topo do conteúdo */
-}
-
-/* Ajuste o conteúdo principal para baixo */
-.mainContent {
-  flex: 1;
-  margin-top: 60px; /* Adiciona espaço para a barra superior */
-  padding: 20px;
-}
-
-/* Barra Lateral */
 .sidebar {
-  width: 250px;
-  height: calc(90vh - 10px); /* Ajusta a altura para deixar espaço para a barra superior */
-  background: #e0f0f8; /* Azul suave */
-  position: fixed; /* Fixa a barra lateral */
-  top: 117px; /* Distância da parte superior da página para baixo da barra superior */
-  left: 0;
-  transition: transform 0.3s ease;
-  border-top-right-radius: 10px; /* Arredondamento do canto superior direito */
-  border-bottom-right-radius: 10px; /* Arredondamento do canto inferior direito */
-  z-index: 999; /* Garante que a barra lateral fique atrás da barra superior */
-  overflow-y: auto; /* Permite rolar a barra lateral se necessário */
+    background-color: var(--c-gray-800);
+    padding: 1.5rem;
+    width: 300px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    border-right: 2px solid var(--c-gray-700);
 }
 
-/* Cabeçalho da barra lateral */
 .sidebarHeader {
-  padding: 20px 15px;
-  background: #005f73; /* Azul mais forte */
-  color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
+    margin-bottom: 2rem;
 }
 
-/* Nome do Painel */
 .painelName {
-  margin-top: 10px;
-  font-size: 19px;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--c-text-primary);
+    text-align: center;
 }
 
-/* Lista de Menus e Submenus */
 .sidebarMenu {
-  list-style-type: none;
-  padding: 0;
-  margin: 0;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    flex: 1;
 }
 
-/* Estilo do item do menu */
 .menuItem {
-  padding: 15px;
-  border-bottom: 1px solid #ddd;
-  display: flex;
-  align-items: center;
-  color: #333;
-  position: relative;
-  cursor: pointer;
-  justify-content: space-between; /* Espaça o título e a seta */
-  transition: background 0.3s ease;
+    margin-bottom: 1rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--c-text-tertiary);
+    transition: color 0.3s ease;
+}
+
+.menuItem.active {
+    color: var(--c-text-primary);
 }
 
 .menuItem:hover,
-.menuItem.active {
-  background: #57bfb8;
-  color: #fff;
+.menuItem:focus {
+    color: var(--c-text-primary);
 }
 
-/* Submenu */
 .submenu {
-  list-style-type: none;
-  padding-left: 20px; /* Alinhamento correto dos submenus abaixo do menu */
-  max-height: 0;
-  overflow: hidden;
-  transition: max-height 0.5s ease, padding 0.5s ease;
+    margin-top: 0.5rem;
+    margin-left: 1rem;
+    list-style: none;
+    padding: 0;
+    display: none;
+    max-height: 0; /* Ocultar inicialmente */
+    opacity: 0; /* Ocultar inicialmente */
+    overflow: hidden;
+    transition: max-height 2.5s ease, opacity 2.5s ease; /* Transição bem mais lenta */
 }
 
 .submenu.show {
-  max-height: 500px; /* Expande o submenu quando ativado */
+    display: block;
+    max-height: 500px; /* Altura máxima ao abrir */
+    opacity: 1; /* Torna o submenu visível */
 }
 
-/* Estilo dos itens do submenu */
-.submenu li {
-  padding: 10px 15px;
-  cursor: pointer;
-  color: #333;
+.submenu.hide {
+    max-height: 0;
+    opacity: 0;
 }
 
-.submenu li:hover {
-  background: #f0f0f0; /* Fundo leve ao passar o mouse */
-  color: #57bfb8;
+/* Ajustes para botões de submenu */
+.submenu button {
+    background: none;
+    border: none;
+    color: var(--c-gray-100); /* Cor branca vibrante */
+    cursor: pointer;
+    font-size: 0.875rem;
+    padding: 0.5rem 1rem;
+    transition: color 0.3s ease, background-color 0.3s ease;
+    border-radius: 8px;
 }
 
-/* Setas para menus com animação de rotação */
-.arrow {
-  transition: transform 0.3s ease;
+.submenu button:hover,
+.submenu button:focus {
+    color: var(--c-text-primary);
+    background-color: rgba(255, 255, 255, 0.1);
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
 }
 
-.menuItem.active .arrow {
-  transform: rotate(90deg);
+.mainContent {
+    flex: 1;
+    background-color: var(--c-gray-800);
+    padding: 2rem;
+    margin-left: 302px;
+    overflow-y: auto;
+    height: 100vh;
 }
 
-/* Animação para os submenus */
-.submenuTransition {
-  transition: max-height 0.5s ease, padding 0.5s ease;
+.topbar {
+    background-color: var(--c-gray-700);
+    padding: 1rem;
+    position: fixed;
+    top: 0;
+    left: 302px;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--c-gray-600);
 }
 
-/* Botão de logout */
-.logoutButton {
-  background: #ff4c4c;
-  border: none;
-  color: #fff;
-  padding: 10px 15px;
-  cursor: pointer;
-  border-radius: 5px;
-  position: absolute;
-  right: 15px;
-  top: 50%;
-  transform: translateY(-50%);
+.topbarContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
 }
 
-.logoutButton:hover {
-  background: #ff1a1a;
-}
-
-/* Centralização do texto na barra superior */
 .welcomeText {
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  top: 50%;
-  cursor: pointer;
-  border-radius: 5px;
+    font-size: 1.25rem;
+    color: var(--c-text-primary);
+    margin-right: auto;
+}
+
+.logoutButton {
+    background-color: var(--c-gray-600);
+    color: var(--c-text-primary);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-left: auto;
+}
+
+.logoutButton:hover,
+.logoutButton:focus {
+    background-color: var(--c-gray-500);
 }

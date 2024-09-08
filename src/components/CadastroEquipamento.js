@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 
 const CadastroEquipamento = () => {
@@ -12,23 +12,28 @@ const CadastroEquipamento = () => {
 
   useEffect(() => {
     const fetchEquipamentos = async () => {
-      const querySnapshot = await getDocs(collection(db, 'equipamento')); // Corrigido para a coleção correta
+      const querySnapshot = await getDocs(collection(db, 'equipamento'));
       const equipamentosList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setEquipamentos(equipamentosList);
     };
 
+    // Real-time listener para atualizações na coleção 'equipamento'
+    const unsubscribe = onSnapshot(collection(db, 'equipamento'), (snapshot) => {
+      const updatedEquipamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setEquipamentos(updatedEquipamentos);
+    });
+
     fetchEquipamentos();
+
+    return () => unsubscribe(); // Cleanup na desmontagem do componente
   }, []);
 
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      await addDoc(collection(db, 'equipamento'), { nome }); // Corrigido para a coleção correta
+      await addDoc(collection(db, 'equipamento'), { nome });
       alert('Equipamento cadastrado com sucesso!');
       setNome('');
-      const querySnapshot = await getDocs(collection(db, 'equipamento')); // Corrigido para a coleção correta
-      const equipamentosList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setEquipamentos(equipamentosList);
     } catch (error) {
       console.error('Erro ao cadastrar equipamento:', error);
       alert('Erro ao cadastrar equipamento');
@@ -37,14 +42,11 @@ const CadastroEquipamento = () => {
 
   const handleEdit = async (id) => {
     try {
-      const docRef = doc(db, 'equipamento', id); // Corrigido para a coleção correta
+      const docRef = doc(db, 'equipamento', id);
       await updateDoc(docRef, { nome: editNome });
       alert('Equipamento atualizado com sucesso!');
       setEditId(null);
       setEditNome('');
-      const querySnapshot = await getDocs(collection(db, 'equipamento')); // Corrigido para a coleção correta
-      const equipamentosList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setEquipamentos(equipamentosList);
     } catch (error) {
       console.error('Erro ao atualizar equipamento:', error);
       alert('Erro ao atualizar equipamento');
@@ -54,11 +56,8 @@ const CadastroEquipamento = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Você tem certeza que deseja excluir este equipamento?')) {
       try {
-        await deleteDoc(doc(db, 'equipamento', id)); // Corrigido para a coleção correta
+        await deleteDoc(doc(db, 'equipamento', id));
         alert('Equipamento removido com sucesso!');
-        const querySnapshot = await getDocs(collection(db, 'equipamento')); // Corrigido para a coleção correta
-        const equipamentosList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setEquipamentos(equipamentosList);
       } catch (error) {
         console.error('Erro ao remover equipamento:', error);
         alert('Erro ao remover equipamento');
@@ -103,7 +102,7 @@ const CadastroEquipamento = () => {
           )}
         </div>
       ))}
-      <button onClick={() => navigate('/dashboard')}>Voltar</button>
+      <button onClick={() => navigate('/dashboard-professor')}>Voltar</button>
     </div>
   );
 };

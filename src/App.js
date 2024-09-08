@@ -25,10 +25,10 @@ function App() {
     <Router>
       <Routes>
         <Route path="/" element={<Login />} />
-        <Route path="/cadastroProfessor" element={<CadastroProfessor />} />
+        <Route path="/cadastro" element={<CadastroProfessor />} />
         <Route path="/login" element={<Login />} />
         {/* Rotas públicas */}
-        <Route path="/cadastroProfessor" element={<CadastroProfessor />} />
+        <Route path="/cadastro" element={<CadastroProfessor />} />
         <Route path="/login" element={<Login />} />
         {/* Rotas privadas */}
         <Route element={<RotasPrivadas />}>
@@ -40,7 +40,7 @@ function App() {
           <Route path="/cadastro-tipo-treino" element={<CadastroTipoTreino />} />
           <Route path="/visualizar-treino" element={<VisualizarTreino />} />
           <Route path="/relatorio-treinos" element={<RelatorioTreinos />} />
-          <Route path="/treino" element={<PaginaTreino />} />
+          <Route path="/Pagina-treino" element={<PaginaTreino />} />
           <Route path="/gerenciar-equipamentos" element={<GerenciarEquipamentos />} />
           <Route path="/gerenciar-series" element={<GerenciarSeries />} />
           <Route path="/gerenciar-repeticoes" element={<GerenciarRepeticoes />} />

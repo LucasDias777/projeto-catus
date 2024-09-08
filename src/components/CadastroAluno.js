@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Cadastro.module.css';
@@ -31,13 +32,11 @@ const CadastroAluno = () => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setProfessorId(user.uid);
-      } else {
-        navigate('/login');
       }
     });
 
     return () => unsubscribe();
-  }, [navigate]);
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -80,6 +79,9 @@ const CadastroAluno = () => {
     }
 
     try {
+      const professorEmail = auth.currentUser.email; // Salva email do professor
+      //const professorPassword = 123456;//auth.currentUser.senha;
+      const professorPassword = prompt('Digite sua senha para confirmar o cadastro:'); 
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
       const user = userCredential.user;
 
@@ -99,8 +101,11 @@ const CadastroAluno = () => {
         userId: user.uid,
         professorId: professorId
       });
-
+      await signInWithEmailAndPassword(auth, professorEmail, professorPassword);
       alert('Aluno cadastrado com sucesso!');
+    
+      
+      
       setFormData({
         nomeCompleto: '',
         dataNascimento: '',
@@ -118,9 +123,19 @@ const CadastroAluno = () => {
         tipoPessoa: 'aluno'
       });
       setErrorMessage(null);
+
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error.message);
-      setErrorMessage('Erro ao cadastrar aluno. Por favor, tente novamente mais tarde.');
+      setErrorMessage(`Erro ao cadastrar aluno: ${error.message}`);
+    }
+  };
+
+  const handleBack = () => {
+    if (auth.currentUser) {
+      navigate('/dashboard-professor');
+    } else {
+      // Forçar redirecionamento para o dashboard mesmo sem autenticação
+      navigate('/dashboard-professor');
     }
   };
 
@@ -132,11 +147,24 @@ const CadastroAluno = () => {
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
             <label>Nome Completo</label>
-            <input type="text" name="nomeCompleto" placeholder="Nome Completo" value={formData.nomeCompleto} onChange={handleChange} required />
+            <input
+              type="text"
+              name="nomeCompleto"
+              placeholder="Nome Completo"
+              value={formData.nomeCompleto}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Data de Nascimento</label>
-            <input type="date" name="dataNascimento" value={formData.dataNascimento} onChange={handleChange} required />
+            <input
+              type="date"
+              name="dataNascimento"
+              value={formData.dataNascimento}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Gênero</label>
@@ -149,47 +177,118 @@ const CadastroAluno = () => {
           </div>
           <div className={styles.formGroup}>
             <label>CEP</label>
-            <input type="text" name="cep" placeholder="CEP" value={formData.cep} onChange={handleCepChange} onBlur={handleCepChange} required />
+            <input
+              type="text"
+              name="cep"
+              placeholder="CEP"
+              value={formData.cep}
+              onChange={handleCepChange}
+              onBlur={handleCepChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Cidade</label>
-            <input type="text" name="cidade" placeholder="Cidade" value={formData.cidade} onChange={handleChange} required />
+            <input
+              type="text"
+              name="cidade"
+              placeholder="Cidade"
+              value={formData.cidade}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>UF</label>
-            <input type="text" name="uf" placeholder="UF" value={formData.uf} onChange={handleChange} required />
+            <input
+              type="text"
+              name="uf"
+              placeholder="UF"
+              value={formData.uf}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Endereço</label>
-            <input type="text" name="endereco" placeholder="Endereço" value={formData.endereco} onChange={handleChange} required />
+            <input
+              type="text"
+              name="endereco"
+              placeholder="Endereço"
+              value={formData.endereco}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Número da Residência</label>
-            <input type="text" name="numeroCasa" placeholder="Número da Residência" value={formData.numeroCasa} onChange={handleChange} required />
+            <input
+              type="text"
+              name="numeroCasa"
+              placeholder="Número da Residência"
+              value={formData.numeroCasa}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Bairro</label>
-            <input type="text" name="bairro" placeholder="Bairro" value={formData.bairro} onChange={handleChange} required />
+            <input
+              type="text"
+              name="bairro"
+              placeholder="Bairro"
+              value={formData.bairro}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Telefone</label>
-            <input type="text" name="telefone" placeholder="Telefone" value={formData.telefone} onChange={handleChange} required />
+            <input
+              type="text"
+              name="telefone"
+              placeholder="Telefone"
+              value={formData.telefone}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>E-mail</label>
-            <input type="email" name="email" placeholder="E-mail" value={formData.email} onChange={handleChange} required />
+            <input
+              type="email"
+              name="email"
+              placeholder="E-mail"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Senha</label>
-            <input type="password" name="senha" placeholder="Senha" value={formData.senha} onChange={handleChange} required />
+            <input
+              type="password"
+              name="senha"
+              placeholder="Senha"
+              value={formData.senha}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Confirme sua senha</label>
-            <input type="password" name="repetirSenha" placeholder="Confirme sua senha" value={formData.repetirSenha} onChange={handleChange} required />
+            <input
+              type="password"
+              name="repetirSenha"
+              placeholder="Confirme sua senha"
+              value={formData.repetirSenha}
+              onChange={handleChange}
+              required
+            />
           </div>
-          <button type="submit">CADASTRAR</button>
+          <button type="submit">Cadastrar</button>
         </form>
-        <button onClick={() => navigate('/dashboard-professor')} className={styles.backButton}>Voltar</button>
+        <button onClick={handleBack} className={styles.backButton}>Voltar</button>
       </div>
     </div>
   );

@@ -1,4 +1,4 @@
-# CATUS - PROJETO DE CADASTRO E CONTROLE DE TREINO
+# STRIVEFLOW- PROJETO DE CADASTRO E CONTROLE DE TREINO
 
 Este é um projeto de controle de treino e cadastro utilizando React.js e Firebase. O projeto permite que professores cadastrem treinos e alunos visualizem e concluam esses treinos.
 

@@ -71,7 +71,7 @@ const Login = () => {
   };
 
   const handleRegisterClick = () => {
-    navigate('/cadastroProfessor');
+    navigate('/cadastro');
   };
 
   return (
@@ -106,7 +106,7 @@ const Login = () => {
           </button>
           {error && <p className={styles.errorMessage}>{error}</p>}
           <div className={styles.registerLink}>
-            <p>Ainda não tem uma conta? <a href="#" onClick={handleRegisterClick}>Registre-se</a></p>
+            <p>Ainda não tem uma conta? <a href="" onClick={handleRegisterClick}>Registre-se</a></p>
           </div>
         </form>
       </div>

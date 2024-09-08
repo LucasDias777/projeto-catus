@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { auth, db } from '../firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
-import styles from '../styles/Dashboard.module.css'; // Importa o CSS
+import styles from '../styles/Dashboard.module.css';
 
 const DashboardAluno = () => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeMenu, setActiveMenu] = useState(null); // Adicionei estado para menu ativo
+  const [activeMenu, setActiveMenu] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -74,7 +74,7 @@ const DashboardAluno = () => {
           >
             Treino
             <ul className={`${styles.submenu} ${activeMenu === 'treino' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/ver-treino')}>Ver Treino</button></li>
+              <li><button onClick={() => navigate('/visualizar-treino')}>Ver Treino</button></li>
             </ul>
           </li>
           <li
@@ -83,7 +83,7 @@ const DashboardAluno = () => {
           >
             Relatórios
             <ul className={`${styles.submenu} ${activeMenu === 'relatorios' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/relatorios-treinos')}>Treinos</button></li>
+              <li><button onClick={() => navigate('/relatorio-treinos')}>Treinos</button></li>
             </ul>
           </li>
         </ul>
@@ -91,17 +91,11 @@ const DashboardAluno = () => {
       <div className={styles.mainContent}>
         <div className={styles.topbar}>
           <div className={styles.topbarContent}>
-            <div className={styles.logoContainer}>
-              <img src="" alt="Logo da Empresa" className={styles.logo} />
-              <h1 className={styles.topbarTitle}>Catus</h1>
-            </div>
-            <h1 className={styles.welcomeText}>Bem-vindo, {userData?.nomeCompleto}</h1>
-            <button className={styles.logoutButton} onClick={handleLogout}>Deslogar</button>
+            <div className={styles.welcomeText}>Bem-vindo, {userData?.nomeCompleto}</div>
+            <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
           </div>
         </div>
-        <div className={styles.content}>
-          {/* Conteúdo principal do dashboard */}
-        </div>
+        {/* Conteúdo principal do dashboard */}
       </div>
     </div>
   );

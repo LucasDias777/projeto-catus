@@ -1,66 +1,210 @@
+/* Estilos para a página de Alunos Cadastrados */
+
 .page {
-    padding: 20px;
-  }
-  
-  .table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-  
-  .table th, .table td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-  }
-  
-  .table th {
-    background-color: #f4f4f4;
-  }
-  
-  .editForm {
-    margin-top: 20px;
-  }
-  
-  .formGroup {
-    margin-bottom: 10px;
-  }
-  
-  .formGroup label {
-    display: block;
-    margin-bottom: 5px;
-  }
-  
-  .formGroup input {
-    width: 100%;
-    padding: 8px;
-    box-sizing: border-box;
-  }
-  
-  button {
-    margin-right: 10px;
-    padding: 10px 15px;
-    border: none;
-    color: white;
-    background-color: #007bff;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  
-  /* Estilos específicos para o botão de voltar */
-  .backButton {
-    margin-bottom: 20px;
-    padding: 10px 15px;
-    border: none;
-    color: white;
-    background-color: #28a745; /* Verde para o botão de voltar */
-    cursor: pointer;
-  }
-  
-  .backButton:hover {
-    background-color: #218838; /* Verde mais escuro ao passar o mouse */
-  }
-  
+  padding: 20px;
+  background-color: #000; /* Fundo preto para essa página */
+  min-height: 100vh;
+  color: #fff;
+}
+
+.topbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #333; /* Barra superior preta */
+  padding: 10px 20px;
+  border-bottom: 2px solid #444;
+}
+
+h1 {
+  font-size: 24px;
+  color: #fff;
+}
+
+.backButton {
+  padding: 10px 15px;
+  background-color: #28a745;
+  color: white;
+  border: none;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.backButton:hover {
+  background-color: #218838;
+}
+
+/* Estilo para o campo de pesquisa */
+.searchInput {
+  margin: 20px 0;
+  padding: 10px;
+  width: 100%;
+  max-width: 300px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+.table th, .table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.table th {
+  background-color: #444;
+  color: #fff;
+}
+
+.table td {
+  color: #fff;
+}
+
+.editForm {
+  margin-top: 20px;
+}
+
+.formGroup {
+  margin-bottom: 10px;
+}
+
+.formGroup label {
+  display: block;
+  margin-bottom: 5px;
+}
+
+.formGroup input {
+  width: 100%;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Estilo dos botões de ícones */
+.iconButton {
+  background: none;
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  padding: 5px;
+  margin-right: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.iconButton:hover {
+  color: #007bff;
+  background-color: rgba(255, 255, 255, 0.2); /* Fundo branco semitransparente */
+  border-radius: 5px; /* Adiciona bordas arredondadas */
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  color: white;
+  background-color: #007bff;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button:hover {
+  background-color: #0056b3;
+}
+
+/* Estilos do Modal */
+
+/* Fundo do modal */
+.modalOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.8); /* Fundo escuro semitransparente */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+/* Container do modal */
+.modalContent {
+  background-color: #fff;
+  color: #000;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+  position: relative;
+  z-index: 1001;
+}
+
+/* Estilo para o botão de fechar o modal */
+.modalClose {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #333;
+  transition: color 0.3s ease, background-color 0.3s ease;
+  border-radius: 50%; /* Botão redondo */
+  padding: 5px; /* Espaçamento interno para o botão */
+}
+
+.modalClose:hover {
+  color: #ff0000;
+  background-color: rgba(255, 255, 255, 0.5); /* Fundo branco semitransparente ao passar o mouse */
+}
+
+/* Estilos do cabeçalho e corpo do modal */
+.modalHeader {
+  margin-bottom: 20px;
+  font-size: 20px;
+  font-weight: bold;
+}
+
+.modalBody {
+  margin-bottom: 20px;
+}
+
+.modalFooter {
+  display: flex;
+  flex-direction: column; /* Alinha os botões em coluna */
+  gap: 10px; /* Espaço entre os botões */
+}
+
+.modalFooter button {
+  width: 100%; /* Faz os botões ocuparem toda a largura */
+  padding: 10px 20px;
+  border-radius: 5px;
+  border: none;
+  cursor: pointer;
+  color: white;
+  transition: background-color 0.3s ease;
+}
+
+.modalFooter button[type="submit"] {
+  background-color: #007bff; /* Cor do botão "Salvar" */
+}
+
+.modalFooter button[type="submit"]:hover {
+  background-color: #0056b3;
+}
+
+.modalFooter button[type="button"] {
+  background-color: #dc3545; /* Cor do botão "Cancelar" */
+}
+
+.modalFooter button[type="button"]:hover {
+  background-color: #c82333; /* Cor ao passar o mouse no "Cancelar" */
+}
+
+.errorText { 
+  color: #ff0000; /* Cor vermelha para mensagens de erro */
+}

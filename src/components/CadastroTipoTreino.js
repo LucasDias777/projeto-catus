@@ -103,7 +103,7 @@ const CadastroTipoTreino = () => {
           )}
         </div>
       ))}
-      <button onClick={() => navigate('/dashboard')}>Voltar</button>
+      <button onClick={() => navigate('/dashboard-professor')}>Voltar</button>
     </div>
   );
 };

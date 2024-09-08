@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { auth, db } from '../firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc, collection, getDocs, query, orderBy, limit } from 'firebase/firestore';
+import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Cadastro.module.css'; // Importa como módulo CSS
 
@@ -80,11 +80,13 @@ const CadastroProfessor = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Verificação de e-mail
     if (!isEmailValid(formData.email)) {
       setError('O e-mail fornecido é inválido.');
       return;
     }
 
+    // Verificação de senha
     if (formData.senha !== formData.repetirSenha) {
       setError('As senhas não coincidem!');
       return;
@@ -115,7 +117,7 @@ const CadastroProfessor = () => {
       });
 
       alert('Usuário cadastrado com sucesso!');
-      navigate('/login');
+      navigate('/login'); // Navega para a página de login após o cadastro
     } catch (error) {
       console.error('Erro ao cadastrar usuário:', error);
       // Trata diferentes tipos de erros retornados pelo Firebase
@@ -204,6 +206,7 @@ const CadastroProfessor = () => {
           </div>
           <button type="submit" className={styles.submitButton}>Cadastrar</button>
         </form>
+        <button onClick={() => navigate('/login')} className={styles.backButton}>Voltar</button>
       </div>
     </div>
   );
