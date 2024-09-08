@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../authContext'; // Importando o contexto de autenticação
 
 const CadastroSeries = () => {
   const [numeroSeries, setNumeroSeries] = useState('');
@@ -9,6 +10,7 @@ const CadastroSeries = () => {
   const [editId, setEditId] = useState(null);
   const [editNumeroSeries, setEditNumeroSeries] = useState('');
   const navigate = useNavigate();
+  const { currentUser } = useAuth(); // Obtendo o usuário atual
 
   useEffect(() => {
     const fetchSeries = async () => {
@@ -17,18 +19,31 @@ const CadastroSeries = () => {
       setSeries(seriesList);
     };
 
+    // Real-time listener para atualizações na coleção 'series'
+    const unsubscribe = onSnapshot(collection(db, 'series'), (snapshot) => {
+      const updatedSeries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setSeries(updatedSeries);
+    });
+
     fetchSeries();
+
+    return () => unsubscribe(); // Cleanup na desmontagem do componente
   }, []);
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+      alert('Você precisa estar logado para cadastrar uma série');
+      return;
+    }
+
     try {
-      await addDoc(collection(db, 'series'), { numeroSeries });
+      await addDoc(collection(db, 'series'), {
+        numeroSeries,
+        professorId: currentUser.uid // Associando a série ao professor que a criou
+      });
       alert('Série cadastrada com sucesso!');
       setNumeroSeries('');
-      const querySnapshot = await getDocs(collection(db, 'series'));
-      const seriesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setSeries(seriesList);
     } catch (error) {
       console.error('Erro ao cadastrar série:', error);
       alert('Erro ao cadastrar série');
@@ -42,9 +57,6 @@ const CadastroSeries = () => {
       alert('Série atualizada com sucesso!');
       setEditId(null);
       setEditNumeroSeries('');
-      const querySnapshot = await getDocs(collection(db, 'series'));
-      const seriesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setSeries(seriesList);
     } catch (error) {
       console.error('Erro ao atualizar série:', error);
       alert('Erro ao atualizar série');
@@ -56,9 +68,6 @@ const CadastroSeries = () => {
       try {
         await deleteDoc(doc(db, 'series', id));
         alert('Série removida com sucesso!');
-        const querySnapshot = await getDocs(collection(db, 'series'));
-        const seriesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSeries(seriesList);
       } catch (error) {
         console.error('Erro ao remover série:', error);
         alert('Erro ao remover série');

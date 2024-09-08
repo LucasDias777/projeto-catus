@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../authContext'; // Importando o contexto de autenticação
 
 const CadastroTipoTreino = () => {
   const [nome, setNome] = useState('');
@@ -9,10 +10,11 @@ const CadastroTipoTreino = () => {
   const [editId, setEditId] = useState(null);
   const [editNome, setEditNome] = useState('');
   const navigate = useNavigate();
+  const { currentUser } = useAuth(); // Obtendo o usuário atual
 
   useEffect(() => {
     const fetchTiposTreino = async () => {
-      const querySnapshot = await getDocs(collection(db, 'tiposTreino')); // Corrigido para a coleção correta
+      const querySnapshot = await getDocs(collection(db, 'tiposTreino'));
       const tiposList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTiposTreino(tiposList);
     };
@@ -22,11 +24,19 @@ const CadastroTipoTreino = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+      alert('Você precisa estar logado para cadastrar um tipo de treino');
+      return;
+    }
+
     try {
-      await addDoc(collection(db, 'tiposTreino'), { nome }); // Corrigido para a coleção correta
+      await addDoc(collection(db, 'tiposTreino'), {
+        nome,
+        professorId: currentUser.uid // Associando o tipo de treino ao professor que o criou
+      });
       alert('Tipo de treino cadastrado com sucesso!');
       setNome('');
-      const querySnapshot = await getDocs(collection(db, 'tiposTreino')); // Corrigido para a coleção correta
+      const querySnapshot = await getDocs(collection(db, 'tiposTreino'));
       const tiposList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTiposTreino(tiposList);
     } catch (error) {
@@ -37,12 +47,12 @@ const CadastroTipoTreino = () => {
 
   const handleEdit = async (id) => {
     try {
-      const docRef = doc(db, 'tiposTreino', id); // Corrigido para a coleção correta
+      const docRef = doc(db, 'tiposTreino', id);
       await updateDoc(docRef, { nome: editNome });
       alert('Tipo de treino atualizado com sucesso!');
       setEditId(null);
       setEditNome('');
-      const querySnapshot = await getDocs(collection(db, 'tiposTreino')); // Corrigido para a coleção correta
+      const querySnapshot = await getDocs(collection(db, 'tiposTreino'));
       const tiposList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTiposTreino(tiposList);
     } catch (error) {
@@ -54,9 +64,9 @@ const CadastroTipoTreino = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Você tem certeza que deseja excluir este tipo de treino?')) {
       try {
-        await deleteDoc(doc(db, 'tiposTreino', id)); // Corrigido para a coleção correta
+        await deleteDoc(doc(db, 'tiposTreino', id));
         alert('Tipo de treino removido com sucesso!');
-        const querySnapshot = await getDocs(collection(db, 'tiposTreino')); // Corrigido para a coleção correta
+        const querySnapshot = await getDocs(collection(db, 'tiposTreino'));
         const tiposList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setTiposTreino(tiposList);
       } catch (error) {

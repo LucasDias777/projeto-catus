@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import { useNavigate } from 'react-router-dom'; 
 import { db } from '../firebaseConfig';
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, query, where, doc } from 'firebase/firestore'; 
+import { collection, getDocs, addDoc, updateDoc, deleteDoc, query, where, doc } from 'firebase/firestore';
 
 const PaginaTreino = ({ professorId }) => {
   const { control, handleSubmit, reset } = useForm();
@@ -12,33 +13,29 @@ const PaginaTreino = ({ professorId }) => {
   const [students, setStudents] = useState([]);
   const [treinos, setTreinos] = useState([]);
   const [editTreino, setEditTreino] = useState(null);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Fetch Equipments, Series, Repetitions, and Training Types
-        const equipmentsSnapshot = await getDocs(collection(db, 'equipamento'));
-        const seriesSnapshot = await getDocs(collection(db, 'series'));
-        const repetitionsSnapshot = await getDocs(collection(db, 'repeticoes'));
-        const trainingTypesSnapshot = await getDocs(collection(db, 'tiposTreino'));
+        const equipmentsSnapshot = await getDocs(query(collection(db, 'equipamento'), where('professorId', '==', professorId)));
+        const seriesSnapshot = await getDocs(query(collection(db, 'series'), where('professorId', '==', professorId)));
+        const repetitionsSnapshot = await getDocs(query(collection(db, 'repeticoes'), where('professorId', '==', professorId)));
+        const trainingTypesSnapshot = await getDocs(query(collection(db, 'tiposTreino'), where('professorId', '==', professorId)));
 
-        // Fetch students linked to the professor
         const alunosRef = collection(db, 'pessoa');
-        const querySnapshot = await getDocs(alunosRef);
-        const studentsSnapshot = querySnapshot.docs
-          .filter(doc =>  doc.data().tipoPessoa === 'aluno')
-          .filter(doc => doc.data().professorId == professorId && doc.data().tipoPessoa == 'aluno')
-          .map(doc => ({ id: doc.id, ...doc.data() }));
+        const q = query(alunosRef,  where('tipoPessoa', '==', 'aluno'));
+        //const q = query(alunosRef, where('professorId', '==', professorId), where('tipoPessoa', '==', 'aluno'));
+        const studentsSnapshot = await getDocs(q);
+        const filteredStudents = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Fetch treinos
-        const treinosSnapshot = await getDocs(collection(db, 'treinos'));
+        const treinosSnapshot = await getDocs(query(collection(db, 'treinos'), where('professorId', '==', professorId)));
 
-        // Set state with fetched data
         setEquipments(equipmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         setSeries(seriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         setRepetitions(repetitionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
         setTrainingTypes(trainingTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setStudents(studentsSnapshot);
+        setStudents(filteredStudents);
         setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       } catch (error) {
         console.error('Erro ao buscar dados:', error);
@@ -52,11 +49,12 @@ const PaginaTreino = ({ professorId }) => {
     try {
       await addDoc(collection(db, 'treinos'), {
         ...data,
+        professorId, // Inclui o professorId ao criar o treino
         createdAt: new Date(),
       });
       alert('Treino criado com sucesso!');
       reset();
-      const treinosSnapshot = await getDocs(collection(db, 'treinos'));
+      const treinosSnapshot = await getDocs(query(collection(db, 'treinos'), where('professorId', '==', professorId)));
       setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
       console.error('Erro ao criar treino:', error);
@@ -64,13 +62,17 @@ const PaginaTreino = ({ professorId }) => {
     }
   };
 
-  const handleEdit = async (id) => {
+  const handleEdit = (treino) => {
+    setEditTreino(treino);
+  };
+
+  const saveEdit = async () => {
     try {
-      const docRef = doc(db, 'treinos', id);
+      const docRef = doc(db, 'treinos', editTreino.id);
       await updateDoc(docRef, { ...editTreino });
       alert('Treino atualizado com sucesso!');
       setEditTreino(null);
-      const treinosSnapshot = await getDocs(collection(db, 'treinos'));
+      const treinosSnapshot = await getDocs(query(collection(db, 'treinos'), where('professorId', '==', professorId)));
       setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
     } catch (error) {
       console.error('Erro ao atualizar treino:', error);
@@ -83,7 +85,7 @@ const PaginaTreino = ({ professorId }) => {
       try {
         await deleteDoc(doc(db, 'treinos', id));
         alert('Treino removido com sucesso!');
-        const treinosSnapshot = await getDocs(collection(db, 'treinos'));
+        const treinosSnapshot = await getDocs(query(collection(db, 'treinos'), where('professorId', '==', professorId)));
         setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
       } catch (error) {
         console.error('Erro ao remover treino:', error);
@@ -116,6 +118,25 @@ const PaginaTreino = ({ professorId }) => {
         </div>
 
         <div>
+          <label>Tipo de Treino</label>
+          <Controller
+            name="tipoTreinoId"
+            control={control}
+            defaultValue=""
+            render={({ field }) => (
+              <select {...field} required>
+                <option value="">Selecione o tipo de treino</option>
+                {trainingTypes.map(type => (
+                  <option key={type.id} value={type.id}>
+                    {type.nome}
+                  </option>
+                ))}
+              </select>
+            )}
+          />
+        </div>
+
+        <div>
           <label>Equipamento</label>
           <Controller
             name="equipamentoId"
@@ -133,6 +154,7 @@ const PaginaTreino = ({ professorId }) => {
             )}
           />
         </div>
+
         <div>
           <label>Séries</label>
           <Controller
@@ -171,32 +193,54 @@ const PaginaTreino = ({ professorId }) => {
           />
         </div>
 
-        <div>
-          <label>Tipo de Treino</label>
-          <Controller
-            name="tipoTreinoId"
-            control={control}
-            defaultValue=""
-            render={({ field }) => (
-              <select {...field} required>
-                <option value="">Selecione o tipo de treino</option>
-                {trainingTypes.map(type => (
-                  <option key={type.id} value={type.id}>
-                    {type.nome}
-                  </option>
-                ))}
-              </select>
-            )}
-          />
-        </div>
-
         <button type="submit">Criar Treino</button>
       </form>
+
+      <button onClick={() => navigate('/dashboard-professor')}>Voltar</button>
 
       <h3>Treinos Cadastrados</h3>
       {treinos.map(treino => (
         <div key={treino.id}>
-          {/* Renderização e edição de treino */}
+          {editTreino?.id === treino.id ? (
+            <div>
+              <input
+                type="text"
+                value={editTreino.alunoId}
+                onChange={(e) => setEditTreino({ ...editTreino, alunoId: e.target.value })}
+              />
+              <input
+                type="text"
+                value={editTreino.tipoTreinoId}
+                onChange={(e) => setEditTreino({ ...editTreino, tipoTreinoId: e.target.value })}
+              />
+              <input
+                type="text"
+                value={editTreino.equipamentoId}
+                onChange={(e) => setEditTreino({ ...editTreino, equipamentoId: e.target.value })}
+              />
+              <input
+                type="text"
+                value={editTreino.serieId}
+                onChange={(e) => setEditTreino({ ...editTreino, serieId: e.target.value })}
+              />
+              <input
+                type="text"
+                value={editTreino.repeticaoId}
+                onChange={(e) => setEditTreino({ ...editTreino, repeticaoId: e.target.value })}
+              />
+              <button onClick={saveEdit}>Salvar</button>
+            </div>
+          ) : (
+            <div>
+              <p>Aluno: {treino.alunoId}</p>
+              <p>Tipo de Treino: {treino.tipoTreinoId}</p>
+              <p>Equipamento: {treino.equipamentoId}</p>
+              <p>Séries: {treino.serieId}</p>
+              <p>Repetições: {treino.repeticaoId}</p>
+              <button onClick={() => handleEdit(treino)}>Editar</button>
+              <button onClick={() => handleDelete(treino.id)}>Excluir</button>
+            </div>
+          )}
         </div>
       ))}
     </div>

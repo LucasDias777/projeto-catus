@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../authContext'; // Importando o contexto de autenticação
 
 const CadastroRepeticoes = () => {
   const [numeroRepeticoes, setNumeroRepeticoes] = useState('');
@@ -9,6 +10,7 @@ const CadastroRepeticoes = () => {
   const [editId, setEditId] = useState(null);
   const [editNumeroRepeticoes, setEditNumeroRepeticoes] = useState('');
   const navigate = useNavigate();
+  const { currentUser } = useAuth(); // Obtendo o usuário atual do contexto
 
   useEffect(() => {
     const fetchRepeticoes = async () => {
@@ -22,10 +24,19 @@ const CadastroRepeticoes = () => {
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+      alert('Você precisa estar autenticado para adicionar repetições.');
+      return;
+    }
+
     try {
-      await addDoc(collection(db, 'repeticoes'), { numeroRepeticoes });
+      await addDoc(collection(db, 'repeticoes'), {
+        numeroRepeticoes,
+        professorId: currentUser.uid // Associando a repetição ao professor que a criou
+      });
       alert('Repetição cadastrada com sucesso!');
       setNumeroRepeticoes('');
+      // Atualizando a lista de repetições após adicionar uma nova
       const querySnapshot = await getDocs(collection(db, 'repeticoes'));
       const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRepeticoes(repeticoesList);
@@ -42,6 +53,7 @@ const CadastroRepeticoes = () => {
       alert('Repetição atualizada com sucesso!');
       setEditId(null);
       setEditNumeroRepeticoes('');
+      // Atualizando a lista de repetições após editar uma existente
       const querySnapshot = await getDocs(collection(db, 'repeticoes'));
       const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRepeticoes(repeticoesList);
@@ -56,6 +68,7 @@ const CadastroRepeticoes = () => {
       try {
         await deleteDoc(doc(db, 'repeticoes', id));
         alert('Repetição removida com sucesso!');
+        // Atualizando a lista de repetições após deletar uma
         const querySnapshot = await getDocs(collection(db, 'repeticoes'));
         const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setRepeticoes(repeticoesList);

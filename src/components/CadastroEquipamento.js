@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../authContext'; // Importando o contexto de autenticação
 
 const CadastroEquipamento = () => {
   const [nome, setNome] = useState('');
@@ -9,6 +10,7 @@ const CadastroEquipamento = () => {
   const [editId, setEditId] = useState(null);
   const [editNome, setEditNome] = useState('');
   const navigate = useNavigate();
+  const { currentUser } = useAuth(); // Obtendo o usuário atual
 
   useEffect(() => {
     const fetchEquipamentos = async () => {
@@ -17,7 +19,6 @@ const CadastroEquipamento = () => {
       setEquipamentos(equipamentosList);
     };
 
-    // Real-time listener para atualizações na coleção 'equipamento'
     const unsubscribe = onSnapshot(collection(db, 'equipamento'), (snapshot) => {
       const updatedEquipamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setEquipamentos(updatedEquipamentos);
@@ -25,13 +26,21 @@ const CadastroEquipamento = () => {
 
     fetchEquipamentos();
 
-    return () => unsubscribe(); // Cleanup na desmontagem do componente
+    return () => unsubscribe();
   }, []);
 
   const handleAdd = async (e) => {
     e.preventDefault();
+    if (!currentUser) {
+      alert('Você precisa estar logado para cadastrar um equipamento');
+      return;
+    }
+
     try {
-      await addDoc(collection(db, 'equipamento'), { nome });
+      await addDoc(collection(db, 'equipamento'), {
+        nome,
+        professorId: currentUser.uid // Associando o equipamento ao professor que o criou
+      });
       alert('Equipamento cadastrado com sucesso!');
       setNome('');
     } catch (error) {
