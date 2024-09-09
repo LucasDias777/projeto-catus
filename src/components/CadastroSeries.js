@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../authContext'; // Importando o contexto de autenticação
 
@@ -13,22 +13,36 @@ const CadastroSeries = () => {
   const { currentUser } = useAuth(); // Obtendo o usuário atual
 
   useEffect(() => {
+    if (!currentUser) return; // Garantir que o usuário esteja logado antes de buscar os dados
+
     const fetchSeries = async () => {
-      const querySnapshot = await getDocs(collection(db, 'series'));
-      const seriesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setSeries(seriesList);
+      try {
+        // Consulta para buscar séries associadas ao professor logado
+        const q = query(collection(db, 'series'), where('professorId', '==', currentUser.uid));
+        const querySnapshot = await getDocs(q);
+        const seriesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setSeries(seriesList);
+      } catch (error) {
+        console.error('Erro ao buscar séries:', error);
+      }
     };
 
-    // Real-time listener para atualizações na coleção 'series'
-    const unsubscribe = onSnapshot(collection(db, 'series'), (snapshot) => {
-      const updatedSeries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setSeries(updatedSeries);
-    });
+    // Real-time listener para atualizações na coleção 'series', filtrado pelo professorId
+    const unsubscribe = onSnapshot(
+      query(collection(db, 'series'), where('professorId', '==', currentUser.uid)),
+      (snapshot) => {
+        const updatedSeries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setSeries(updatedSeries);
+      },
+      (error) => {
+        console.error('Erro ao escutar séries:', error);
+      }
+    );
 
     fetchSeries();
 
     return () => unsubscribe(); // Cleanup na desmontagem do componente
-  }, []);
+  }, [currentUser]);
 
   const handleAdd = async (e) => {
     e.preventDefault();

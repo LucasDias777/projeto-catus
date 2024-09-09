@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, updateDoc, deleteDoc, doc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../authContext'; // Importando o contexto de autenticação
 
@@ -14,13 +14,21 @@ const CadastroRepeticoes = () => {
 
   useEffect(() => {
     const fetchRepeticoes = async () => {
-      const querySnapshot = await getDocs(collection(db, 'repeticoes'));
+      if (!currentUser) return;
+
+      // Filtrar as repetições pelo professorId (userId do professor logado)
+      const q = query(
+        collection(db, 'repeticoes'),
+        where('professorId', '==', currentUser.uid)
+      );
+
+      const querySnapshot = await getDocs(q);
       const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRepeticoes(repeticoesList);
     };
 
     fetchRepeticoes();
-  }, []);
+  }, [currentUser]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -36,8 +44,13 @@ const CadastroRepeticoes = () => {
       });
       alert('Repetição cadastrada com sucesso!');
       setNumeroRepeticoes('');
+
       // Atualizando a lista de repetições após adicionar uma nova
-      const querySnapshot = await getDocs(collection(db, 'repeticoes'));
+      const q = query(
+        collection(db, 'repeticoes'),
+        where('professorId', '==', currentUser.uid)
+      );
+      const querySnapshot = await getDocs(q);
       const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRepeticoes(repeticoesList);
     } catch (error) {
@@ -53,8 +66,13 @@ const CadastroRepeticoes = () => {
       alert('Repetição atualizada com sucesso!');
       setEditId(null);
       setEditNumeroRepeticoes('');
+
       // Atualizando a lista de repetições após editar uma existente
-      const querySnapshot = await getDocs(collection(db, 'repeticoes'));
+      const q = query(
+        collection(db, 'repeticoes'),
+        where('professorId', '==', currentUser.uid)
+      );
+      const querySnapshot = await getDocs(q);
       const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setRepeticoes(repeticoesList);
     } catch (error) {
@@ -68,8 +86,13 @@ const CadastroRepeticoes = () => {
       try {
         await deleteDoc(doc(db, 'repeticoes', id));
         alert('Repetição removida com sucesso!');
+
         // Atualizando a lista de repetições após deletar uma
-        const querySnapshot = await getDocs(collection(db, 'repeticoes'));
+        const q = query(
+          collection(db, 'repeticoes'),
+          where('professorId', '==', currentUser.uid)
+        );
+        const querySnapshot = await getDocs(q);
         const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setRepeticoes(repeticoesList);
       } catch (error) {

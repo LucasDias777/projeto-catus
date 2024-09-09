@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, onSnapshot, query, where } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../authContext'; // Importando o contexto de autenticação
 
@@ -13,21 +13,31 @@ const CadastroEquipamento = () => {
   const { currentUser } = useAuth(); // Obtendo o usuário atual
 
   useEffect(() => {
+    if (!currentUser) {
+      return; // Se não houver usuário logado, interrompa a execução
+    }
+
     const fetchEquipamentos = async () => {
-      const querySnapshot = await getDocs(collection(db, 'equipamento'));
+      const equipamentosRef = collection(db, 'equipamento');
+      const q = query(equipamentosRef, where('professorId', '==', currentUser.uid)); // Filtrando pelo professorId
+      const querySnapshot = await getDocs(q);
       const equipamentosList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setEquipamentos(equipamentosList);
     };
 
-    const unsubscribe = onSnapshot(collection(db, 'equipamento'), (snapshot) => {
-      const updatedEquipamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setEquipamentos(updatedEquipamentos);
-    });
+    // Monitorar mudanças em tempo real apenas para equipamentos do professor logado
+    const unsubscribe = onSnapshot(
+      query(collection(db, 'equipamento'), where('professorId', '==', currentUser.uid)), 
+      (snapshot) => {
+        const updatedEquipamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setEquipamentos(updatedEquipamentos);
+      }
+    );
 
     fetchEquipamentos();
 
     return () => unsubscribe();
-  }, []);
+  }, [currentUser]);
 
   const handleAdd = async (e) => {
     e.preventDefault();

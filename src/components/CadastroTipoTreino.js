@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc } from 'firebase/firestore';
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, doc, query, where } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../authContext'; // Importando o contexto de autenticação
 
@@ -14,13 +14,17 @@ const CadastroTipoTreino = () => {
 
   useEffect(() => {
     const fetchTiposTreino = async () => {
-      const querySnapshot = await getDocs(collection(db, 'tiposTreino'));
+      if (!currentUser) return;
+
+      // Filtrando os tipos de treino pelo professorId (userId do professor logado)
+      const q = query(collection(db, 'tiposTreino'), where('professorId', '==', currentUser.uid));
+      const querySnapshot = await getDocs(q);
       const tiposList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTiposTreino(tiposList);
     };
 
     fetchTiposTreino();
-  }, []);
+  }, [currentUser]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
@@ -36,7 +40,8 @@ const CadastroTipoTreino = () => {
       });
       alert('Tipo de treino cadastrado com sucesso!');
       setNome('');
-      const querySnapshot = await getDocs(collection(db, 'tiposTreino'));
+      const q = query(collection(db, 'tiposTreino'), where('professorId', '==', currentUser.uid));
+      const querySnapshot = await getDocs(q);
       const tiposList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTiposTreino(tiposList);
     } catch (error) {
@@ -52,7 +57,8 @@ const CadastroTipoTreino = () => {
       alert('Tipo de treino atualizado com sucesso!');
       setEditId(null);
       setEditNome('');
-      const querySnapshot = await getDocs(collection(db, 'tiposTreino'));
+      const q = query(collection(db, 'tiposTreino'), where('professorId', '==', currentUser.uid));
+      const querySnapshot = await getDocs(q);
       const tiposList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       setTiposTreino(tiposList);
     } catch (error) {
@@ -66,7 +72,8 @@ const CadastroTipoTreino = () => {
       try {
         await deleteDoc(doc(db, 'tiposTreino', id));
         alert('Tipo de treino removido com sucesso!');
-        const querySnapshot = await getDocs(collection(db, 'tiposTreino'));
+        const q = query(collection(db, 'tiposTreino'), where('professorId', '==', currentUser.uid));
+        const querySnapshot = await getDocs(q);
         const tiposList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setTiposTreino(tiposList);
       } catch (error) {

@@ -3,8 +3,9 @@ import { useForm, Controller } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom'; 
 import { db } from '../firebaseConfig';
 import { collection, getDocs, addDoc, updateDoc, deleteDoc, query, where, doc } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
 
-const PaginaTreino = ({ professorId }) => {
+const PaginaTreino = () => {
   const { control, handleSubmit, reset } = useForm();
   const [equipments, setEquipments] = useState([]);
   const [series, setSeries] = useState([]);
@@ -14,48 +15,71 @@ const PaginaTreino = ({ professorId }) => {
   const [treinos, setTreinos] = useState([]);
   const [editTreino, setEditTreino] = useState(null);
   const navigate = useNavigate();
+  const auth = getAuth();
+  const currentUser = auth.currentUser; // Obtém o usuário logado
+
+  // Função para buscar dados do Firebase vinculados ao professor logado
+  const fetchData = async () => {
+    if (!currentUser) {
+      return; // Se não houver usuário logado, interrompa a execução
+    }
+
+    try {
+      const userId = currentUser.uid;
+
+      // Buscar Equipamentos
+      const equipamentosQuery = query(collection(db, 'equipamento'), where('professorId', '==', userId));
+      const equipamentosSnapshot = await getDocs(equipamentosQuery);
+      setEquipments(equipamentosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      // Buscar Séries
+      const seriesQuery = query(collection(db, 'series'), where('professorId', '==', userId));
+      const seriesSnapshot = await getDocs(seriesQuery);
+      setSeries(seriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      // Buscar Repetições
+      const repetitionsQuery = query(collection(db, 'repeticoes'), where('professorId', '==', userId));
+      const repetitionsSnapshot = await getDocs(repetitionsQuery);
+      setRepetitions(repetitionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      // Buscar Tipos de Treino
+      const trainingTypesQuery = query(collection(db, 'tiposTreino'), where('professorId', '==', userId));
+      const trainingTypesSnapshot = await getDocs(trainingTypesQuery);
+      setTrainingTypes(trainingTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      // Buscar Alunos
+      const studentsQuery = query(collection(db, 'pessoa'), where('tipoPessoa', '==', 'aluno'), where('professorId', '==', userId));
+      const studentsSnapshot = await getDocs(studentsQuery);
+      setStudents(studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      // Buscar Treinos
+      const treinosQuery = query(collection(db, 'treinos'), where('professorId', '==', userId));
+      const treinosSnapshot = await getDocs(treinosQuery);
+      setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
+    }
+  };
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const equipmentsSnapshot = await getDocs(query(collection(db, 'equipamento'), where('professorId', '==', professorId)));
-        const seriesSnapshot = await getDocs(query(collection(db, 'series'), where('professorId', '==', professorId)));
-        const repetitionsSnapshot = await getDocs(query(collection(db, 'repeticoes'), where('professorId', '==', professorId)));
-        const trainingTypesSnapshot = await getDocs(query(collection(db, 'tiposTreino'), where('professorId', '==', professorId)));
+    fetchData(); // Chama a função ao carregar a página
+  }, [currentUser]);
 
-        const alunosRef = collection(db, 'pessoa');
-        const q = query(alunosRef,  where('tipoPessoa', '==', 'aluno'));
-        //const q = query(alunosRef, where('professorId', '==', professorId), where('tipoPessoa', '==', 'aluno'));
-        const studentsSnapshot = await getDocs(q);
-        const filteredStudents = studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        const treinosSnapshot = await getDocs(query(collection(db, 'treinos'), where('professorId', '==', professorId)));
-
-        setEquipments(equipmentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setSeries(seriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setRepetitions(repetitionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setTrainingTypes(trainingTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-        setStudents(filteredStudents);
-        setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
-      } catch (error) {
-        console.error('Erro ao buscar dados:', error);
-      }
-    };
-
-    fetchData();
-  }, [professorId]);
-
+  // Função para criar um novo treino
   const onSubmit = async (data) => {
+    if (!currentUser) {
+      return; // Se não houver usuário logado, interrompa a execução
+    }
+
     try {
       await addDoc(collection(db, 'treinos'), {
         ...data,
-        professorId, // Inclui o professorId ao criar o treino
+        professorId: currentUser.uid, // Inclui o professorId ao criar o treino
         createdAt: new Date(),
       });
       alert('Treino criado com sucesso!');
       reset();
-      const treinosSnapshot = await getDocs(query(collection(db, 'treinos'), where('professorId', '==', professorId)));
-      setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      fetchData(); // Atualiza os treinos após a criação
     } catch (error) {
       console.error('Erro ao criar treino:', error);
       alert('Erro ao criar treino');
@@ -67,13 +91,16 @@ const PaginaTreino = ({ professorId }) => {
   };
 
   const saveEdit = async () => {
+    if (!currentUser) {
+      return; // Se não houver usuário logado, interrompa a execução
+    }
+
     try {
       const docRef = doc(db, 'treinos', editTreino.id);
       await updateDoc(docRef, { ...editTreino });
       alert('Treino atualizado com sucesso!');
       setEditTreino(null);
-      const treinosSnapshot = await getDocs(query(collection(db, 'treinos'), where('professorId', '==', professorId)));
-      setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+      fetchData(); // Atualiza os treinos após a edição
     } catch (error) {
       console.error('Erro ao atualizar treino:', error);
       alert('Erro ao atualizar treino');
@@ -81,12 +108,15 @@ const PaginaTreino = ({ professorId }) => {
   };
 
   const handleDelete = async (id) => {
+    if (!currentUser) {
+      return; // Se não houver usuário logado, interrompa a execução
+    }
+
     if (window.confirm('Você realmente deseja remover este treino?')) {
       try {
         await deleteDoc(doc(db, 'treinos', id));
         alert('Treino removido com sucesso!');
-        const treinosSnapshot = await getDocs(query(collection(db, 'treinos'), where('professorId', '==', professorId)));
-        setTreinos(treinosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        fetchData(); // Atualiza os treinos após a remoção
       } catch (error) {
         console.error('Erro ao remover treino:', error);
         alert('Erro ao remover treino');
@@ -213,30 +243,13 @@ const PaginaTreino = ({ professorId }) => {
                 value={editTreino.tipoTreinoId}
                 onChange={(e) => setEditTreino({ ...editTreino, tipoTreinoId: e.target.value })}
               />
-              <input
-                type="text"
-                value={editTreino.equipamentoId}
-                onChange={(e) => setEditTreino({ ...editTreino, equipamentoId: e.target.value })}
-              />
-              <input
-                type="text"
-                value={editTreino.serieId}
-                onChange={(e) => setEditTreino({ ...editTreino, serieId: e.target.value })}
-              />
-              <input
-                type="text"
-                value={editTreino.repeticaoId}
-                onChange={(e) => setEditTreino({ ...editTreino, repeticaoId: e.target.value })}
-              />
               <button onClick={saveEdit}>Salvar</button>
+              <button onClick={() => setEditTreino(null)}>Cancelar</button>
             </div>
           ) : (
             <div>
               <p>Aluno: {treino.alunoId}</p>
               <p>Tipo de Treino: {treino.tipoTreinoId}</p>
-              <p>Equipamento: {treino.equipamentoId}</p>
-              <p>Séries: {treino.serieId}</p>
-              <p>Repetições: {treino.repeticaoId}</p>
               <button onClick={() => handleEdit(treino)}>Editar</button>
               <button onClick={() => handleDelete(treino.id)}>Excluir</button>
             </div>
