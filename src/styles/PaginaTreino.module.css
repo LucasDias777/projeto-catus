@@ -1,49 +1,111 @@
 .pageContainer {
-  background-color: black; /* Fundo preto */
+  background-color: #333; /* Fundo preto */
   color: white; /* Texto branco */
   min-height: 100vh; /* Ocupa toda a altura da tela */
   padding: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.topBar {
+  width: 100%;
+  background-color: #222; /* Cinza mais escuro */
+  color: white;
+  padding: 20px 20px; /* Aumenta o padding para tornar a barra superior maior */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000; /* Garante que a barra superior fique acima dos outros conteúdos */
+}
+
+.topBarTitle {
+  font-size: 24px;
+  font-weight: bold;
 }
 
 .headerBar {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end; /* Ajusta os botões à direita */
   align-items: center;
+  width: 100%;
+  margin-top: 80px; /* Adiciona espaço para a barra superior maior */
   margin-bottom: 20px;
 }
 
 .headerTitle {
   font-size: 24px;
   font-weight: bold;
+  margin-right: auto; /* Alinha o título à esquerda */
+}
+
+.backButton, .addButton {
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-left: 10px; /* Espaço entre os botões */
+  border-radius: 4px;
+  width: 150px; /* Tamanho fixo para ambos os botões */
+  text-align: center;
+  font-size: 16px; /* Ajusta o tamanho da fonte */
+}
+
+.addButton {
+  background-color: #2196F3; /* Azul para o botão Adicionar Treino */
 }
 
 .backButton {
-  background-color: #333;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
+  background-color: #4CAF50; /* Verde para o botão Voltar ao Dashboard */
 }
 
-.button {
-  background-color: #333;
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  cursor: pointer;
-  margin-bottom: 20px;
+.addButton:hover {
+  background-color: #1976D2; /* Azul mais escuro para hover */
+}
+
+.backButton:hover {
+  background-color: #45a049; /* Verde mais escuro para hover */
 }
 
 .treinosContainer {
   display: flex;
-  flex-direction: column;
+  flex-wrap: wrap; /* Permite que os containers se ajustem lado a lado */
+  gap: 15px; /* Espaço entre os containers dos treinos */
+  justify-content: center; /* Centraliza os containers horizontalmente */
+  margin-top: 20px; /* Adiciona espaço acima dos containers de treinos */
 }
 
 .treinoCard {
   background-color: #444;
   border-radius: 8px;
   padding: 15px;
-  margin-bottom: 15px;
+  width: 100%;
+  max-width: 300px; /* Ajuste a largura máxima conforme necessário */
+  box-sizing: border-box;
+  position: relative; /* Necessário para posicionar os botões de adicionar/remover equipamentos */
+}
+
+.equipmentGroup {
+  display: flex;
+  align-items: center;
+  gap: 10px; /* Espaço entre o nome do equipamento e os botões */
+}
+
+.addButton, .removeButton {
+  background-color: #555;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 4px;
+}
+
+.addButton:hover, .removeButton:hover {
+  background-color: #666;
 }
 
 .modal {
@@ -92,10 +154,6 @@
 }
 
 .formGroup {
-  margin-bottom: 15px;
-}
-
-.equipmentGroup {
   margin-bottom: 15px;
 }
 

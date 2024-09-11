@@ -85,7 +85,7 @@ const CadastroAluno = () => {
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
       const user = userCredential.user;
 
-      await setDoc(doc(db, 'pessoa', user.uid), {
+      await setDoc(doc(db, 'pessoas', user.uid), {
         nomeCompleto: formData.nomeCompleto,
         dataNascimento: formData.dataNascimento,
         genero: formData.genero,

@@ -18,7 +18,7 @@ const CadastroEquipamento = () => {
     }
 
     const fetchEquipamentos = async () => {
-      const equipamentosRef = collection(db, 'equipamento');
+      const equipamentosRef = collection(db, 'equipamentos');
       const q = query(equipamentosRef, where('professorId', '==', currentUser.uid)); // Filtrando pelo professorId
       const querySnapshot = await getDocs(q);
       const equipamentosList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -27,7 +27,7 @@ const CadastroEquipamento = () => {
 
     // Monitorar mudanças em tempo real apenas para equipamentos do professor logado
     const unsubscribe = onSnapshot(
-      query(collection(db, 'equipamento'), where('professorId', '==', currentUser.uid)), 
+      query(collection(db, 'equipamentos'), where('professorId', '==', currentUser.uid)), 
       (snapshot) => {
         const updatedEquipamentos = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setEquipamentos(updatedEquipamentos);
@@ -47,7 +47,7 @@ const CadastroEquipamento = () => {
     }
 
     try {
-      await addDoc(collection(db, 'equipamento'), {
+      await addDoc(collection(db, 'equipamentos'), {
         nome,
         professorId: currentUser.uid // Associando o equipamento ao professor que o criou
       });
@@ -61,7 +61,7 @@ const CadastroEquipamento = () => {
 
   const handleEdit = async (id) => {
     try {
-      const docRef = doc(db, 'equipamento', id);
+      const docRef = doc(db, 'equipamentos', id);
       await updateDoc(docRef, { nome: editNome });
       alert('Equipamento atualizado com sucesso!');
       setEditId(null);
@@ -75,7 +75,7 @@ const CadastroEquipamento = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Você tem certeza que deseja excluir este equipamento?')) {
       try {
-        await deleteDoc(doc(db, 'equipamento', id));
+        await deleteDoc(doc(db, 'equipamentos', id));
         alert('Equipamento removido com sucesso!');
       } catch (error) {
         console.error('Erro ao remover equipamento:', error);

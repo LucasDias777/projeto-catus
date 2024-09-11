@@ -98,7 +98,7 @@ const CadastroProfessor = () => {
       const user = userCredential.user;
 
       // Cria um documento no Firestore com o ID do documento gerado pelo Firebase
-      const userDocRef = doc(db, 'pessoa', user.uid);
+      const userDocRef = doc(db, 'pessoas', user.uid);
 
       await setDoc(userDocRef, {
         nomeCompleto: formData.nomeCompleto,

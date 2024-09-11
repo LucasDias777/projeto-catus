@@ -25,7 +25,7 @@ const Login = () => {
       const user = userCredential.user;
 
       // Obtém o documento do usuário na coleção 'pessoa' usando o userId (uid)
-      const userDocRef = doc(db, 'pessoa', user.uid);
+      const userDocRef = doc(db, 'pessoas', user.uid);
       const userDoc = await getDoc(userDocRef);
 
       if (userDoc.exists()) {

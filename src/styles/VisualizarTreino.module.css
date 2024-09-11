@@ -1,0 +1,119 @@
+/* Container principal da página */
+.pageContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #2e2b2b; /* Fundo preto suave */
+    color: #fff; /* Cor do texto branco para contraste */
+    height: 100vh;
+    box-sizing: border-box;
+    padding-top: 60px; /* Espaço para a barra superior fixa */
+    padding-bottom: 20px; /* Espaço para a parte inferior da página */
+    position: relative;
+}
+
+/* Barra superior */
+.header {
+    width: 100%;
+    background-color: #007BFF; /* Azul para a barra superior */
+    color: white;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 20px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 1000;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); /* Sombra mais forte para maior contraste */
+}
+
+/* Título na barra superior */
+.header h2 {
+    margin: 0;
+}
+
+/* Botão de voltar ao dashboard */
+.backButton {
+    background-color: #4CAF50; /* Verde */
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 10px 20px;
+    cursor: pointer;
+    font-size: 16px;
+    text-align: center;
+}
+
+.backButton:hover {
+    background-color: #45a049; /* Verde mais escuro para hover */
+}
+
+/* Barra de filtro de pesquisa */
+.searchContainer {
+    position: fixed;
+    top: 60px; /* Abaixo da barra superior */
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 800px; /* Largura máxima do filtro de pesquisa */
+    background-color: #1e1e1e; /* Fundo preto suave */
+    padding: 10px 20px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4); /* Sombra mais pronunciada para contraste */
+    z-index: 999; /* Para garantir que fique sobre outros elementos */
+    box-sizing: border-box;
+    border-radius: 4px; /* Bordas arredondadas para o container de pesquisa */
+}
+
+/* Linha horizontal de destaque */
+.searchContainer::after {
+    content: '';
+    display: block;
+    width: 100%; /* Largura do container de pesquisa */
+    height: 2px;
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.1), transparent, rgba(255, 255, 255, 0.1));
+    margin: 10px 0 0; /* Margem para alinhar com o padding da barra */
+}
+
+/* Campo de pesquisa */
+.searchInput {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444; /* Cor de borda mais escura */
+    border-radius: 4px;
+    font-size: 16px;
+    background-color: #333; /* Fundo escuro para o campo de pesquisa */
+    color: #fff; /* Cor do texto no campo de pesquisa */
+}
+
+/* Placeholder do campo de pesquisa */
+.searchInput::placeholder {
+    color: #888; /* Cor do placeholder mais clara */
+}
+
+/* Container para os treinos */
+.treinoContainer {
+    margin-top: 130px; /* Espaço para a barra de pesquisa fixa e a barra superior */
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px; /* Espaço entre os blocos */
+    justify-content: center; /* Centraliza horizontalmente */
+    width: 100%;
+    max-width: 1200px;
+}
+
+/* Card de treino */
+.treinoCard {
+    background-color: #1e1e1e; /* Fundo escuro para contraste */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5); /* Sombra mais forte para contraste */
+    padding: 20px;
+    width: 300px; /* Ajuste o tamanho conforme necessário */
+    box-sizing: border-box;
+}
+
+/* Estilo para texto dentro dos cards de treino */
+.treinoCard div {
+    margin-bottom: 10px;
+    color: #fff; /* Cor do texto dentro dos cards */
+}

@@ -29,7 +29,7 @@ const AlunoCadastrado = () => {
 
       try {
         const professorId = user.uid;
-        const alunosRef = collection(db, 'pessoa');
+        const alunosRef = collection(db, 'pessoas');
         const querySnapshot = await getDocs(alunosRef);
         const alunosList = querySnapshot.docs
           .filter(doc => doc.data().professorId === professorId && doc.data().tipoPessoa === 'aluno')
@@ -71,7 +71,7 @@ const AlunoCadastrado = () => {
     }
 
     try {
-      const alunoRef = doc(db, 'pessoa', editAlunoId);
+      const alunoRef = doc(db, 'pessoas', editAlunoId);
 
       // Atualizar os dados; se senha estiver vazia, não atualizá-la
       const updatedData = { ...editFormData };
@@ -101,7 +101,7 @@ const AlunoCadastrado = () => {
   const handleDeleteClick = async (id, confirm) => {
     if (confirm) {
       try {
-        await deleteDoc(doc(db, 'pessoa', id));
+        await deleteDoc(doc(db, 'pessoas', id));
         alert('Aluno excluído com sucesso!');
         setAlunos(alunos.filter(aluno => aluno.id !== id));
       } catch (error) {

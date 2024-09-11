@@ -17,7 +17,7 @@ const DashboardProfessor = () => {
       try {
         const user = auth.currentUser;
         if (user) {
-          const docRef = doc(db, 'pessoa', user.uid);
+          const docRef = doc(db, 'pessoas', user.uid);
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
