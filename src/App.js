@@ -15,13 +15,15 @@ import PaginaTreino from './components/PaginaTreino';
 import CadastroAluno from './components/CadastroAluno';
 import AlunoCadastrado from './components/AlunoCadastrado';
 import RotasPrivadas from './components/RotasPrivadas';
+import LandingPage from './components/LandingPage'; // Importando o LandingPage
 
 function App() {
   return (
     <AuthProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<Login />} />
+          {/* Alterando a rota inicial para LandingPage */}
+          <Route path="/" element={<LandingPage />} />
           <Route path="/cadastro" element={<CadastroProfessor />} />
           <Route path="/login" element={<Login />} />
           {/* Rotas privadas */}
