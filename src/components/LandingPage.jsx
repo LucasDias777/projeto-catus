@@ -42,10 +42,10 @@ const LandingPage = () => {
       <nav className={styles.landingPageNavbar} id="navbar">
         <ul>
           <a href="#" className={styles.logo}>StriveFlow</a>
-          <li><a className={styles.navItem} href="#" onClick={() => navigate('/login')}>Login</a></li>
-          <li><a className={styles.navItem} href="#" onClick={handleRegisterClick}>Cadastre-se</a></li>
-          <li><a className={styles.navItem} href="#">Dragon</a></li>
-          <li><a className={styles.navItem} href="#">Starship</a></li>
+          <li><a className={styles.navItem} href="" onClick={() => navigate('/login')}>Login</a></li>
+          <li><a className={styles.navItem} href="" onClick={handleRegisterClick}>Cadastre-se</a></li>
+          <li><a className={styles.navItem} href="">Sobre nós</a></li>
+          <li><a className={styles.navItem} href="">Contatos</a></li>
         </ul>
       </nav>
 

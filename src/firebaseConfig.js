@@ -4,12 +4,12 @@ import { getFirestore } from 'firebase/firestore';
 
 // Sua configuração do Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDw6x7OIOTYrZdaiATfUQqDRNOJlJBGfvc",
-  authDomain: "banco-striveflow.firebaseapp.com",
-  projectId: "banco-striveflow",
-  storageBucket: "banco-striveflow.appspot.com",
-  messagingSenderId: "858180919500",
-  appId: "1:858180919500:web:b28056ffebafb7f9b46269"
+  apiKey: "AIzaSyAs4nfvj6V8TJJ56J6aTxTwoIp4ZXl3Omw",
+  authDomain: "banco-striveflow-bb588.firebaseapp.com",
+  projectId: "banco-striveflow-bb588",
+  storageBucket: "banco-striveflow-bb588.appspot.com",
+  messagingSenderId: "718597450146",
+  appId: "1:718597450146:web:ecba3ca065ca41f3e6aafb"
 };
 
 // Inicializa o Firebase

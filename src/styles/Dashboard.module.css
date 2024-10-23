@@ -81,25 +81,9 @@
     margin-left: 1rem;
     list-style: none;
     padding: 0;
-    display: none;
-    max-height: 0; /* Ocultar inicialmente */
-    opacity: 0; /* Ocultar inicialmente */
-    overflow: hidden;
-    transition: max-height 2.5s ease, opacity 2.5s ease; /* Transição bem mais lenta */
+    display: block; /* Submenu sempre visível */
 }
 
-.submenu.show {
-    display: block;
-    max-height: 500px; /* Altura máxima ao abrir */
-    opacity: 1; /* Torna o submenu visível */
-}
-
-.submenu.hide {
-    max-height: 0;
-    opacity: 0;
-}
-
-/* Ajustes para botões de submenu */
 .submenu button {
     background: none;
     border: none;
