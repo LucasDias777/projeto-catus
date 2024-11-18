@@ -1,13 +1,11 @@
-import mysql from 'mysql2/promise';
+const { Sequelize } = require('sequelize');
 
-const pool = mysql.createPool({
-  host: 'localhost',
-  user: 'root',
-  password: 'tami3007',
-  database: 'striveflow',
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0,
+// Configuração da conexão
+const sequelize = new Sequelize('meu_banco', 'usuario', 'senha', {
+  host: '0.0.0.0', // Ou IP do servidor MySQL
+  dialect: 'mysql',  // Especifica o uso do MySQL
+  port: 3306,        // Porta padrão do MySQL
+  logging: true     // Desativa logs de SQL no console (opcional)
 });
 
-export default pool;
+module.exports = sequelize;

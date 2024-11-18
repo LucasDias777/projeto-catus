@@ -1,10 +1,11 @@
-import express from 'express';
-import router from './controllers/pessoaController.js';  // Importando o router corretamente
-import cors from 'cors';
-import path from 'path';
+const express = require('express');
+const router = require('./routes/cadastraralunoRoutes');  // Importando o router corretamente
+const cors = require('cors');
+const path = require('path');
+const sequelize = require('./database');
+const Pessoa = require('./models/Pessoa');
 
-// Usando import.meta.url para calcular o __dirname
-const __dirname = path.dirname(new URL(import.meta.url).pathname);
+// Usando __dirname diretamente
 
 const app = express();
 const PORT = 3001;
@@ -23,6 +24,8 @@ app.use(express.static(path.join(__dirname, '../frontend/build')));
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/build', 'index.html'));
 });
+
+Pessoa.sync()
 
 app.listen(PORT, () => {
   console.log(`Servidor rodando na porta ${PORT}`);
