@@ -1,9 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { useForm, Controller, useFieldArray } from 'react-hook-form';
-import { useNavigate } from 'react-router-dom';
-import { db } from '../firebaseConfig';
-import { collection, getDocs, addDoc, query, where, doc, getDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
 import styles from '../styles/PaginaTreino.module.css'; // Importa o CSS
 
 const PaginaTreino = () => {

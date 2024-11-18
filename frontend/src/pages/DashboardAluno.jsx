@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db } from '../firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Dashboard.module.css';
 
@@ -83,7 +81,7 @@ const DashboardAluno = () => {
           >
             Relatórios
             <ul className={`${styles.submenu} ${activeMenu === 'relatorios' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/relatorio-treinos')}>Treinos</button></li>
+              <li><button onClick={() => navigate('/relatorio-treinos')}>Relatório de Treinos</button></li>
             </ul>
           </li>
         </ul>

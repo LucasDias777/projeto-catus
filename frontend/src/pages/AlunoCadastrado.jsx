@@ -1,6 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { db, auth } from '../firebaseConfig';
-import { collection, getDocs, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/AlunoCadastrado.module.css';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
@@ -29,7 +27,7 @@ const AlunoCadastrado = () => {
 
       try {
         const professorId = user.uid;
-        const alunosRef = collection(db, 'pessoas');
+        const alunosRef = collection(db, 'pessoa');
         const querySnapshot = await getDocs(alunosRef);
         const alunosList = querySnapshot.docs
           .filter(doc => doc.data().professorId === professorId && doc.data().tipoPessoa === 'aluno')

@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, getDocs, query, where } from 'firebase/firestore';
+
 
 const RelatorioTreinos = ({ userId }) => {
   const [relatorio, setRelatorio] = useState([]);

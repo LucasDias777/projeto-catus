@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, doc, getDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Login.module.css'; // Certifique-se de que este arquivo contém o CSS atualizado
 
@@ -24,7 +22,7 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
-      // Obtém o documento do usuário na coleção 'pessoa' usando o userId (uid)
+      // Obtém o documento do usuário na coleção 'pessoas' usando o userId (uid)
       const userDocRef = doc(db, 'pessoas', user.uid);
       const userDoc = await getDoc(userDocRef);
 

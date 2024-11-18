@@ -1,21 +1,22 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './authContext'; // Importando o AuthProvider
-import CadastroProfessor from './components/CadastroProfessor';
-import Login from './components/Login';
-import DashboardProfessor from './components/DashboardProfessor';
-import DashboardAluno from './components/DashboardAluno';
-import CadastroEquipamento from './components/CadastroEquipamento';
-import CadastroSeries from './components/CadastroSeries';
-import CadastroRepeticoes from './components/CadastroRepeticoes';
-import CadastroTipoTreino from './components/CadastroTipoTreino';
-import VisualizarTreino from './components/VisualizarTreino';
-import RelatorioTreinos from './components/RelatorioTreinos';
-import PaginaTreino from './components/PaginaTreino';
-import CadastroAluno from './components/CadastroAluno';
-import AlunoCadastrado from './components/AlunoCadastrado';
-import RotasPrivadas from './components/RotasPrivadas';
-import LandingPage from './components/LandingPage'; // Importando o LandingPage
+import CadastroProfessor from './pages/CadastroProfessor';
+import Login from './pages/Login';
+import DashboardProfessor from './pages/DashboardProfessor';
+import DashboardAluno from './pages/DashboardAluno';
+import CadastroEquipamento from './pages/CadastroEquipamento';
+import CadastroSeries from './pages/CadastroSeries';
+import CadastroRepeticoes from './pages/CadastroRepeticoes';
+import CadastroTipoTreino from './pages/CadastroTipoTreino';
+import VisualizarTreino from './pages/VisualizarTreino';
+import RelatorioTreinos from './pages/RelatorioTreinos';
+import PaginaTreino from './pages/PaginaTreino';
+import CadastroAluno from './pages/CadastroAluno';
+import AlunoCadastrado from './pages/AlunoCadastrado';
+import RotasPrivadas from './pages/RotasPrivadas';
+import LandingPage from './pages/LandingPage'; // Importando o LandingPage
+
 
 function App() {
   return (

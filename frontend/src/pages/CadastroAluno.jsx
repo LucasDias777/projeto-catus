@@ -1,8 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { auth, db } from '../firebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { doc, setDoc } from 'firebase/firestore';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Cadastro.module.css';
 
@@ -21,8 +17,7 @@ const CadastroAluno = () => {
     email: '',
     senha: '',
     repetirSenha: '',
-    tipoPessoa: 'aluno'
-  });
+    tipoPessoa: 'aluno'   
 
   const [errorMessage, setErrorMessage] = useState(null);
   const [professorId, setProfessorId] = useState(null);

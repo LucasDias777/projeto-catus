@@ -1,7 +1,4 @@
 import React, { useEffect, useState } from 'react';
-import { db } from '../firebaseConfig';
-import { collection, getDocs, query, where, doc, getDoc } from 'firebase/firestore';
-import { getAuth } from 'firebase/auth';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/VisualizarTreino.module.css'; // Ajuste o caminho do CSS se necessário
 
