@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updateEmail, updatePassword } from 'firebase/auth';
 import { auth, db } from '../config/firebaseConfig'; // Ajuste o caminho conforme necessário
-import { AuthContext } from '../contexts/authContext';
-import styles from './EditarUsuario.module.css'; // Certifique-se de criar o arquivo CSS correspondente
+import { useAuth } from '../contexts/authContext';
+import styles from '../styles/EditarUsuario.module.css'; // Certifique-se de criar o arquivo CSS correspondente
 
 const EditarUsuario = () => {
   const [formData, setFormData] = useState({
@@ -26,15 +26,15 @@ const EditarUsuario = () => {
   const [originalEmail, setOriginalEmail] = useState('');
   const [error, setError] = useState(null);
   const [tipoPessoa, setTipoPessoa] = useState(null);
-  const { user } = useContext(AuthContext);
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!user) return;
+    if (!currentUser) return;
 
     const fetchUserData = async () => {
       try {
-        const userDoc = doc(db, 'Pessoa', user.uid);
+        const userDoc = doc(db, 'Pessoa', currentUser.uid);
         const userSnap = await getDoc(userDoc);
 
         if (userSnap.exists()) {
@@ -66,7 +66,7 @@ const EditarUsuario = () => {
     };
 
     fetchUserData();
-  }, [user]);
+  }, [currentUser]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -108,7 +108,7 @@ const EditarUsuario = () => {
     e.preventDefault();
 
     try {
-      const userDoc = doc(db, 'Pessoa', user.uid);
+      const userDoc = doc(db, 'Pessoa', currentUser.uid);
 
       await updateDoc(userDoc, {
         ...formData,

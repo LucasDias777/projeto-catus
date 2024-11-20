@@ -86,7 +86,7 @@ const DashboardAluno = () => {
           >
             Relatórios
             <ul className={`${styles.submenu} ${activeMenu === 'relatorios' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/relatorio-treinos')}>Relatório de Treinos</button></li>
+              <li><button onClick={() => navigate('/relatorio-treino')}>Relatório de Treinos</button></li>
             </ul>
           </li>
         </ul>

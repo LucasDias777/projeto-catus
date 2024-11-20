@@ -7,7 +7,7 @@ import styles from '../styles/Dashboard.module.css';
 
 const DashboardProfessor = () => {
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);  // Mantenha o loading como true até os dados serem carregados
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 767);
@@ -19,15 +19,13 @@ const DashboardProfessor = () => {
       try {
         const user = auth.currentUser;
         if (user) {
-          // Ajuste para buscar dados na coleção "Pessoa"
           const docRef = doc(db, 'Pessoa', user.uid);
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
             const data = docSnap.data();
-            // Verifica se o tipo de usuário é 'professor'
             if (data.tipo_pessoa === 'professor') {
-              setUserData(data); // Armazena os dados do professor
+              setUserData(data);
             } else {
               setError('Acesso negado. Tipo de usuário inválido.');
               navigate('/login');
@@ -42,7 +40,7 @@ const DashboardProfessor = () => {
       } catch (error) {
         setError('Erro ao buscar dados do usuário!');
       } finally {
-        setLoading(false);  // Define loading como false após a execução da função
+        setLoading(false);
       }
     };
 
@@ -71,9 +69,8 @@ const DashboardProfessor = () => {
     }
   };
 
-  // Garantir que a tela de carregamento ou erro seja exibida enquanto os dados não estão prontos
-  if (loading) return <p>Carregando...</p>;  // Exibe carregando até o estado estar pronto
-  if (error) return <p>{error}</p>;  // Exibe mensagem de erro caso ocorra algum erro
+  if (loading) return <p>Carregando...</p>;
+  if (error) return <p>{error}</p>;
 
   return (
     <div className={styles.dashboardPage}>
@@ -82,8 +79,8 @@ const DashboardProfessor = () => {
           <div className={styles.painelName}>Painel do Professor</div>
         </div>
         <ul className={styles.sidebarMenu}>
-          <li 
-            className={`${styles.menuItem} ${activeMenu === 'aluno' ? styles.active : ''}`} 
+          <li
+            className={`${styles.menuItem} ${activeMenu === 'aluno' ? styles.active : ''}`}
             onClick={() => toggleSubmenu('aluno')}
           >
             Aluno
@@ -92,26 +89,35 @@ const DashboardProfessor = () => {
               <li><button onClick={() => navigate('/aluno-cadastrado')}>Alunos Cadastrados</button></li>
             </ul>
           </li>
-          <li 
-            className={`${styles.menuItem} ${activeMenu === 'treino' ? styles.active : ''}`} 
+          <li
+            className={`${styles.menuItem} ${activeMenu === 'treino' ? styles.active : ''}`}
             onClick={() => toggleSubmenu('treino')}
           >
             Treino
             <ul className={`${styles.submenu} ${activeMenu === 'treino' ? styles.show : ''}`}>
               <li><button onClick={() => navigate('/cadastro-equipamento')}>Cadastrar Equipamento</button></li>
-              <li><button onClick={() => navigate('/cadastro-series')}>Cadastrar Séries</button></li>
-              <li><button onClick={() => navigate('/cadastro-repeticoes')}>Cadastrar Repetições</button></li>
-              <li><button onClick={() => navigate('/cadastro-tipo-treino')}>Cadastrar Tipo de Treino</button></li>
-              <li><button onClick={() => navigate('/Pagina-treino')}>Criar Treino</button></li>
+              <li><button onClick={() => navigate('/cadastro-serie')}>Cadastrar Séries</button></li>
+              <li><button onClick={() => navigate('/cadastro-repeticao')}>Cadastrar Repetições</button></li>
+              <li><button onClick={() => navigate('/cadastro-tipo')}>Cadastrar Tipo de Treino</button></li>
+              <li><button onClick={() => navigate('/cadastro-treino')}>Criar Treino</button></li>
             </ul>
           </li>
-          <li 
-            className={`${styles.menuItem} ${activeMenu === 'relatorio' ? styles.active : ''}`} 
+          <li
+            className={`${styles.menuItem} ${activeMenu === 'relatorio' ? styles.active : ''}`}
             onClick={() => toggleSubmenu('relatorio')}
           >
             Relatórios
             <ul className={`${styles.submenu} ${activeMenu === 'relatorio' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/relatorio-treinos')}>Relatório de Treinos</button></li>
+              <li><button onClick={() => navigate('/relatorio-treino')}>Relatório de Treinos</button></li>
+            </ul>
+          </li>
+          <li
+            className={`${styles.menuItem} ${activeMenu === 'perfil' ? styles.active : ''}`}
+            onClick={() => toggleSubmenu('perfil')}
+          >
+            Perfil
+            <ul className={`${styles.submenu} ${activeMenu === 'perfil' ? styles.show : ''}`}>
+              <li><button onClick={() => navigate('/editar-usuario')}>Editar Perfil</button></li>
             </ul>
           </li>
         </ul>
