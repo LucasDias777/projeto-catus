@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 import styles from '../styles/Dashboard.module.css';
 
 const DashboardAluno = () => {
@@ -8,47 +11,49 @@ const DashboardAluno = () => {
   const [error, setError] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const navigate = useNavigate();
+  const auth = getAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const user = auth.currentUser;
         if (user) {
-          const docRef = doc(db, 'pessoas', user.uid);
+          // Busca os dados na coleção "Pessoa"
+          const docRef = doc(db, 'Pessoa', user.uid);
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (data.tipoPessoa === 'aluno') {
-              setUserData(data);
+            if (data.tipo_pessoa === 'aluno') {
+              setUserData(data); // Armazena os dados do aluno
             } else {
               setError('Acesso negado. Tipo de usuário inválido.');
               navigate('/login');
             }
           } else {
-            setError('Documento não encontrado.');
+            setError('Usuário não encontrado.');
             navigate('/login');
           }
         } else {
           navigate('/login');
         }
       } catch (error) {
-        console.error("Erro ao buscar dados do usuário:", error);
-        setError('Erro ao buscar dados do usuário!');
+        console.error('Erro ao buscar dados do usuário:', error);
+        setError('Erro ao buscar os dados do usuário!');
       } finally {
         setLoading(false);
       }
     };
 
     fetchData();
-  }, [navigate]);
+  }, [navigate, auth]);
 
   const handleLogout = async () => {
     try {
       await auth.signOut();
       navigate('/login');
     } catch (error) {
-      console.error("Erro ao encerrar sessão:", error);
+      console.error('Erro ao encerrar sessão:', error);
     }
   };
 
@@ -89,7 +94,7 @@ const DashboardAluno = () => {
       <div className={styles.mainContent}>
         <div className={styles.topbar}>
           <div className={styles.topbarContent}>
-            <div className={styles.welcomeText}>Bem-vindo, {userData?.nomeCompleto}</div>
+            <div className={styles.welcomeText}>Bem-vindo, {userData?.nome_completo}</div>
             <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
           </div>
         </div>

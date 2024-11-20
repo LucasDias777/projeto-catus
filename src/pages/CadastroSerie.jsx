@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../authContext'; // Importando o contexto de autenticação
+import { useAuth } from '../contexts/authContext'; // Importando o contexto de autenticação
+import { db } from '../config/firebaseConfig'; // Importa a configuração do Firebase
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, query, where, onSnapshot, doc, serverTimestamp } from 'firebase/firestore';
+import styles from '../styles/Serie.module.css';
 
-const CadastroSeries = () => {
+const CadastroSerie = () => {
   const [numeroSeries, setNumeroSeries] = useState('');
   const [series, setSeries] = useState([]);
   const [editId, setEditId] = useState(null);
@@ -11,25 +14,16 @@ const CadastroSeries = () => {
   const { currentUser } = useAuth(); // Obtendo o usuário atual
 
   useEffect(() => {
-    if (!currentUser) return; // Garantir que o usuário esteja logado antes de buscar os dados
+    if (!currentUser) return;
 
-    const fetchSeries = async () => {
-      try {
-        // Consulta para buscar séries associadas ao professor logado
-        const q = query(collection(db, 'series'), where('professorId', '==', currentUser.uid));
-        const querySnapshot = await getDocs(q);
-        const seriesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        setSeries(seriesList);
-      } catch (error) {
-        console.error('Erro ao buscar séries:', error);
-      }
-    };
-
-    // Real-time listener para atualizações na coleção 'series', filtrado pelo professorId
+    // Listener para atualizações em tempo real
     const unsubscribe = onSnapshot(
-      query(collection(db, 'series'), where('professorId', '==', currentUser.uid)),
+      query(collection(db, 'Serie'), where('id_professor', '==', currentUser.uid)), // Corrigido para 'id_professor'
       (snapshot) => {
-        const updatedSeries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const updatedSeries = snapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setSeries(updatedSeries);
       },
       (error) => {
@@ -37,52 +31,51 @@ const CadastroSeries = () => {
       }
     );
 
-    fetchSeries();
-
-    return () => unsubscribe(); // Cleanup na desmontagem do componente
+    return () => unsubscribe(); // Cleanup ao desmontar o componente
   }, [currentUser]);
 
   const handleAdd = async (e) => {
     e.preventDefault();
     if (!currentUser) {
-      alert('Você precisa estar logado para cadastrar uma série');
+      alert('Você precisa estar logado para cadastrar uma série.');
       return;
     }
 
     try {
-      await addDoc(collection(db, 'series'), {
-        numeroSeries,
-        professorId: currentUser.uid // Associando a série ao professor que a criou
+      await addDoc(collection(db, 'Serie'), {
+        nome: numeroSeries,
+        id_professor: currentUser.uid, // Associando a série ao professor que a criou
+        data_criacao: serverTimestamp(), // Adicionando data de criação
       });
       alert('Série cadastrada com sucesso!');
       setNumeroSeries('');
     } catch (error) {
       console.error('Erro ao cadastrar série:', error);
-      alert('Erro ao cadastrar série');
+      alert('Erro ao cadastrar série.');
     }
   };
 
   const handleEdit = async (id) => {
     try {
-      const docRef = doc(db, 'series', id);
-      await updateDoc(docRef, { numeroSeries: editNumeroSeries });
+      const docRef = doc(db, 'Serie', id);
+      await updateDoc(docRef, { nome: editNumeroSeries });
       alert('Série atualizada com sucesso!');
       setEditId(null);
       setEditNumeroSeries('');
     } catch (error) {
       console.error('Erro ao atualizar série:', error);
-      alert('Erro ao atualizar série');
+      alert('Erro ao atualizar série.');
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Você tem certeza que deseja excluir esta série?')) {
       try {
-        await deleteDoc(doc(db, 'series', id));
+        await deleteDoc(doc(db, 'Serie', id));
         alert('Série removida com sucesso!');
       } catch (error) {
         console.error('Erro ao remover série:', error);
-        alert('Erro ao remover série');
+        alert('Erro ao remover série.');
       }
     }
   };
@@ -100,9 +93,9 @@ const CadastroSeries = () => {
         />
         <button type="submit">Cadastrar Séries</button>
       </form>
-      
+
       <h3>Séries Cadastradas:</h3>
-      {series.map(s => (
+      {series.map((s) => (
         <div key={s.id}>
           {editId === s.id ? (
             <div>
@@ -117,8 +110,15 @@ const CadastroSeries = () => {
             </div>
           ) : (
             <div>
-              <span>{s.numeroSeries}</span>
-              <button onClick={() => { setEditId(s.id); setEditNumeroSeries(s.numeroSeries); }}>Editar</button>
+              <span>{s.nome}</span>
+              <button
+                onClick={() => {
+                  setEditId(s.id);
+                  setEditNumeroSeries(s.nome);
+                }}
+              >
+                Editar
+              </button>
               <button onClick={() => handleDelete(s.id)}>Remover</button>
             </div>
           )}
@@ -129,4 +129,4 @@ const CadastroSeries = () => {
   );
 };
 
-export default CadastroSeries;
+export default CadastroSerie;

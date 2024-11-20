@@ -1,8 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../authContext'; // Importando o contexto de autenticação
+import { useAuth } from '../contexts/authContext'; // Importando o contexto de autenticação
+import { db } from '../config/firebaseConfig'; // Importa a configuração do Firebase
+import { collection, addDoc, getDocs, updateDoc, deleteDoc, query, where, doc, serverTimestamp } from 'firebase/firestore';
+import styles from '../styles/Repeticao.module.css';
 
-const CadastroRepeticoes = () => {
+const CadastroRepeticao = () => {
   const [numeroRepeticoes, setNumeroRepeticoes] = useState('');
   const [repeticoes, setRepeticoes] = useState([]);
   const [editId, setEditId] = useState(null);
@@ -14,15 +17,20 @@ const CadastroRepeticoes = () => {
     const fetchRepeticoes = async () => {
       if (!currentUser) return;
 
-      // Filtrar as repetições pelo professorId (userId do professor logado)
-      const q = query(
-        collection(db, 'repeticoes'),
-        where('professorId', '==', currentUser.uid)
-      );
-
-      const querySnapshot = await getDocs(q);
-      const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      setRepeticoes(repeticoesList);
+      try {
+        const q = query(
+          collection(db, 'Repeticao'),
+          where('id_professor', '==', currentUser.uid)
+        );
+        const querySnapshot = await getDocs(q);
+        const repeticoesList = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setRepeticoes(repeticoesList);
+      } catch (error) {
+        console.error('Erro ao buscar repetições:', error);
+      }
     };
 
     fetchRepeticoes();
@@ -36,66 +44,76 @@ const CadastroRepeticoes = () => {
     }
 
     try {
-      await addDoc(collection(db, 'repeticoes'), {
-        numeroRepeticoes,
-        professorId: currentUser.uid // Associando a repetição ao professor que a criou
+      await addDoc(collection(db, 'Repeticao'), {
+        nome: numeroRepeticoes,
+        id_professor: currentUser.uid,
+        data_criacao: serverTimestamp(),
       });
       alert('Repetição cadastrada com sucesso!');
       setNumeroRepeticoes('');
 
-      // Atualizando a lista de repetições após adicionar uma nova
+      // Atualizar lista de repetições
       const q = query(
-        collection(db, 'repeticoes'),
-        where('professorId', '==', currentUser.uid)
+        collection(db, 'Repeticao'),
+        where('id_professor', '==', currentUser.uid)
       );
       const querySnapshot = await getDocs(q);
-      const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const repeticoesList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setRepeticoes(repeticoesList);
     } catch (error) {
-      console.error('Erro ao cadastrar repetições:', error);
-      alert('Erro ao cadastrar repetições');
+      console.error('Erro ao cadastrar repetição:', error);
+      alert('Erro ao cadastrar repetição.');
     }
   };
 
   const handleEdit = async (id) => {
     try {
-      const docRef = doc(db, 'repeticoes', id);
-      await updateDoc(docRef, { numeroRepeticoes: editNumeroRepeticoes });
+      const docRef = doc(db, 'Repeticao', id);
+      await updateDoc(docRef, { nome: editNumeroRepeticoes });
       alert('Repetição atualizada com sucesso!');
       setEditId(null);
       setEditNumeroRepeticoes('');
 
-      // Atualizando a lista de repetições após editar uma existente
+      // Atualizar lista de repetições
       const q = query(
-        collection(db, 'repeticoes'),
-        where('professorId', '==', currentUser.uid)
+        collection(db, 'Repeticao'),
+        where('id_professor', '==', currentUser.uid)
       );
       const querySnapshot = await getDocs(q);
-      const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      const repeticoesList = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
       setRepeticoes(repeticoesList);
     } catch (error) {
-      console.error('Erro ao atualizar repetições:', error);
-      alert('Erro ao atualizar repetições');
+      console.error('Erro ao atualizar repetição:', error);
+      alert('Erro ao atualizar repetição.');
     }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Você tem certeza que deseja excluir esta repetição?')) {
       try {
-        await deleteDoc(doc(db, 'repeticoes', id));
+        await deleteDoc(doc(db, 'Repeticao', id));
         alert('Repetição removida com sucesso!');
 
-        // Atualizando a lista de repetições após deletar uma
+        // Atualizar lista de repetições
         const q = query(
-          collection(db, 'repeticoes'),
-          where('professorId', '==', currentUser.uid)
+          collection(db, 'Repeticao'),
+          where('id_professor', '==', currentUser.uid)
         );
         const querySnapshot = await getDocs(q);
-        const repeticoesList = querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const repeticoesList = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
         setRepeticoes(repeticoesList);
       } catch (error) {
-        console.error('Erro ao remover repetições:', error);
-        alert('Erro ao remover repetições');
+        console.error('Erro ao remover repetição:', error);
+        alert('Erro ao remover repetição.');
       }
     }
   };
@@ -113,9 +131,9 @@ const CadastroRepeticoes = () => {
         />
         <button type="submit">Cadastrar Repetições</button>
       </form>
-      
+
       <h3>Repetições Cadastradas:</h3>
-      {repeticoes.map(r => (
+      {repeticoes.map((r) => (
         <div key={r.id}>
           {editId === r.id ? (
             <div>
@@ -130,8 +148,15 @@ const CadastroRepeticoes = () => {
             </div>
           ) : (
             <div>
-              <span>{r.numeroRepeticoes}</span>
-              <button onClick={() => { setEditId(r.id); setEditNumeroRepeticoes(r.numeroRepeticoes); }}>Editar</button>
+              <span>{r.nome}</span>
+              <button
+                onClick={() => {
+                  setEditId(r.id);
+                  setEditNumeroRepeticoes(r.nome);
+                }}
+              >
+                Editar
+              </button>
               <button onClick={() => handleDelete(r.id)}>Remover</button>
             </div>
           )}
@@ -142,4 +167,4 @@ const CadastroRepeticoes = () => {
   );
 };
 
-export default CadastroRepeticoes;
+export default CadastroRepeticao;

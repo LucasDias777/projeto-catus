@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import styles from '../styles/Cadastro.module.css'; // Importa como módulo CSS
+import { db, auth } from '../config/firebaseConfig'; // Importa Firebase Auth e Firestore
+import { collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import styles from '../styles/Cadastro.module.css';
 
 const CadastroProfessor = () => {
   const [formData, setFormData] = useState({
@@ -13,15 +15,15 @@ const CadastroProfessor = () => {
     uf: '',
     endereco: '',
     numero_casa: '',
-    complemento: '',
     bairro: '',
+    complemento: '',
     telefone: '',
     email: '',
     senha: '',
     tipo_pessoa: 'professor',
   });
 
-  const [error, setError] = useState(null); // Estado para armazenar mensagens de erro
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -84,14 +86,20 @@ const CadastroProfessor = () => {
     }
 
     try {
-      const response = await axios.post('http://localhost:5000/cadastrar', formData);
+      // Cria o usuário no Firebase Authentication
+      await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
 
-      if (response.status === 200) {
-        alert('Usuário cadastrado com sucesso!');
-        navigate('/login');
-      } else {
-        throw new Error('Erro no cadastro.');
-      }
+      // Adiciona o professor na coleção Firestore
+      const docRef = await addDoc(collection(db, 'Pessoa'), {
+        ...formData,
+        data_criacao: serverTimestamp(),
+      });
+
+      // Atualiza o documento para incluir o id_professor
+      await updateDoc(docRef, { id_professor: docRef.id });
+
+      alert('Usuário cadastrado com sucesso!');
+      navigate('/login');
     } catch (error) {
       console.error('Erro ao cadastrar usuário:', error);
       setError('Erro ao cadastrar usuário. Tente novamente.');
@@ -106,16 +114,30 @@ const CadastroProfessor = () => {
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
             <label>Nome Completo</label>
-            <input type="text" name="nome_completo" value={formData.nome_completo} onChange={handleChange} required />
+            <input
+              type="text"
+              name="nome_completo"
+              value={formData.nome_completo}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Data de Nascimento</label>
-            <input type="date" name="data_nascimento" value={formData.data_nascimento} onChange={handleChange} required />
+            <input
+              type="date"
+              name="data_nascimento"
+              value={formData.data_nascimento}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Gênero</label>
             <select name="genero" value={formData.genero} onChange={handleChange} required>
-              <option value="" disabled>Selecione</option>
+              <option value="" disabled>
+                Selecione
+              </option>
               <option value="Masculino">Masculino</option>
               <option value="Feminino">Feminino</option>
               <option value="Outros">Outros</option>
@@ -123,47 +145,110 @@ const CadastroProfessor = () => {
           </div>
           <div className={styles.formGroup}>
             <label>CEP</label>
-            <input type="text" name="cep" value={formData.cep} onChange={handleCepChange} required />
+            <input
+              type="text"
+              name="cep"
+              value={formData.cep}
+              onChange={handleCepChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Cidade</label>
-            <input type="text" name="cidade" value={formData.cidade} onChange={handleChange} required />
+            <input
+              type="text"
+              name="cidade"
+              value={formData.cidade}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>UF</label>
-            <input type="text" name="uf" value={formData.uf} onChange={handleChange} required />
+            <input
+              type="text"
+              name="uf"
+              value={formData.uf}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Endereço</label>
-            <input type="text" name="endereco" value={formData.endereco} onChange={handleChange} required />
+            <input
+              type="text"
+              name="endereco"
+              value={formData.endereco}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
-            <label>Número</label>
-            <input type="text" name="numero_casa" value={formData.numero_casa} onChange={handleChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Complemento</label>
-            <input type="text" name="complemento" value={formData.complemento} onChange={handleChange} />
+            <label>Número da Residência</label>
+            <input
+              type="text"
+              name="numero_casa"
+              value={formData.numero_casa}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Bairro</label>
-            <input type="text" name="bairro" value={formData.bairro} onChange={handleChange} required />
+            <input
+              type="text"
+              name="bairro"
+              value={formData.bairro}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label>Complemento</label>
+            <input
+              type="text"
+              name="complemento"
+              value={formData.complemento}
+              onChange={handleChange}
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Telefone</label>
-            <input type="text" name="telefone" value={formData.telefone} onChange={handleTelefoneChange} required />
+            <input
+              type="text"
+              name="telefone"
+              value={formData.telefone}
+              onChange={handleTelefoneChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>E-mail</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} required />
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
           </div>
           <div className={styles.formGroup}>
             <label>Senha</label>
-            <input type="password" name="senha" value={formData.senha} onChange={handleChange} required />
+            <input
+              type="password"
+              name="senha"
+              value={formData.senha}
+              onChange={handleChange}
+              required
+            />
           </div>
-          <button type="submit" className={styles.submitButton}>Cadastrar</button>
+          <button type="submit" className={styles.submitButton}>
+            Cadastrar
+          </button>
         </form>
-        <button onClick={() => navigate('/login')} className={styles.backButton}>Voltar</button>
+        <button onClick={() => navigate('/login')} className={styles.backButton}>
+          Voltar
+        </button>
       </div>
     </div>
   );

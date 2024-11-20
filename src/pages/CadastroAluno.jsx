@@ -1,37 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Cadastro.module.css';
+import { auth, db } from '../config/firebaseConfig'; // Certifique-se de ter configurado seu Firebase corretamente
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../contexts/authContext'; // Contexto de autenticação
 
 const CadastroAluno = () => {
   const [formData, setFormData] = useState({
-    nomeCompleto: '',
-    dataNascimento: '',
+    nome_completo: '',
+    data_nascimento: '',
     genero: '',
     cep: '',
     cidade: '',
     uf: '',
     endereco: '',
-    numeroCasa: '',
+    numero_casa: '',
     bairro: '',
+    complemento: '',
     telefone: '',
     email: '',
     senha: '',
-    repetirSenha: '',
-    tipoPessoa: 'aluno'   
-
+    tipo_pessoa: 'aluno',
+  });
   const [errorMessage, setErrorMessage] = useState(null);
   const [professorId, setProfessorId] = useState(null);
   const navigate = useNavigate();
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((user) => {
       if (user) {
         setProfessorId(user.uid);
+      } else {
+        navigate('/login');
       }
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -54,7 +61,7 @@ const CadastroAluno = () => {
             cidade: data.localidade,
             uf: data.uf,
             endereco: data.logradouro,
-            bairro: data.bairro
+            bairro: data.bairro,
           }));
         } else {
           alert('CEP inválido!');
@@ -68,57 +75,34 @@ const CadastroAluno = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (formData.senha !== formData.repetirSenha) {
-      setErrorMessage('As senhas não coincidem!');
-      return;
-    }
-
     try {
-      const professorEmail = auth.currentUser.email; // Salva email do professor
-      //const professorPassword = 123456;//auth.currentUser.senha;
-      const professorPassword = prompt('Digite sua senha para confirmar o cadastro:'); 
+      // Cadastro do aluno no Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
       const user = userCredential.user;
 
-      await setDoc(doc(db, 'pessoas', user.uid), {
-        nomeCompleto: formData.nomeCompleto,
-        dataNascimento: formData.dataNascimento,
+      // Registro do aluno na coleção "Pessoa"
+      await setDoc(doc(db, 'Pessoa', user.uid), {
+        nome_completo: formData.nome_completo,
+        data_nascimento: formData.data_nascimento,
         genero: formData.genero,
-        cep: Number(formData.cep.replace('-', '')),
+        cep: formData.cep,
         cidade: formData.cidade,
         uf: formData.uf,
         endereco: formData.endereco,
-        numeroCasa: Number(formData.numeroCasa),
+        numero_casa: formData.numero_casa,
         bairro: formData.bairro,
+        complemento: formData.complemento,
         telefone: formData.telefone,
         email: formData.email,
-        tipoPessoa: formData.tipoPessoa,
-        userId: user.uid,
-        professorId: professorId
+        tipo_pessoa: formData.tipo_pessoa,
+        id_user: user.uid,
+        id_professor: professorId,
+        id_aluno: user.uid,
+        data_criacao: serverTimestamp(), // Salvando a data de criação com o nome 'data_criacao'
       });
-      await signInWithEmailAndPassword(auth, professorEmail, professorPassword);
-      alert('Aluno cadastrado com sucesso!');
-    
-      
-      
-      setFormData({
-        nomeCompleto: '',
-        dataNascimento: '',
-        genero: '',
-        cep: '',
-        cidade: '',
-        uf: '',
-        endereco: '',
-        numeroCasa: '',
-        bairro: '',
-        telefone: '',
-        email: '',
-        senha: '',
-        repetirSenha: '',
-        tipoPessoa: 'aluno'
-      });
-      setErrorMessage(null);
 
+      alert('Aluno cadastrado com sucesso!');
+      navigate('/dashboard-professor');
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error.message);
       setErrorMessage(`Erro ao cadastrar aluno: ${error.message}`);
@@ -126,12 +110,7 @@ const CadastroAluno = () => {
   };
 
   const handleBack = () => {
-    if (auth.currentUser) {
-      navigate('/dashboard-professor');
-    } else {
-      // Forçar redirecionamento para o dashboard mesmo sem autenticação
-      navigate('/dashboard-professor');
-    }
+    navigate('/dashboard-professor');
   };
 
   return (
@@ -144,9 +123,9 @@ const CadastroAluno = () => {
             <label>Nome Completo</label>
             <input
               type="text"
-              name="nomeCompleto"
+              name="nome_completo"
               placeholder="Nome Completo"
-              value={formData.nomeCompleto}
+              value={formData.nome_completo}
               onChange={handleChange}
               required
             />
@@ -155,8 +134,8 @@ const CadastroAluno = () => {
             <label>Data de Nascimento</label>
             <input
               type="date"
-              name="dataNascimento"
-              value={formData.dataNascimento}
+              name="data_nascimento"
+              value={formData.data_nascimento}
               onChange={handleChange}
               required
             />
@@ -178,7 +157,6 @@ const CadastroAluno = () => {
               placeholder="CEP"
               value={formData.cep}
               onChange={handleCepChange}
-              onBlur={handleCepChange}
               required
             />
           </div>
@@ -219,9 +197,9 @@ const CadastroAluno = () => {
             <label>Número da Residência</label>
             <input
               type="text"
-              name="numeroCasa"
+              name="numero_casa"
               placeholder="Número da Residência"
-              value={formData.numeroCasa}
+              value={formData.numero_casa}
               onChange={handleChange}
               required
             />
@@ -235,6 +213,16 @@ const CadastroAluno = () => {
               value={formData.bairro}
               onChange={handleChange}
               required
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label>Complemento</label>
+            <input
+              type="text"
+              name="complemento"
+              placeholder="Complemento"
+              value={formData.complemento}
+              onChange={handleChange}
             />
           </div>
           <div className={styles.formGroup}>
@@ -266,17 +254,6 @@ const CadastroAluno = () => {
               name="senha"
               placeholder="Senha"
               value={formData.senha}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Confirme sua senha</label>
-            <input
-              type="password"
-              name="repetirSenha"
-              placeholder="Confirme sua senha"
-              value={formData.repetirSenha}
               onChange={handleChange}
               required
             />

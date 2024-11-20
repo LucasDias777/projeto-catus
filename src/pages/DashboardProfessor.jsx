@@ -1,27 +1,33 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { getAuth } from 'firebase/auth';
+import { doc, getDoc } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
 import styles from '../styles/Dashboard.module.css';
 
 const DashboardProfessor = () => {
   const [userData, setUserData] = useState(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true);  // Mantenha o loading como true até os dados serem carregados
   const [error, setError] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 767);
   const navigate = useNavigate();
+  const auth = getAuth();
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const user = auth.currentUser;
         if (user) {
-          const docRef = doc(db, 'pessoas', user.uid);
+          // Ajuste para buscar dados na coleção "Pessoa"
+          const docRef = doc(db, 'Pessoa', user.uid);
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
             const data = docSnap.data();
-            if (data.tipoPessoa === 'professor') {
-              setUserData(data);
+            // Verifica se o tipo de usuário é 'professor'
+            if (data.tipo_pessoa === 'professor') {
+              setUserData(data); // Armazena os dados do professor
             } else {
               setError('Acesso negado. Tipo de usuário inválido.');
               navigate('/login');
@@ -36,12 +42,12 @@ const DashboardProfessor = () => {
       } catch (error) {
         setError('Erro ao buscar dados do usuário!');
       } finally {
-        setLoading(false);
+        setLoading(false);  // Define loading como false após a execução da função
       }
     };
 
     fetchData();
-  }, [navigate]);
+  }, [navigate, auth]);
 
   useEffect(() => {
     const handleResize = () => {
@@ -61,12 +67,13 @@ const DashboardProfessor = () => {
       await auth.signOut();
       navigate('/login');
     } catch (error) {
-      console.error("Erro ao deslogar:", error);
+      console.error('Erro ao deslogar:', error);
     }
   };
 
-  if (loading) return <p>Carregando...</p>;
-  if (error) return <p>{error}</p>;
+  // Garantir que a tela de carregamento ou erro seja exibida enquanto os dados não estão prontos
+  if (loading) return <p>Carregando...</p>;  // Exibe carregando até o estado estar pronto
+  if (error) return <p>{error}</p>;  // Exibe mensagem de erro caso ocorra algum erro
 
   return (
     <div className={styles.dashboardPage}>
@@ -112,11 +119,10 @@ const DashboardProfessor = () => {
       <div className={styles.mainContent}>
         <div className={styles.topbar}>
           <div className={styles.topbarContent}>
-            <div className={styles.welcomeText}>Bem-vindo, {userData?.nomeCompleto}</div>
+            <div className={styles.welcomeText}>Bem-vindo, {userData?.nome_completo}</div>
             <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
           </div>
         </div>
-        {/* Conteúdo principal do dashboard */}
       </div>
     </div>
   );

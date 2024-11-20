@@ -1,17 +1,17 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './authContext'; // Importando o AuthProvider
+import { AuthProvider, useAuth } from './contexts/authContext';
 import CadastroProfessor from './pages/CadastroProfessor';
 import Login from './pages/Login';
 import DashboardProfessor from './pages/DashboardProfessor';
 import DashboardAluno from './pages/DashboardAluno';
 import CadastroEquipamento from './pages/CadastroEquipamento';
-import CadastroSeries from './pages/CadastroSeries';
-import CadastroRepeticoes from './pages/CadastroRepeticoes';
-import CadastroTipoTreino from './pages/CadastroTipoTreino';
+import CadastroSeries from './pages/CadastroSerie';
+import CadastroRepeticoes from './pages/CadastroRepeticao';
+import CadastroTipoTreino from './pages/CadastroTipo';
 import VisualizarTreino from './pages/VisualizarTreino';
-import RelatorioTreinos from './pages/RelatorioTreinos';
-import PaginaTreino from './pages/PaginaTreino';
+import RelatorioTreinos from './pages/RelatorioTreino';
+import PaginaTreino from './pages/CadastroTreino';
 import CadastroAluno from './pages/CadastroAluno';
 import AlunoCadastrado from './pages/AlunoCadastrado';
 import RotasPrivadas from './pages/RotasPrivadas';
