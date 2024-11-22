@@ -89,6 +89,16 @@ const DashboardAluno = () => {
               <li><button onClick={() => navigate('/relatorio-treino')}>Relatório de Treinos</button></li>
             </ul>
           </li>
+          <li
+            className={`${styles.menuItem} ${activeMenu === 'perfil' ? styles.active : ''}`}
+            onClick={() => toggleMenu('perfil')}
+          >
+            Perfil
+            <ul className={`${styles.submenu} ${activeMenu === 'perfil' ? styles.show : ''}`}>
+              <li><button onClick={() => navigate('/editar-usuario')}>Editar Perfil</button></li>
+            </ul>
+          </li>
+          
         </ul>
       </div>
       <div className={styles.mainContent}>

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { doc, getDoc, updateDoc } from 'firebase/firestore';
 import { updateEmail, updatePassword } from 'firebase/auth';
-import { auth, db } from '../config/firebaseConfig'; // Ajuste o caminho conforme necessário
+import { auth, db } from '../config/firebaseConfig';
 import { useAuth } from '../contexts/authContext';
-import styles from '../styles/EditarUsuario.module.css'; // Certifique-se de criar o arquivo CSS correspondente
+import styles from '../styles/EditarUsuario.module.css';
 
 const EditarUsuario = () => {
   const [formData, setFormData] = useState({
@@ -24,8 +24,8 @@ const EditarUsuario = () => {
   });
 
   const [originalEmail, setOriginalEmail] = useState('');
+  const [originalSenha, setOriginalSenha] = useState('');
   const [error, setError] = useState(null);
-  const [tipoPessoa, setTipoPessoa] = useState(null);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
 
@@ -40,6 +40,7 @@ const EditarUsuario = () => {
         if (userSnap.exists()) {
           const data = userSnap.data();
           setFormData({
+            ...formData,
             nome_completo: data.nome_completo || '',
             data_nascimento: data.data_nascimento || '',
             genero: data.genero || '',
@@ -52,10 +53,10 @@ const EditarUsuario = () => {
             complemento: data.complemento || '',
             telefone: data.telefone || '',
             email: data.email || '',
-            senha: '', // Não carregar senha por segurança
+            senha: data.senha || '', // Preencher o campo de senha com a senha atual
           });
           setOriginalEmail(data.email || '');
-          setTipoPessoa(data.tipo_pessoa || null);
+          setOriginalSenha(data.senha || '');
         } else {
           setError('Dados do usuário não encontrados.');
         }
@@ -72,13 +73,8 @@ const EditarUsuario = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleTelefoneChange = (e) => {
-    const telefone = e.target.value;
-    setFormData({ ...formData, telefone });
-  };
-  
   const handleCepChange = async (e) => {
-    const cep = e.target.value;
+    const cep = e.target.value.replace(/\D/g, '');
     setFormData({ ...formData, cep });
 
     if (cep.length === 8) {
@@ -104,17 +100,25 @@ const EditarUsuario = () => {
     }
   };
 
+  const handleTelefoneChange = (e) => {
+    let telefone = e.target.value.replace(/\D/g, '');
+    if (telefone.length > 11) {
+      telefone = telefone.slice(0, 11);
+    }
+    if (telefone.length > 6) {
+      telefone = `(${telefone.slice(0, 2)}) ${telefone.slice(2, 7)}-${telefone.slice(7, 11)}`;
+    } else if (telefone.length > 2) {
+      telefone = `(${telefone.slice(0, 2)}) ${telefone.slice(2)}`;
+    }
+    setFormData({ ...formData, telefone });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
 
     try {
       const userDoc = doc(db, 'Pessoa', currentUser.uid);
-
-      await updateDoc(userDoc, {
-        ...formData,
-        senha: undefined, // Não salvar a senha no Firestore
-      });
-
       let requiresReLogin = false;
 
       if (formData.email !== originalEmail) {
@@ -122,10 +126,13 @@ const EditarUsuario = () => {
         requiresReLogin = true;
       }
 
-      if (formData.senha) {
+      if (formData.senha && formData.senha !== originalSenha) {
         await updatePassword(auth.currentUser, formData.senha);
         requiresReLogin = true;
       }
+
+      // Atualizar no Firestore
+      await updateDoc(userDoc, { ...formData });
 
       if (requiresReLogin) {
         alert('As alterações foram salvas com sucesso. Por favor, faça login novamente.');
@@ -141,13 +148,7 @@ const EditarUsuario = () => {
   };
 
   const handleBackToDashboard = () => {
-    if (tipoPessoa === 'professor') {
-      navigate('/dashboard-professor');
-    } else if (tipoPessoa === 'aluno') {
-      navigate('/dashboard-aluno');
-    } else {
-      navigate('/');
-    }
+    navigate('/');
   };
 
   return (
@@ -201,7 +202,7 @@ const EditarUsuario = () => {
             <input type="text" name="endereco" value={formData.endereco} onChange={handleChange} required />
           </div>
           <div className={styles.formGroup}>
-            <label>Número</label>
+            <label>Número da Residência </label>
             <input type="text" name="numero_casa" value={formData.numero_casa} onChange={handleChange} required />
           </div>
           <div className={styles.formGroup}>

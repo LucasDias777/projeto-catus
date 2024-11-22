@@ -101,7 +101,7 @@ const RelatorioTreino = ({ userId }) => {
             type="text"
             value={filtroAluno}
             onChange={(e) => setFiltroAluno(e.target.value)}
-            placeholder="ID do Aluno"
+            placeholder="Nome do Aluno"
           />
         </label>
         <label>

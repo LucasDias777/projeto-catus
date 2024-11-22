@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { db, auth } from '../config/firebaseConfig'; // Importa Firebase Auth e Firestore
-import { collection, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { collection, doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import styles from '../styles/Cadastro.module.css';
 
 const CadastroProfessor = () => {
@@ -26,10 +26,12 @@ const CadastroProfessor = () => {
   const [error, setError] = useState(null);
   const navigate = useNavigate();
 
+  // Atualiza os campos do formulário conforme o usuário digita
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Formata o CEP e faz a busca na API ViaCEP
   const handleCepChange = async (e) => {
     let cep = e.target.value.replace(/\D/g, '');
     if (cep.length > 5) {
@@ -59,6 +61,7 @@ const CadastroProfessor = () => {
     }
   };
 
+  // Formata o telefone
   const handleTelefoneChange = (e) => {
     let telefone = e.target.value.replace(/\D/g, '');
     if (telefone.length > 11) {
@@ -72,11 +75,13 @@ const CadastroProfessor = () => {
     setFormData({ ...formData, telefone });
   };
 
+  // Valida o formato do e-mail
   const isEmailValid = (email) => {
     const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailPattern.test(email);
   };
 
+  // Submissão do formulário
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -86,23 +91,44 @@ const CadastroProfessor = () => {
     }
 
     try {
-      // Cria o usuário no Firebase Authentication
-      await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
+      // Cria o professor no Firebase Auth
+      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
+      const user = userCredential.user;
+      console.log('Usuário criado no Firebase Auth com sucesso:', user.uid);
 
-      // Adiciona o professor na coleção Firestore
-      const docRef = await addDoc(collection(db, 'Pessoa'), {
+      // Cria o professor na coleção Firestore usando o uid do Firebase Auth
+      const pessoaRef = doc(collection(db, 'Pessoa'), user.uid); // Usando o UID do Firebase Auth para definir o ID no Firestore
+      await setDoc(pessoaRef, {
         ...formData,
+        id_professor: user.uid, // Definindo o id_professor como o UID gerado
         data_criacao: serverTimestamp(),
       });
 
-      // Atualiza o documento para incluir o id_professor
-      await updateDoc(docRef, { id_professor: docRef.id });
+      console.log('Professor cadastrado no Firestore com sucesso.');
 
+      // Sucesso, redireciona para login
       alert('Usuário cadastrado com sucesso!');
       navigate('/login');
     } catch (error) {
       console.error('Erro ao cadastrar usuário:', error);
-      setError('Erro ao cadastrar usuário. Tente novamente.');
+
+      // Exibe mensagem de erro dependendo do tipo de falha
+      if (error.code === 'auth/email-already-in-use') {
+        setError('Este e-mail já está em uso. Tente outro.');
+      } else if (error.code === 'auth/weak-password') {
+        setError('A senha fornecida é muito fraca.');
+      } else {
+        setError('Erro ao cadastrar usuário. Tente novamente.');
+      }
+
+      // Rollback no caso de falha
+      if (auth.currentUser) {
+        try {
+          await deleteUser(auth.currentUser);
+        } catch (deleteError) {
+          console.error('Erro ao excluir usuário no Firebase Auth:', deleteError);
+        }
+      }
     }
   };
 

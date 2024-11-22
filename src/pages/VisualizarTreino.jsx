@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, addDoc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig'; // Certifique-se de importar corretamente
 import { useAuth } from '../contexts/authContext'; // Importa o hook de autenticação
 import styles from '../styles/VisualizarTreino.module.css'; // Ajuste o caminho se necessário
@@ -50,7 +50,7 @@ const VisualizarTreino = () => {
         id_treino: treinoId,
         id_aluno: currentUser.uid,
         id_professor: treinos.find(treino => treino.id === treinoId)?.id_professor || '',
-        data_inicio: new Date().toISOString(),
+        data_inicio: serverTimestamp(),
         data_termino: null
       };
 
@@ -68,7 +68,7 @@ const VisualizarTreino = () => {
     try {
       const treinoTempoRef = doc(db, 'Treino_Tempo', inProgress);
       await updateDoc(treinoTempoRef, {
-        data_termino: new Date().toISOString(),
+        data_termino: serverTimestamp(),
       });
 
       setInProgress(null);
@@ -104,7 +104,7 @@ const VisualizarTreino = () => {
           filteredTreinos.map(treino => (
             <div key={treino.id} className={styles.treinoCard}>
               <div><strong>Tipo de Treino:</strong> {treino.descricao_tipo}</div>
-              <div><strong>Equipamento:</strong> {treino.descricao_equipamento}</div>
+              <div><strong>Equipamento:</strong> {treino.id_equipamento}</div>
               <div><strong>Série:</strong> {treino.descricao_serie}</div>
               <div><strong>Repetição:</strong> {treino.descricao_repeticao}</div>
               <button 

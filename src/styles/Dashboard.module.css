@@ -153,3 +153,6 @@
 .logoutButton:focus {
     background-color: var(--c-gray-500);
 }
+.contentArea {
+    padding-top: 4rem; /* Evita sobreposição com a barra superior */
+  }

@@ -1,55 +1,100 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth } from '../config/firebaseConfig'; // Certifique-se de configurar o arquivo firebase.js
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import {
+  auth,
+  db,
+} from '../config/firebaseConfig';
+import {
+  signInWithEmailAndPassword,
+  signOut,
+  onAuthStateChanged,
+  browserLocalPersistence,
+  setPersistence,
+} from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 
-// Criação do contexto de autenticação
 const AuthContext = createContext();
 
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
+  const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Função para login com Firebase
   const login = async (email, password) => {
     try {
       await setPersistence(auth, browserLocalPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+
+      // Busca o documento no Firestore com base no email
+      const userQuery = query(
+        collection(db, 'Pessoa'),
+        where('email', '==', email)
+      );
+
+      const querySnapshot = await getDocs(userQuery);
+
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        setUserType(userData.tipo_pessoa);
+        setCurrentUser({
+          uid: user.uid,
+          ...userData,
+        }); // Inclui o UID e dados do Firestore no estado
+        return userData.tipo_pessoa;
+      } else {
+        throw new Error('Usuário não encontrado no Firestore.');
+      }
     } catch (error) {
-      console.error('Erro ao fazer login:', error.message);
-      throw error; // Opcional: lançar erro para tratar no componente que chama.
+      throw error;
     }
   };
 
-  // Função para logout com Firebase
   const logout = async () => {
     try {
       await signOut(auth);
       setCurrentUser(null);
+      setUserType(null);
     } catch (error) {
       console.error('Erro ao fazer logout:', error.message);
     }
   };
 
-  // Observa mudanças no estado de autenticação
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      console.log('Usuário autenticado:', user);
-      setCurrentUser(user); // Define o usuário autenticado
-      setLoading(false); // Quando o estado de autenticação for verificado, atualiza o estado
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const userQuery = query(
+          collection(db, 'Pessoa'),
+          where('email', '==', user.email)
+        );
+
+        const querySnapshot = await getDocs(userQuery);
+
+        if (!querySnapshot.empty) {
+          const userData = querySnapshot.docs[0].data();
+          setUserType(userData.tipo_pessoa);
+          setCurrentUser({
+            uid: user.uid,
+            ...userData,
+          });
+        }
+      } else {
+        setCurrentUser(null);
+        setUserType(null);
+      }
+      setLoading(false);
     });
 
-    return unsubscribe; // Remove o observador ao desmontar o componente
+    return unsubscribe;
   }, []);
 
-  // Renderiza um indicador de carregamento enquanto aguarda a verificação de autenticação
   if (loading) {
-    return <div>Carregando...</div>; // Você pode customizar com um spinner ou outro componente
+    return <div>Carregando...</div>;
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, login, logout }}>
+    <AuthContext.Provider value={{ currentUser, userType, login, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -16,28 +16,35 @@ const DashboardProfessor = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      console.log('Iniciando fetchData para buscar dados do professor.');
       try {
         const user = auth.currentUser;
         if (user) {
+          console.log('Usuário autenticado:', user.uid);
           const docRef = doc(db, 'Pessoa', user.uid);
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
             const data = docSnap.data();
+            console.log('Dados do usuário:', data);
             if (data.tipo_pessoa === 'professor') {
               setUserData(data);
             } else {
+              console.warn('Tipo de usuário inválido:', data.tipo_pessoa);
               setError('Acesso negado. Tipo de usuário inválido.');
               navigate('/login');
             }
           } else {
+            console.warn('Documento do usuário não encontrado no Firestore.');
             setError('Documento não encontrado.');
             navigate('/login');
           }
         } else {
+          console.warn('Nenhum usuário autenticado encontrado.');
           navigate('/login');
         }
       } catch (error) {
+        console.error('Erro ao buscar dados do usuário:', error);
         setError('Erro ao buscar dados do usuário!');
       } finally {
         setLoading(false);
@@ -63,6 +70,7 @@ const DashboardProfessor = () => {
   const handleLogout = async () => {
     try {
       await auth.signOut();
+      console.log('Usuário deslogado com sucesso.');
       navigate('/login');
     } catch (error) {
       console.error('Erro ao deslogar:', error);
@@ -125,7 +133,7 @@ const DashboardProfessor = () => {
       <div className={styles.mainContent}>
         <div className={styles.topbar}>
           <div className={styles.topbarContent}>
-            <div className={styles.welcomeText}>Bem-vindo, {userData?.nome_completo}</div>
+            <div className={styles.welcomeText}>Bem-vindo, {userData?.nome_completo || 'Usuário'}</div>
             <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
           </div>
         </div>

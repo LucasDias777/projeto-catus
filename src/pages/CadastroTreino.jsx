@@ -114,7 +114,7 @@ const CadastroTreino = () => {
                       <option value="">Selecione um aluno</option>
                       {students.map(student => (
                         <option key={student.id} value={student.id}>
-                          {student.nomeCompleto}
+                          {student.nome_completo}
                         </option>
                       ))}
                     </select>
@@ -166,7 +166,7 @@ const CadastroTreino = () => {
                         <option value="">Série</option>
                         {series.map(serie => (
                           <option key={serie.id} value={serie.id}>
-                            {serie.numeroSeries}
+                            {serie.nome}
                           </option>
                         ))}
                       </select>
@@ -181,7 +181,7 @@ const CadastroTreino = () => {
                         <option value="">Repetição</option>
                         {repetitions.map(rep => (
                           <option key={rep.id} value={rep.id}>
-                            {rep.numeroRepeticoes}
+                            {rep.nome}
                           </option>
                         ))}
                       </select>

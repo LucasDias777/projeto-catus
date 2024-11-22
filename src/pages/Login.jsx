@@ -1,85 +1,84 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getAuth, signInWithEmailAndPassword } from 'firebase/auth';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { auth, db } from '../config/firebaseConfig';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import styles from '../styles/Login.module.css';
 
 const Login = () => {
-  const [email, setEmail] = useState(localStorage.getItem('email') || ''); // Salvar e-mail local
+  const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [authChecked, setAuthChecked] = useState(false);  // Novo estado para controlar se a autenticação foi checada
   const navigate = useNavigate();
-  const auth = getAuth();
-  const db = getFirestore();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     setError(null);
 
+    console.log('Tentativa de login iniciada');
+    console.log('Email:', email);
+
     try {
-      // Tenta autenticar o usuário no Firebase Authentication
+      // Faz login no Firebase Authentication
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
+      console.log('Usuário autenticado com sucesso:', user.uid);
 
-      // Realiza uma busca na coleção "Pessoa" pelo campo "email"
-      const pessoaQuery = query(
+      // Busca o tipo de usuário no Firestore com base no UID do Firebase Authentication
+      console.log('Buscando tipo de usuário no Firestore...');
+      
+      // Consulta para verificar se o usuário é professor
+      const professorQuery = query(
         collection(db, 'Pessoa'),
-        where('email', '==', email)
+        where('id_professor', '==', user.uid)
       );
-      const querySnapshot = await getDocs(pessoaQuery);
+      const professorSnapshot = await getDocs(professorQuery);
 
-      if (!querySnapshot.empty) {
-        const userData = querySnapshot.docs[0].data(); // Obtém o primeiro documento encontrado
+      // Consulta para verificar se o usuário é aluno
+      const alunoQuery = query(
+        collection(db, 'Pessoa'),
+        where('id_aluno', '==', user.uid)
+      );
+      const alunoSnapshot = await getDocs(alunoQuery);
 
-        // Verifica o tipo de pessoa
-        if (userData.tipo_pessoa === 'professor') {
-          navigate('/dashboard-professor', { state: { id_professor: userData.id_professor } });
-        } else if (userData.tipo_pessoa === 'aluno') {
-          navigate('/dashboard-aluno', { state: { id_aluno: userData.id_professor } });
-        } else {
-          setError('Usuário não possui um tipo válido.');
-        }
+      if (!professorSnapshot.empty) {
+        // Usuário é um professor
+        const userData = professorSnapshot.docs[0].data();
+        console.log('Dados do professor encontrados:', userData);
+        console.log('Redirecionando para /dashboard-professor');
+        navigate('/dashboard-professor');
+      } else if (!alunoSnapshot.empty) {
+        // Usuário é um aluno
+        const userData = alunoSnapshot.docs[0].data();
+        console.log('Dados do aluno encontrados:', userData);
+        console.log('Redirecionando para /dashboard-aluno');
+        navigate('/dashboard-aluno');
       } else {
-        setError('Usuário não encontrado na coleção.');
+        // Usuário não encontrado em nenhuma coleção
+        console.error('Usuário não encontrado na coleção Pessoa.');
+        setError('Usuário não encontrado na base de dados.');
       }
     } catch (error) {
-      const errorMessages = {
-        'auth/invalid-email': 'E-mail inválido.',
-        'auth/user-not-found': 'Usuário ou senha incorretos.',
-        'auth/wrong-password': 'Usuário ou senha incorretos.',
-        'auth/too-many-requests': 'Muitas tentativas. Tente novamente mais tarde.',
-      };
-
-      setError(errorMessages[error.code] || `Erro ao fazer login: ${error.message}`);
+      console.error('Erro ao fazer login:', error.message);
+      if (error.message.includes('auth/wrong-password')) {
+        setError('Senha incorreta.');
+      } else if (error.message.includes('auth/user-not-found')) {
+        setError('Usuário não encontrado.');
+      } else {
+        setError('Erro ao fazer login.');
+      }
     } finally {
       setLoading(false);
+      console.log('Finalizando tentativa de login');
     }
   };
 
   const handleRegisterClick = () => {
+    console.log('Redirecionando para a página de registro...');
     navigate('/cadastro');
   };
-
-  // Verificação de autenticação no useEffect
-  useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged(user => {
-      if (user) {
-        setAuthChecked(true);  // Marcar como verificado
-      } else {
-        setAuthChecked(true);  // Marcar como verificado mesmo sem usuário logado
-      }
-    });
-
-    return unsubscribe;
-  }, [auth]);
-
-  // Espera até que a autenticação seja verificada antes de exibir a tela
-  if (!authChecked) {
-    return <p>Carregando...</p>;
-  }
 
   return (
     <div className={styles.loginPage}>
@@ -88,25 +87,21 @@ const Login = () => {
         <form onSubmit={handleSubmit}>
           <div className={styles.formGroup}>
             <input
-              id="email"
               type="email"
               placeholder="Informe seu E-mail"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
             />
-            <i className="bx bxs-user"></i>
           </div>
           <div className={styles.formGroup}>
             <input
-              id="senha"
               type="password"
               placeholder="Informe sua Senha"
               value={senha}
               onChange={(e) => setSenha(e.target.value)}
               required
             />
-            <i className="bx bxs-lock-alt"></i>
           </div>
           <button type="submit" disabled={loading} className={styles.button}>
             {loading ? 'Carregando...' : 'Login'}

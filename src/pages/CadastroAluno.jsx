@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import styles from '../styles/Cadastro.module.css';
-import { auth, db } from '../config/firebaseConfig'; // Certifique-se de ter configurado seu Firebase corretamente
+import { auth, db } from '../config/firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/authContext'; // Contexto de autenticação
@@ -24,21 +24,15 @@ const CadastroAluno = () => {
     tipo_pessoa: 'aluno',
   });
   const [errorMessage, setErrorMessage] = useState(null);
-  const [professorId, setProfessorId] = useState(null);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
+  // Redirecionar para login caso o usuário não esteja autenticado
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
-      if (user) {
-        setProfessorId(user.uid);
-      } else {
-        navigate('/login');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [navigate]);
+    if (!currentUser) {
+      navigate('/login');
+    }
+  }, [currentUser, navigate]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -71,12 +65,23 @@ const CadastroAluno = () => {
       }
     }
   };
+  const handleTelefoneChange = (e) => {
+    let telefone = e.target.value.replace(/\D/g, '');
+    if (telefone.length > 11) {
+      telefone = telefone.slice(0, 11);
+    }
+    if (telefone.length > 6) {
+      telefone = `(${telefone.slice(0, 2)}) ${telefone.slice(2, 7)}-${telefone.slice(7, 11)}`;
+    } else if (telefone.length > 2) {
+      telefone = `(${telefone.slice(0, 2)}) ${telefone.slice(2)}`;
+    }
+    setFormData({ ...formData, telefone });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     try {
-      // Cadastro do aluno no Firebase Authentication
       const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
       const user = userCredential.user;
 
@@ -94,15 +99,30 @@ const CadastroAluno = () => {
         complemento: formData.complemento,
         telefone: formData.telefone,
         email: formData.email,
+        senha: formData.senha, // Armazenando a senha
         tipo_pessoa: formData.tipo_pessoa,
-        id_user: user.uid,
-        id_professor: professorId,
-        id_aluno: user.uid,
-        data_criacao: serverTimestamp(), // Salvando a data de criação com o nome 'data_criacao'
+        id_aluno: user.uid, // UID do Authentication como id_aluno
+        id_professor: currentUser.uid,
+        data_criacao: serverTimestamp(), // Salvando a data de criação
       });
 
       alert('Aluno cadastrado com sucesso!');
-      navigate('/dashboard-professor');
+      setFormData({
+        nome_completo: '',
+        data_nascimento: '',
+        genero: '',
+        cep: '',
+        cidade: '',
+        uf: '',
+        endereco: '',
+        numero_casa: '',
+        bairro: '',
+        complemento: '',
+        telefone: '',
+        email: '',
+        senha: '',
+        tipo_pessoa: 'aluno',
+      });
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error.message);
       setErrorMessage(`Erro ao cadastrar aluno: ${error.message}`);
@@ -112,6 +132,7 @@ const CadastroAluno = () => {
   const handleBack = () => {
     navigate('/dashboard-professor');
   };
+
 
   return (
     <div className={styles.cadastroPage}>
@@ -232,7 +253,7 @@ const CadastroAluno = () => {
               name="telefone"
               placeholder="Telefone"
               value={formData.telefone}
-              onChange={handleChange}
+              onChange={handleTelefoneChange}
               required
             />
           </div>
