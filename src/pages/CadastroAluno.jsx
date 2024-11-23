@@ -1,29 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import styles from '../styles/Cadastro.module.css';
+import { useFormik, Formik, Field, Form } from 'formik';
+import * as Yup from 'yup';
+import axios from 'axios';
 import { auth, db } from '../config/firebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { useAuth } from '../contexts/authContext'; // Contexto de autenticação
+import { useAuth } from '../contexts/authContext';
+import styles from '../styles/Cadastro.module.css';
 
 const CadastroAluno = () => {
-  const [formData, setFormData] = useState({
-    nome_completo: '',
-    data_nascimento: '',
-    genero: '',
-    cep: '',
-    cidade: '',
-    uf: '',
-    endereco: '',
-    numero_casa: '',
-    bairro: '',
-    complemento: '',
-    telefone: '',
-    email: '',
-    senha: '',
-    tipo_pessoa: 'aluno',
-  });
-  const [errorMessage, setErrorMessage] = useState(null);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
@@ -34,254 +20,202 @@ const CadastroAluno = () => {
     }
   }, [currentUser, navigate]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // Validação com Yup
+  const validationSchema = Yup.object({
+    nome_completo: Yup.string().required('Nome completo é obrigatório'),
+    data_nascimento: Yup.date().required('Data de nascimento é obrigatória'),
+    genero: Yup.string().required('Gênero é obrigatório'),
+    cep: Yup.string()
+      .matches(/^\d{5}-?\d{3}$/, 'CEP inválido')
+      .notRequired(),
+    numero_casa: Yup.string().required('Número da residência é obrigatório'),
+    telefone: Yup.string()
+      .matches(
+        /^\(\d{2}\) \d{4,5}-\d{4}$/,
+        'Telefone inválido. Use o formato (xx) xxxx-xxxx ou (xx) xxxxx-xxxx'
+      )
+      .required('Telefone é obrigatório'),
+    email: Yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
+    senha: Yup.string().required('Senha é obrigatória'),
+  });
 
-  const handleCepChange = async (e) => {
-    let cep = e.target.value.replace(/\D/g, '');
-    if (cep.length > 5) {
-      cep = `${cep.slice(0, 5)}-${cep.slice(5, 8)}`;
-    }
-    setFormData({ ...formData, cep });
-
-    if (cep.length === 9) {
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep.replace('-', '')}/json/`);
-        const data = await response.json();
-        if (!data.erro) {
-          setFormData((prevState) => ({
-            ...prevState,
-            cidade: data.localidade,
-            uf: data.uf,
-            endereco: data.logradouro,
-            bairro: data.bairro,
-          }));
-        } else {
-          alert('CEP inválido!');
-        }
-      } catch (error) {
-        console.error('Erro ao buscar o CEP:', error);
-      }
-    }
-  };
-  const handleTelefoneChange = (e) => {
-    let telefone = e.target.value.replace(/\D/g, '');
-    if (telefone.length > 11) {
-      telefone = telefone.slice(0, 11);
-    }
-    if (telefone.length > 6) {
-      telefone = `(${telefone.slice(0, 2)}) ${telefone.slice(2, 7)}-${telefone.slice(7, 11)}`;
-    } else if (telefone.length > 2) {
-      telefone = `(${telefone.slice(0, 2)}) ${telefone.slice(2)}`;
-    }
-    setFormData({ ...formData, telefone });
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-
+  // Envio do formulário
+  const onSubmit = async (values, { resetForm }) => {
     try {
-      const userCredential = await createUserWithEmailAndPassword(auth, formData.email, formData.senha);
+      const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.senha);
       const user = userCredential.user;
 
       // Registro do aluno na coleção "Pessoa"
       await setDoc(doc(db, 'Pessoa', user.uid), {
-        nome_completo: formData.nome_completo,
-        data_nascimento: formData.data_nascimento,
-        genero: formData.genero,
-        cep: formData.cep,
-        cidade: formData.cidade,
-        uf: formData.uf,
-        endereco: formData.endereco,
-        numero_casa: formData.numero_casa,
-        bairro: formData.bairro,
-        complemento: formData.complemento,
-        telefone: formData.telefone,
-        email: formData.email,
-        senha: formData.senha, // Armazenando a senha
-        tipo_pessoa: formData.tipo_pessoa,
-        id_aluno: user.uid, // UID do Authentication como id_aluno
+        ...values,
+        id_aluno: user.uid,
         id_professor: currentUser.uid,
-        data_criacao: serverTimestamp(), // Salvando a data de criação
+        tipo_pessoa: 'aluno',
+        data_criacao: serverTimestamp(),
       });
 
       alert('Aluno cadastrado com sucesso!');
-      setFormData({
-        nome_completo: '',
-        data_nascimento: '',
-        genero: '',
-        cep: '',
-        cidade: '',
-        uf: '',
-        endereco: '',
-        numero_casa: '',
-        bairro: '',
-        complemento: '',
-        telefone: '',
-        email: '',
-        senha: '',
-        tipo_pessoa: 'aluno',
-      });
+      resetForm();
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error.message);
-      setErrorMessage(`Erro ao cadastrar aluno: ${error.message}`);
+      alert(`Erro ao cadastrar aluno: ${error.message}`);
     }
   };
 
-  const handleBack = () => {
-    navigate('/dashboard-professor');
-  };
+  // Função para buscar informações pelo CEP
+  const fetchAddressByCep = async (cep, setFieldValue) => {
+    if (!cep) return;
+    try {
+      const response = await axios.get(`https://viacep.com.br/ws/${cep.replace('-', '')}/json/`);
+      const data = response.data;
 
+      if (!data.erro) {
+        setFieldValue('cidade', data.localidade || '');
+        setFieldValue('uf', data.uf || '');
+        setFieldValue('endereco', data.logradouro || '');
+        setFieldValue('bairro', data.bairro || '');
+      } else {
+        alert('CEP inválido!');
+      }
+    } catch (error) {
+      console.error('Erro ao buscar o CEP:', error);
+      alert('Erro ao buscar informações do CEP.');
+    }
+  };
 
   return (
     <div className={styles.cadastroPage}>
       <div className={styles.cadastroContainer}>
         <h1 className={styles.cadastroHeading}>Cadastrar Aluno</h1>
-        {errorMessage && <p className={styles.errorMessage}>{errorMessage}</p>}
-        <form onSubmit={handleSubmit}>
-          <div className={styles.formGroup}>
-            <label>Nome Completo</label>
-            <input
-              type="text"
-              name="nome_completo"
-              placeholder="Nome Completo"
-              value={formData.nome_completo}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Data de Nascimento</label>
-            <input
-              type="date"
-              name="data_nascimento"
-              value={formData.data_nascimento}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Gênero</label>
-            <select name="genero" value={formData.genero} onChange={handleChange} required>
-              <option value="" disabled>Selecione o Gênero</option>
-              <option value="Masculino">Masculino</option>
-              <option value="Feminino">Feminino</option>
-              <option value="Outros">Outros</option>
-            </select>
-          </div>
-          <div className={styles.formGroup}>
-            <label>CEP</label>
-            <input
-              type="text"
-              name="cep"
-              placeholder="CEP"
-              value={formData.cep}
-              onChange={handleCepChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Cidade</label>
-            <input
-              type="text"
-              name="cidade"
-              placeholder="Cidade"
-              value={formData.cidade}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>UF</label>
-            <input
-              type="text"
-              name="uf"
-              placeholder="UF"
-              value={formData.uf}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Endereço</label>
-            <input
-              type="text"
-              name="endereco"
-              placeholder="Endereço"
-              value={formData.endereco}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Número da Residência</label>
-            <input
-              type="text"
-              name="numero_casa"
-              placeholder="Número da Residência"
-              value={formData.numero_casa}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Bairro</label>
-            <input
-              type="text"
-              name="bairro"
-              placeholder="Bairro"
-              value={formData.bairro}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Complemento</label>
-            <input
-              type="text"
-              name="complemento"
-              placeholder="Complemento"
-              value={formData.complemento}
-              onChange={handleChange}
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Telefone</label>
-            <input
-              type="text"
-              name="telefone"
-              placeholder="Telefone"
-              value={formData.telefone}
-              onChange={handleTelefoneChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>E-mail</label>
-            <input
-              type="email"
-              name="email"
-              placeholder="E-mail"
-              value={formData.email}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Senha</label>
-            <input
-              type="password"
-              name="senha"
-              placeholder="Senha"
-              value={formData.senha}
-              onChange={handleChange}
-              required
-            />
-          </div>
-          <button type="submit">Cadastrar</button>
-        </form>
-        <button onClick={handleBack} className={styles.backButton}>Voltar</button>
+        <Formik
+          initialValues={{
+            nome_completo: '',
+            data_nascimento: '',
+            genero: '',
+            cep: '',
+            cidade: '',
+            uf: '',
+            endereco: '',
+            numero_casa: '',
+            bairro: '',
+            complemento: '',
+            telefone: '',
+            email: '',
+            senha: '',
+          }}
+          validationSchema={validationSchema}
+          onSubmit={onSubmit}
+        >
+          {({ errors, touched, values, setFieldValue }) => (
+            <Form>
+              <div className={styles.formGroup}>
+                <label>Nome Completo</label>
+                <Field name="nome_completo" type="text" placeholder="Nome Completo" />
+                {errors.nome_completo && touched.nome_completo && (
+                  <p className={styles.errorMessage}>{errors.nome_completo}</p>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Data de Nascimento</label>
+                <Field name="data_nascimento" type="date" />
+                {errors.data_nascimento && touched.data_nascimento && (
+                  <p className={styles.errorMessage}>{errors.data_nascimento}</p>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Gênero</label>
+                <Field as="select" name="genero">
+                  <option value="" disabled>
+                    Selecione o Gênero
+                  </option>
+                  <option value="Masculino">Masculino</option>
+                  <option value="Feminino">Feminino</option>
+                  <option value="Outros">Outros</option>
+                </Field>
+                {errors.genero && touched.genero && (
+                  <p className={styles.errorMessage}>{errors.genero}</p>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>CEP</label>
+                <Field
+                  name="cep"
+                  type="text"
+                  placeholder="CEP"
+                  onBlur={(e) => fetchAddressByCep(e.target.value, setFieldValue)}
+                />
+                {errors.cep && touched.cep && (
+                  <p className={styles.errorMessage}>{errors.cep}</p>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Cidade</label>
+                <Field name="cidade" type="text" placeholder="Cidade" disabled />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>UF</label>
+                <Field name="uf" type="text" placeholder="UF" disabled />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Endereço</label>
+                <Field name="endereco" type="text" placeholder="Endereço" />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Número da Residência</label>
+                <Field name="numero_casa" type="text" placeholder="Número da Residência" />
+                {errors.numero_casa && touched.numero_casa && (
+                  <p className={styles.errorMessage}>{errors.numero_casa}</p>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Bairro</label>
+                <Field name="bairro" type="text" placeholder="Bairro" />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Complemento</label>
+                <Field name="complemento" type="text" placeholder="Complemento" />
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Telefone</label>
+                <Field name="telefone" type="text" placeholder="Telefone" />
+                {errors.telefone && touched.telefone && (
+                  <p className={styles.errorMessage}>{errors.telefone}</p>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>E-mail</label>
+                <Field name="email" type="email" placeholder="E-mail" />
+                {errors.email && touched.email && (
+                  <p className={styles.errorMessage}>{errors.email}</p>
+                )}
+              </div>
+
+              <div className={styles.formGroup}>
+                <label>Senha</label>
+                <Field name="senha" type="password" placeholder="Senha" />
+                {errors.senha && touched.senha && (
+                  <p className={styles.errorMessage}>{errors.senha}</p>
+                )}
+              </div>
+
+              <button type="submit">Cadastrar</button>
+            </Form>
+          )}
+        </Formik>
+        <button onClick={() => navigate('/dashboard-professor')} className={styles.backButton}>
+          Voltar
+        </button>
       </div>
     </div>
   );

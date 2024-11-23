@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig'; // Certifique-se de importar corretamente sua configuração do Firebase
 import { useAuth } from '../contexts/authContext'; // Contexto de autenticação
+import { Formik, Field, Form, ErrorMessage } from 'formik';
+import * as Yup from 'yup'; // Biblioteca de validação
 import styles from '../styles/Equipamento.module.css';
 
 const CadastroEquipamento = () => {
-  const [nome, setNome] = useState('');
   const [equipamentos, setEquipamentos] = useState([]);
   const [editId, setEditId] = useState(null);
   const [editNome, setEditNome] = useState('');
@@ -43,9 +44,7 @@ const CadastroEquipamento = () => {
   }, [currentUser]);
 
   // Adicionar equipamento
-  const handleAdd = async (e) => {
-    e.preventDefault();
-
+  const handleAdd = async (values, { resetForm }) => {
     if (!currentUser) {
       alert('Você precisa estar logado para cadastrar um equipamento.');
       return;
@@ -53,12 +52,12 @@ const CadastroEquipamento = () => {
 
     try {
       await addDoc(collection(db, 'Equipamento'), {
-        nome,
+        nome: values.nome,
         id_professor: currentUser.uid, // Associando ao professor logado
         data_criacao: serverTimestamp(), // Usando o timestamp do servidor
       });
       alert('Equipamento cadastrado com sucesso!');
-      setNome('');
+      resetForm();
     } catch (error) {
       console.error('Erro ao cadastrar equipamento:', error);
       alert('Erro ao cadastrar equipamento.');
@@ -92,19 +91,37 @@ const CadastroEquipamento = () => {
     }
   };
 
+  // Validação com Yup
+  const validationSchema = Yup.object({
+    nome: Yup.string().required('Nome do equipamento é obrigatório').min(3, 'Nome deve ter no mínimo 3 caracteres'),
+  });
+
   return (
     <div>
       <h2>Cadastrar Equipamento</h2>
-      <form onSubmit={handleAdd}>
-        <input
-          type="text"
-          value={nome}
-          onChange={(e) => setNome(e.target.value)}
-          placeholder="Nome do Equipamento"
-          required
-        />
-        <button type="submit">Cadastrar Equipamento</button>
-      </form>
+      <Formik
+        initialValues={{ nome: '' }}
+        validationSchema={validationSchema}
+        onSubmit={handleAdd}
+      >
+        {({ values, handleChange, handleBlur, errors, touched }) => (
+          <Form>
+            <div className={styles.formGroup}>
+              <Field
+                type="text"
+                name="nome"
+                placeholder="Nome do Equipamento"
+                value={values.nome}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={errors.nome && touched.nome ? styles.errorInput : ''}
+              />
+              <ErrorMessage name="nome" component="div" className={styles.errorMessage} />
+            </div>
+            <button type="submit">Cadastrar Equipamento</button>
+          </Form>
+        )}
+      </Formik>
 
       <h3>Equipamentos Cadastrados:</h3>
       {equipamentos.map((equipamento) => (

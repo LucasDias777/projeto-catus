@@ -25,6 +25,7 @@ const EditarUsuario = () => {
 
   const [originalEmail, setOriginalEmail] = useState('');
   const [originalSenha, setOriginalSenha] = useState('');
+  const [tipoPessoa, setTipoPessoa] = useState('');
   const [error, setError] = useState(null);
   const { currentUser } = useAuth();
   const navigate = useNavigate();
@@ -40,7 +41,6 @@ const EditarUsuario = () => {
         if (userSnap.exists()) {
           const data = userSnap.data();
           setFormData({
-            ...formData,
             nome_completo: data.nome_completo || '',
             data_nascimento: data.data_nascimento || '',
             genero: data.genero || '',
@@ -53,10 +53,11 @@ const EditarUsuario = () => {
             complemento: data.complemento || '',
             telefone: data.telefone || '',
             email: data.email || '',
-            senha: data.senha || '', // Preencher o campo de senha com a senha atual
+            senha: '', // Não exibe a senha, apenas um campo vazio
           });
           setOriginalEmail(data.email || '');
           setOriginalSenha(data.senha || '');
+          setTipoPessoa(data.tipo_pessoa || '');
         } else {
           setError('Dados do usuário não encontrados.');
         }
@@ -75,7 +76,7 @@ const EditarUsuario = () => {
 
   const handleCepChange = async (e) => {
     const cep = e.target.value.replace(/\D/g, '');
-    setFormData({ ...formData, cep });
+    setFormData((prev) => ({ ...prev, cep }));
 
     if (cep.length === 8) {
       try {
@@ -83,34 +84,32 @@ const EditarUsuario = () => {
         const data = await response.json();
 
         if (!data.erro) {
-          setFormData({
-            ...formData,
-            cep,
+          setFormData((prev) => ({
+            ...prev,
             cidade: data.localidade || '',
             uf: data.uf || '',
             endereco: data.logradouro || '',
             bairro: data.bairro || '',
             complemento: data.complemento || '',
-          });
+          }));
+        } else {
+          setError('CEP inválido ou não encontrado.');
         }
       } catch (error) {
         console.error('Erro ao buscar CEP:', error);
-        setError('CEP inválido ou não encontrado.');
       }
     }
   };
 
   const handleTelefoneChange = (e) => {
     let telefone = e.target.value.replace(/\D/g, '');
-    if (telefone.length > 11) {
-      telefone = telefone.slice(0, 11);
-    }
-    if (telefone.length > 6) {
-      telefone = `(${telefone.slice(0, 2)}) ${telefone.slice(2, 7)}-${telefone.slice(7, 11)}`;
-    } else if (telefone.length > 2) {
-      telefone = `(${telefone.slice(0, 2)}) ${telefone.slice(2)}`;
-    }
-    setFormData({ ...formData, telefone });
+    if (telefone.length > 11) telefone = telefone.slice(0, 11);
+    telefone = telefone.length > 6
+      ? `(${telefone.slice(0, 2)}) ${telefone.slice(2, 7)}-${telefone.slice(7)}`
+      : telefone.length > 2
+      ? `(${telefone.slice(0, 2)}) ${telefone.slice(2)}`
+      : telefone;
+    setFormData((prev) => ({ ...prev, telefone }));
   };
 
   const handleSubmit = async (e) => {
@@ -121,21 +120,28 @@ const EditarUsuario = () => {
       const userDoc = doc(db, 'Pessoa', currentUser.uid);
       let requiresReLogin = false;
 
+      // Atualizar e-mail
       if (formData.email !== originalEmail) {
         await updateEmail(auth.currentUser, formData.email);
+        await updateDoc(userDoc, { email: formData.email });
         requiresReLogin = true;
       }
 
+      // Atualizar senha
       if (formData.senha && formData.senha !== originalSenha) {
         await updatePassword(auth.currentUser, formData.senha);
+        await updateDoc(userDoc, { senha: formData.senha });
         requiresReLogin = true;
       }
 
-      // Atualizar no Firestore
-      await updateDoc(userDoc, { ...formData });
+      // Atualizar outros campos
+      const updatedData = { ...formData };
+      delete updatedData.senha; // Não armazenar senha diretamente
+      await updateDoc(userDoc, updatedData);
 
       if (requiresReLogin) {
-        alert('As alterações foram salvas com sucesso. Por favor, faça login novamente.');
+        alert('Alterações salvas com sucesso. Você precisará fazer login novamente.');
+        auth.signOut();
         navigate('/login');
         return;
       }
@@ -148,7 +154,7 @@ const EditarUsuario = () => {
   };
 
   const handleBackToDashboard = () => {
-    navigate('/');
+    navigate(tipoPessoa === 'professor' ? '/dashboard-professor' : '/dashboard-aluno');
   };
 
   return (
@@ -178,59 +184,121 @@ const EditarUsuario = () => {
         </div>
         <div className={styles.formGroup}>
           <label>Gênero</label>
-          <select name="genero" value={formData.genero} onChange={handleChange} required>
-            <option value="" disabled>Selecione</option>
-            <option value="Masculino">Masculino</option>
-            <option value="Feminino">Feminino</option>
-            <option value="Outros">Outros</option>
+          <select
+            name="genero"
+            value={formData.genero}
+            onChange={handleChange}
+            required
+          >
+            <option value="">Selecione</option>
+            <option value="masculino">Masculino</option>
+            <option value="feminino">Feminino</option>
+            <option value="outro">Outro</option>
           </select>
         </div>
         <div className={styles.formGroup}>
-            <label>CEP</label>
-            <input type="text" name="cep" value={formData.cep} onChange={handleCepChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Cidade</label>
-            <input type="text" name="cidade" value={formData.cidade} onChange={handleChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>UF</label>
-            <input type="text" name="uf" value={formData.uf} onChange={handleChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Endereço</label>
-            <input type="text" name="endereco" value={formData.endereco} onChange={handleChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Número da Residência </label>
-            <input type="text" name="numero_casa" value={formData.numero_casa} onChange={handleChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Bairro</label>
-            <input type="text" name="bairro" value={formData.bairro} onChange={handleChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Complemento</label>
-            <input type="text" name="complemento" value={formData.complemento} onChange={handleChange} />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Telefone</label>
-            <input type="text" name="telefone" value={formData.telefone} onChange={handleTelefoneChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>E-mail</label>
-            <input type="email" name="email" value={formData.email} onChange={handleChange} required />
-          </div>
-          <div className={styles.formGroup}>
-            <label>Senha</label>
-            <input type="password" name="senha" value={formData.senha} onChange={handleChange} required />
-          </div>
-        
-        <button type="submit" className={styles.button}>Salvar</button>
-        <button type="button" className={styles.buttonSecondary} onClick={handleBackToDashboard}>
-          Voltar ao Dashboard
-        </button>
+          <label>CEP</label>
+          <input
+            type="text"
+            name="cep"
+            value={formData.cep}
+            onChange={handleCepChange}
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Cidade</label>
+          <input
+            type="text"
+            name="cidade"
+            value={formData.cidade}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>UF</label>
+          <input
+            type="text"
+            name="uf"
+            value={formData.uf}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Endereço</label>
+          <input
+            type="text"
+            name="endereco"
+            value={formData.endereco}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Número</label>
+          <input
+            type="text"
+            name="numero_casa"
+            value={formData.numero_casa}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Bairro</label>
+          <input
+            type="text"
+            name="bairro"
+            value={formData.bairro}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Complemento</label>
+          <input
+            type="text"
+            name="complemento"
+            value={formData.complemento}
+            onChange={handleChange}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Telefone</label>
+          <input
+            type="text"
+            name="telefone"
+            value={formData.telefone}
+            onChange={handleTelefoneChange}
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Email</label>
+          <input
+            type="email"
+            name="email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <label>Senha</label>
+          <input
+            type="password"
+            name="senha"
+            value={formData.senha}
+            onChange={handleChange}
+          />
+        </div>
+        <div className={styles.formGroup}>
+          <button type="submit">Atualizar</button>
+        </div>
       </form>
+      <button onClick={handleBackToDashboard} className={styles.backButton}>Voltar ao Dashboard</button>
     </div>
   );
 };

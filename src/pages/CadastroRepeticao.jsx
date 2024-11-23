@@ -3,10 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext'; // Importando o contexto de autenticação
 import { db } from '../config/firebaseConfig'; // Importa a configuração do Firebase
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, query, where, doc, serverTimestamp } from 'firebase/firestore';
+import { Formik, Field, Form, ErrorMessage } from 'formik';
+import * as Yup from 'yup'; // Biblioteca de validação
 import styles from '../styles/Repeticao.module.css';
 
 const CadastroRepeticao = () => {
-  const [numeroRepeticoes, setNumeroRepeticoes] = useState('');
   const [repeticoes, setRepeticoes] = useState([]);
   const [editId, setEditId] = useState(null);
   const [editNumeroRepeticoes, setEditNumeroRepeticoes] = useState('');
@@ -36,8 +37,7 @@ const CadastroRepeticao = () => {
     fetchRepeticoes();
   }, [currentUser]);
 
-  const handleAdd = async (e) => {
-    e.preventDefault();
+  const handleAdd = async (values, { resetForm }) => {
     if (!currentUser) {
       alert('Você precisa estar autenticado para adicionar repetições.');
       return;
@@ -45,12 +45,12 @@ const CadastroRepeticao = () => {
 
     try {
       await addDoc(collection(db, 'Repeticao'), {
-        nome: numeroRepeticoes,
+        nome: values.numeroRepeticoes,
         id_professor: currentUser.uid,
         data_criacao: serverTimestamp(),
       });
       alert('Repetição cadastrada com sucesso!');
-      setNumeroRepeticoes('');
+      resetForm();
 
       // Atualizar lista de repetições
       const q = query(
@@ -118,19 +118,41 @@ const CadastroRepeticao = () => {
     }
   };
 
+  // Validação com Yup
+  const validationSchema = Yup.object({
+    numeroRepeticoes: Yup.number()
+      .required('Número de repetições é obrigatório')
+      .positive('O número deve ser positivo')
+      .integer('Deve ser um número inteiro')
+      .min(1, 'Deve ter pelo menos 1 repetição'),
+  });
+
   return (
     <div>
       <h2>Cadastrar Repetições</h2>
-      <form onSubmit={handleAdd}>
-        <input
-          type="text"
-          value={numeroRepeticoes}
-          onChange={(e) => setNumeroRepeticoes(e.target.value)}
-          placeholder="Número de Repetições"
-          required
-        />
-        <button type="submit">Cadastrar Repetições</button>
-      </form>
+      <Formik
+        initialValues={{ numeroRepeticoes: '' }}
+        validationSchema={validationSchema}
+        onSubmit={handleAdd}
+      >
+        {({ values, handleChange, handleBlur, errors, touched }) => (
+          <Form>
+            <div className={styles.formGroup}>
+              <Field
+                type="number"
+                name="numeroRepeticoes"
+                placeholder="Número de Repetições"
+                value={values.numeroRepeticoes}
+                onChange={handleChange}
+                onBlur={handleBlur}
+                className={errors.numeroRepeticoes && touched.numeroRepeticoes ? styles.errorInput : ''}
+              />
+              <ErrorMessage name="numeroRepeticoes" component="div" className={styles.errorMessage} />
+            </div>
+            <button type="submit">Cadastrar Repetições</button>
+          </Form>
+        )}
+      </Formik>
 
       <h3>Repetições Cadastradas:</h3>
       {repeticoes.map((r) => (
@@ -138,7 +160,7 @@ const CadastroRepeticao = () => {
           {editId === r.id ? (
             <div>
               <input
-                type="text"
+                type="number"
                 value={editNumeroRepeticoes}
                 onChange={(e) => setEditNumeroRepeticoes(e.target.value)}
                 placeholder="Número de Repetições"

@@ -1,15 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import {
-  auth,
-  db,
-} from '../config/firebaseConfig';
-import {
-  signInWithEmailAndPassword,
-  signOut,
-  onAuthStateChanged,
-  browserLocalPersistence,
-  setPersistence,
-} from 'firebase/auth';
+import { auth, db,} from '../config/firebaseConfig';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const AuthContext = createContext();
@@ -44,7 +35,7 @@ export const AuthProvider = ({ children }) => {
         }); // Inclui o UID e dados do Firestore no estado
         return userData.tipo_pessoa;
       } else {
-        throw new Error('Usuário não encontrado no Firestore.');
+        throw new Error('Usuário não encontrado no Banco de Dados.');
       }
     } catch (error) {
       throw error;

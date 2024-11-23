@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, addDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig'; // Certifique-se de importar corretamente
-import { useAuth } from '../contexts/authContext'; // Importa o hook de autenticação
-import styles from '../styles/VisualizarTreino.module.css'; // Ajuste o caminho se necessário
+import { 
+  collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serverTimestamp 
+} from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
+import { useAuth } from '../contexts/authContext';
+import styles from '../styles/VisualizarTreino.module.css';
 
 const VisualizarTreino = () => {
   const [treinos, setTreinos] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [inProgress, setInProgress] = useState(null); // Estado para controle de treino em andamento
-  const { currentUser } = useAuth(); // Usa o hook useAuth para acessar o currentUser
+  const [inProgress, setInProgress] = useState(null);
+  const { currentUser } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -18,14 +20,51 @@ const VisualizarTreino = () => {
 
       try {
         const alunoId = currentUser.uid;
-        // Consulta para buscar treinos do aluno atual
+
+        // Consulta para buscar treinos do aluno
         const treinosQuery = query(collection(db, 'Treino'), where('id_aluno', '==', alunoId));
         const querySnapshot = await getDocs(treinosQuery);
 
-        const treinosDetalhados = querySnapshot.docs.map(docTreino => ({
-          id: docTreino.id,
-          ...docTreino.data() // Spread para obter os campos diretamente
-        }));
+        const treinosDetalhados = await Promise.all(
+          querySnapshot.docs.map(async (docTreino) => {
+            const treinoData = docTreino.data();
+
+            // Buscar detalhes dos equipamentos, séries e repetições
+            const equipamentosDetalhados = await Promise.all(
+              (treinoData.equipamentos || []).map(async (equipamento) => {
+                const equipDoc = await getDoc(doc(db, 'Equipamento', equipamento.id_equipamento));
+                return equipDoc.exists() ? equipDoc.data().nome : 'Equipamento não encontrado';
+              })
+            );
+
+            const seriesDetalhadas = await Promise.all(
+              (treinoData.equipamentos || []).map(async (equipamento) => {
+                const serieDoc = await getDoc(doc(db, 'Serie', equipamento.id_serie));
+                return serieDoc.exists() ? serieDoc.data().nome : 'Série não encontrada';
+              })
+            );
+
+            const repeticoesDetalhadas = await Promise.all(
+              (treinoData.equipamentos || []).map(async (equipamento) => {
+                const repeticaoDoc = await getDoc(doc(db, 'Repeticao', equipamento.id_repeticao));
+                return repeticaoDoc.exists() ? repeticaoDoc.data().nome : 'Repetição não encontrada';
+              })
+            );
+
+            const tipoDoc = treinoData.id_tipo
+              ? await getDoc(doc(db, 'Tipo', treinoData.id_tipo))
+              : null;
+
+            return {
+              id: docTreino.id,
+              ...treinoData,
+              equipamento: equipamentosDetalhados.join(', '),
+              serie: seriesDetalhadas.join(', '),
+              repeticao: repeticoesDetalhadas.join(', '),
+              tipo: tipoDoc?.exists() ? tipoDoc.data().nome : 'Tipo não encontrado',
+            };
+          })
+        );
 
         setTreinos(treinosDetalhados);
       } catch (error) {
@@ -36,12 +75,10 @@ const VisualizarTreino = () => {
     fetchTreinos();
   }, [currentUser]);
 
-  // Filtragem de treinos pelo termo de pesquisa
-  const filteredTreinos = treinos.filter(treino =>
-    treino.descricao_tipo.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredTreinos = treinos.filter((treino) =>
+    treino.tipo.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  // Função para iniciar o treino
   const iniciarTreino = async (treinoId) => {
     if (!currentUser) return;
 
@@ -49,19 +86,18 @@ const VisualizarTreino = () => {
       const novoTreinoTempo = {
         id_treino: treinoId,
         id_aluno: currentUser.uid,
-        id_professor: treinos.find(treino => treino.id === treinoId)?.id_professor || '',
+        id_professor: treinos.find((treino) => treino.id === treinoId)?.id_professor || '',
         data_inicio: serverTimestamp(),
-        data_termino: null
+        data_termino: null,
       };
 
-      const treinoTempoRef = await addDoc(collection(db, 'Treino_Tempo'), novoTreinoTempo);
-      setInProgress(treinoTempoRef.id);
+      await addDoc(collection(db, 'Treino_Tempo'), novoTreinoTempo);
+      setInProgress(treinoId);
     } catch (error) {
       console.error('Erro ao iniciar o treino:', error);
     }
   };
 
-  // Função para terminar o treino
   const terminarTreino = async () => {
     if (!inProgress) return;
 
@@ -101,19 +137,20 @@ const VisualizarTreino = () => {
         {filteredTreinos.length === 0 ? (
           <p>Você ainda não tem treinos disponíveis.</p>
         ) : (
-          filteredTreinos.map(treino => (
+          filteredTreinos.map((treino) => (
             <div key={treino.id} className={styles.treinoCard}>
-              <div><strong>Tipo de Treino:</strong> {treino.descricao_tipo}</div>
-              <div><strong>Equipamento:</strong> {treino.id_equipamento}</div>
-              <div><strong>Série:</strong> {treino.descricao_serie}</div>
-              <div><strong>Repetição:</strong> {treino.descricao_repeticao}</div>
+              <div><strong>Tipo de Treino:</strong> {treino.tipo}</div>
+              <div><strong>Equipamentos:</strong> {treino.equipamento}</div>
+              <div><strong>Séries:</strong> {treino.serie}</div>
+              <div><strong>Repetições:</strong> {treino.repeticao}</div>
+              <div><strong>Descrição Geral:</strong> {treino.descricao}</div>
               <button 
                 onClick={() => iniciarTreino(treino.id)} 
-                disabled={!!inProgress}
+                disabled={inProgress === treino.id}
               >
-                {inProgress ? 'Treino em Progresso' : 'Iniciar Treino'}
+                {inProgress === treino.id ? 'Treino em Progresso' : 'Iniciar Treino'}
               </button>
-              {inProgress && (
+              {inProgress === treino.id && (
                 <button onClick={terminarTreino}>
                   Terminar Treino
                 </button>

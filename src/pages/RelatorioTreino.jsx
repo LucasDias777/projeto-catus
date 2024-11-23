@@ -1,9 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import React, { useEffect, useState, useContext } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { getFirestore, collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
 import { app } from '../config/firebaseConfig'; // Importa a configuração do Firebase
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
+import { useAuth } from '../contexts/authContext';  // Corrigido para usar o hook useAuth
 
 const RelatorioTreino = ({ userId }) => {
   const [relatorio, setRelatorio] = useState([]);
@@ -11,39 +13,59 @@ const RelatorioTreino = ({ userId }) => {
   const [dataInicio, setDataInicio] = useState('');
   const [dataFim, setDataFim] = useState('');
   const [statusTreino, setStatusTreino] = useState('');
+  const [tipoPessoa, setTipoPessoa] = useState('');
 
   const db = getFirestore(app);
+  const navigate = useNavigate();
+  const { currentUser } = useAuth(); // Usando o hook useAuth
 
+  // Função para buscar o tipo de pessoa (aluno ou professor)
+  const fetchTipoPessoa = async (uid) => {
+    try {
+      const pessoaDoc = await getDoc(doc(db, 'Pessoa', uid));
+      if (pessoaDoc.exists()) {
+        setTipoPessoa(pessoaDoc.data().tipo_pessoa);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar tipo de pessoa:', error);
+    }
+  };
+
+  // Função para buscar os relatórios de treino
   const fetchRelatorio = async () => {
     try {
       const treinosQuery = query(
         collection(db, 'Treino'),
-        where('id_professor', '==', userId),
-        filtroAluno && where('id_aluno', '==', filtroAluno)
+        where('id_professor', '==', userId)
       );
-      const treinosSnapshot = await getDocs(treinosQuery);
 
+      const treinosSnapshot = await getDocs(treinosQuery);
       const treinos = await Promise.all(
         treinosSnapshot.docs.map(async (doc) => {
           const treinoData = doc.data();
-
+          const alunoDoc = await getDoc(doc(db, 'Pessoa', treinoData.id_aluno));
+          const tipoDoc = await getDoc(doc(db, 'Tipo', treinoData.id_tipo));
           const treinoTempoQuery = query(
             collection(db, 'Treino_Tempo'),
-            where('id_treino', '==', doc.id),
-            dataInicio && where('data_inicio', '>=', dataInicio),
-            dataFim && where('data_inicio', '<=', dataFim)
+            where('id_treino', '==', doc.id)
           );
-          const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
 
+          const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
           const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => tempoDoc.data());
+
           const statusConcluido = tempos.some((tempo) => tempo.data_termino);
+          const primeiroTempo = tempos[0] || {};
 
           if (statusTreino === 'concluido' && !statusConcluido) return null;
           if (statusTreino === 'nao_concluido' && statusConcluido) return null;
 
           return {
-            ...treinoData,
+            aluno: alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado',
+            tipo: tipoDoc.exists() ? tipoDoc.data().nome : 'Não informado',
             status: statusConcluido ? 'Concluído' : 'Não Concluído',
+            dataInicio: primeiroTempo.data_inicio || 'Não informado',
+            dataTermino: statusConcluido ? primeiroTempo.data_termino : 'Não informado',
+            dataCriacao: treinoData.data_criacao || 'Não informado',
           };
         })
       );
@@ -54,32 +76,38 @@ const RelatorioTreino = ({ userId }) => {
     }
   };
 
+  // Função para gerar o PDF
   const gerarPDF = () => {
     const doc = new jsPDF();
     doc.text('Relatório de Treinos', 10, 10);
 
     const tableData = relatorio.map((treino) => [
-      treino.descricao_tipo,
-      treino.id_aluno,
-      treino.descricao_equipamento,
+      treino.aluno,
+      treino.tipo,
       treino.status,
+      treino.dataInicio,
+      treino.dataTermino,
+      treino.dataCriacao,
     ]);
 
     doc.autoTable({
-      head: [['Tipo', 'Aluno', 'Equipamento', 'Status']],
+      head: [['Aluno', 'Tipo do Treino', 'Status', 'Data de Início', 'Data de Término', 'Data de Criação']],
       body: tableData,
     });
 
     doc.save('Relatorio_Treinos.pdf');
   };
 
+  // Função para gerar o Excel
   const gerarExcel = () => {
     const ws = XLSX.utils.json_to_sheet(
       relatorio.map((treino) => ({
-        Tipo: treino.descricao_tipo,
-        Aluno: treino.id_aluno,
-        Equipamento: treino.descricao_equipamento,
+        Aluno: treino.aluno,
+        Tipo: treino.tipo,
         Status: treino.status,
+        'Data de Início': treino.dataInicio,
+        'Data de Término': treino.dataTermino,
+        'Data de Criação': treino.dataCriacao,
       }))
     );
     const wb = XLSX.utils.book_new();
@@ -87,12 +115,25 @@ const RelatorioTreino = ({ userId }) => {
     XLSX.writeFile(wb, 'Relatorio_Treinos.xlsx');
   };
 
+  // Função para voltar ao dashboard correto
+  const voltarDashboard = () => {
+    if (tipoPessoa === 'aluno') {
+      navigate('/dashboard-aluno');
+    } else if (tipoPessoa === 'professor') {
+      navigate('/dashboard-professor');
+    }
+  };
+
   useEffect(() => {
+    if (currentUser) {
+      fetchTipoPessoa(currentUser.uid); // Verifica o tipo de pessoa do usuário logado
+    }
     fetchRelatorio();
-  }, [filtroAluno, dataInicio, dataFim, statusTreino]);
+  }, [currentUser, filtroAluno, dataInicio, dataFim, statusTreino, tipoPessoa]);
 
   return (
     <div>
+      <button onClick={voltarDashboard}>Voltar ao Dashboard</button>
       <h2>Relatório de Treinos</h2>
       <div>
         <label>
@@ -133,14 +174,30 @@ const RelatorioTreino = ({ userId }) => {
         <button onClick={gerarExcel}>Gerar Excel</button>
       </div>
       {relatorio.length > 0 ? (
-        relatorio.map((treino, index) => (
-          <div key={index}>
-            <h3>{treino.descricao_tipo}</h3>
-            <p>Aluno: {treino.id_aluno}</p>
-            <p>Equipamento: {treino.descricao_equipamento}</p>
-            <p>Status: {treino.status}</p>
-          </div>
-        ))
+        <table>
+          <thead>
+            <tr>
+              <th>Aluno</th>
+              <th>Tipo do Treino</th>
+              <th>Status</th>
+              <th>Data de Início</th>
+              <th>Data de Término</th>
+              <th>Data de Criação</th>
+            </tr>
+          </thead>
+          <tbody>
+            {relatorio.map((treino, index) => (
+              <tr key={index}>
+                <td>{treino.aluno}</td>
+                <td>{treino.tipo}</td>
+                <td>{treino.status}</td>
+                <td>{treino.dataInicio}</td>
+                <td>{treino.dataTermino}</td>
+                <td>{treino.dataCriacao}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       ) : (
         <p>Nenhum treino encontrado.</p>
       )}

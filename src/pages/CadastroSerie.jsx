@@ -3,10 +3,19 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext'; // Importando o contexto de autenticação
 import { db } from '../config/firebaseConfig'; // Importa a configuração do Firebase
 import { collection, addDoc, getDocs, updateDoc, deleteDoc, query, where, onSnapshot, doc, serverTimestamp } from 'firebase/firestore';
+import { Formik, Field, Form, ErrorMessage } from 'formik';
+import * as Yup from 'yup';
 import styles from '../styles/Serie.module.css';
 
+// Validação com Yup
+const validationSchema = Yup.object({
+  numeroSeries: Yup.string()
+    .required('Número de séries é obrigatório')
+    .min(1, 'O número de séries deve ter pelo menos 1 caractere')
+    .max(10, 'O número de séries não pode ter mais que 10 caracteres'),
+});
+
 const CadastroSerie = () => {
-  const [numeroSeries, setNumeroSeries] = useState('');
   const [series, setSeries] = useState([]);
   const [editId, setEditId] = useState(null);
   const [editNumeroSeries, setEditNumeroSeries] = useState('');
@@ -18,7 +27,7 @@ const CadastroSerie = () => {
 
     // Listener para atualizações em tempo real
     const unsubscribe = onSnapshot(
-      query(collection(db, 'Serie'), where('id_professor', '==', currentUser.uid)), // Corrigido para 'id_professor'
+      query(collection(db, 'Serie'), where('id_professor', '==', currentUser.uid)),
       (snapshot) => {
         const updatedSeries = snapshot.docs.map((doc) => ({
           id: doc.id,
@@ -34,8 +43,7 @@ const CadastroSerie = () => {
     return () => unsubscribe(); // Cleanup ao desmontar o componente
   }, [currentUser]);
 
-  const handleAdd = async (e) => {
-    e.preventDefault();
+  const handleAdd = async (values, { resetForm }) => {
     if (!currentUser) {
       alert('Você precisa estar logado para cadastrar uma série.');
       return;
@@ -43,12 +51,12 @@ const CadastroSerie = () => {
 
     try {
       await addDoc(collection(db, 'Serie'), {
-        nome: numeroSeries,
+        nome: values.numeroSeries,
         id_professor: currentUser.uid, // Associando a série ao professor que a criou
         data_criacao: serverTimestamp(), // Adicionando data de criação
       });
       alert('Série cadastrada com sucesso!');
-      setNumeroSeries('');
+      resetForm(); // Resetando o formulário
     } catch (error) {
       console.error('Erro ao cadastrar série:', error);
       alert('Erro ao cadastrar série.');
@@ -83,16 +91,26 @@ const CadastroSerie = () => {
   return (
     <div>
       <h2>Cadastrar Séries</h2>
-      <form onSubmit={handleAdd}>
-        <input
-          type="text"
-          value={numeroSeries}
-          onChange={(e) => setNumeroSeries(e.target.value)}
-          placeholder="Número de Séries"
-          required
-        />
-        <button type="submit">Cadastrar Séries</button>
-      </form>
+      <Formik
+        initialValues={{ numeroSeries: '' }}
+        validationSchema={validationSchema}
+        onSubmit={handleAdd}
+      >
+        {({ touched, errors }) => (
+          <Form>
+            <div>
+              <Field
+                type="text"
+                name="numeroSeries"
+                placeholder="Número de Séries"
+                className={styles.input}
+              />
+              <ErrorMessage name="numeroSeries" component="div" className={styles.error} />
+            </div>
+            <button type="submit" className={styles.submitButton}>Cadastrar Séries</button>
+          </Form>
+        )}
+      </Formik>
 
       <h3>Séries Cadastradas:</h3>
       {series.map((s) => (

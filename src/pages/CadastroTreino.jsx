@@ -27,7 +27,6 @@ const CadastroTreino = () => {
     try {
       const userId = currentUser.uid;
 
-      // Consultas para as coleções usando o campo `id_professor`
       const equipamentosQuery = query(collection(db, 'Equipamento'), where('id_professor', '==', userId));
       const equipamentosSnapshot = await getDocs(equipamentosQuery);
       setEquipments(equipamentosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || []);
@@ -66,16 +65,13 @@ const CadastroTreino = () => {
         id_aluno: data.alunoId,
         id_professor: userId,
         id_tipo: data.tipoTreinoId,
-        descricao_tipo: trainingTypes.find(t => t.id === data.tipoTreinoId)?.nome || '',
+        descricao: data.descricao, // Descrição geral do treino
         equipamentos: data.equipamentos.map(equip => ({
           id_equipamento: equip.equipamentoId,
-          descricao_equipamento: equipments.find(e => e.id === equip.equipamentoId)?.nome || '',
           id_serie: equip.serieId,
-          descricao_serie: series.find(s => s.id === equip.serieId)?.numeroSeries || '',
           id_repeticao: equip.repeticaoId,
-          descricao_repeticao: repetitions.find(r => r.id === equip.repeticaoId)?.numeroRepeticoes || '',
         })),
-        data_criacao: serverTimestamp(), // Adiciona a data de criação
+        data_criacao: serverTimestamp(),
       };
 
       await addDoc(collection(db, 'Treino'), treinoData);
@@ -196,6 +192,16 @@ const CadastroTreino = () => {
               <button type="button" onClick={() => append({ equipamentoId: '', serieId: '', repeticaoId: '' })}>
                 Adicionar Equipamento
               </button>
+
+              <div>
+                <label>Descrição Geral</label>
+                <Controller
+                  name="descricao"
+                  control={control}
+                  defaultValue=""
+                  render={({ field }) => <textarea {...field} placeholder="Informações adicionais do treino" />}
+                />
+              </div>
 
               <button type="submit">Salvar</button>
             </form>
