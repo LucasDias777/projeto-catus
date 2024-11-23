@@ -1,6 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap");
 
-.dashboardPage {
+/* Variáveis para cores */
+:root {
     --c-gray-900: #000000;
     --c-gray-800: #1f1f1f;
     --c-gray-700: #2e2e2e;
@@ -11,25 +12,32 @@
     --c-gray-200: #f1f1f1;
     --c-gray-100: #ffffff;
 
+    --c-blue-500: #007BFF;
     --c-green-500: #45ffbc;
     --c-olive-500: #e3ffa8;
 
     --c-white: var(--c-gray-100);
 
-    --c-text-primary: var(--c-gray-100);
-    --c-text-secondary: var(--c-gray-200);
-    --c-text-tertiary: var(--c-gray-500);
+    --c-text-primary: #000000; /* Texto preto para fundo claro */
+    --c-text-secondary: var(--c-gray-500);
+    --c-text-tertiary: var(--c-gray-400);
+}
 
+/* Página principal do dashboard */
+.dashboardPage {
     font-family: 'Be Vietnam Pro', sans-serif;
     color: var(--c-text-primary);
-    background-color: var(--c-gray-900);
+    background-color: var(--c-gray-100); /* Fundo branco */
     min-height: 100vh;
     display: flex;
+    flex-direction: column; /* Garantir que o conteúdo fique na coluna */
     overflow: hidden;
 }
 
+/* Barra lateral */
 .sidebar {
-    background-color: var(--c-gray-800);
+    background-color: var(--c-blue-500); /* Azul */
+    color: var(--c-white); /* Texto branco */
     padding: 1.5rem;
     width: 300px;
     height: 100vh;
@@ -38,7 +46,7 @@
     left: 0;
     display: flex;
     flex-direction: column;
-    border-right: 2px solid var(--c-gray-700);
+    border-right: 2px solid var(--c-gray-300); /* Borda clara */
 }
 
 .sidebarHeader {
@@ -48,7 +56,7 @@
 .painelName {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--c-text-primary);
+    color: var(--c-white); /* Texto branco */
     text-align: center;
 }
 
@@ -63,56 +71,34 @@
     margin-bottom: 1rem;
     cursor: pointer;
     font-size: 1rem;
-    color: var(--c-text-tertiary);
+    color: var(--c-gray-100);
     transition: color 0.3s ease;
 }
 
 .menuItem.active {
-    color: var(--c-text-primary);
+    color: var(--c-white);
 }
 
 .menuItem:hover,
 .menuItem:focus {
-    color: var(--c-text-primary);
+    color: var(--c-white);
 }
 
-.submenu {
-    margin-top: 0.5rem;
-    margin-left: 1rem;
-    list-style: none;
-    padding: 0;
-    display: block; /* Submenu sempre visível */
-}
-
-.submenu button {
-    background: none;
-    border: none;
-    color: var(--c-gray-100); /* Cor branca vibrante */
-    cursor: pointer;
-    font-size: 0.875rem;
-    padding: 0.5rem 1rem;
-    transition: color 0.3s ease, background-color 0.3s ease;
-    border-radius: 8px;
-}
-
-.submenu button:hover,
-.submenu button:focus {
-    color: var(--c-text-primary);
-    background-color: rgba(255, 255, 255, 0.1);
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.15);
-}
-
+/* Conteúdo principal */
 .mainContent {
     flex: 1;
-    background-color: var(--c-gray-800);
+    background-color: var(--c-gray-100); /* Fundo branco */
     padding: 2rem;
     margin-left: 302px;
     overflow-y: auto;
-    height: 100vh;
+    height: calc(100vh - 60px); /* Ajusta a altura para evitar o esticamento */
+    display: flex;
+    flex-direction: column;
 }
 
+/* Barra superior */
 .topbar {
-    background-color: var(--c-gray-700);
+    background-color: var(--c-gray-200); /* Cinza claro */
     padding: 1rem;
     position: fixed;
     top: 0;
@@ -122,7 +108,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid var(--c-gray-600);
+    border-bottom: 2px solid var(--c-gray-300);
 }
 
 .topbarContent {
@@ -139,8 +125,8 @@
 }
 
 .logoutButton {
-    background-color: var(--c-gray-600);
-    color: var(--c-text-primary);
+    background-color: #dc3545; /* Cor de fundo vermelha */
+    color: var(--c-white); /* Cor do texto */
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 6px;
@@ -151,8 +137,83 @@
 
 .logoutButton:hover,
 .logoutButton:focus {
-    background-color: var(--c-gray-500);
+    background-color: #c82333; /* Cor vermelha mais escura no hover/focus */
 }
+
+
+/* Área de conteúdo */
 .contentArea {
-    padding-top: 4rem; /* Evita sobreposição com a barra superior */
-  }
+    padding-top: 5rem; /* Evita sobreposição com a barra superior */
+    display: flex;
+    flex-direction: column;
+    gap: 2rem; /* Espaçamento entre blocos de gráficos */
+    overflow: hidden; /* Impede que o conteúdo ultrapasse o contêiner */
+}
+
+/* Linha de gráficos */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    justify-content: flex-start; /* Alinha os gráficos à esquerda */
+    margin: 0;
+    overflow: hidden; /* Impede o overflow dos gráficos */
+}
+
+/* Estilos para gráficos */
+.chartContainer {
+    flex: 1 1 calc(50% - 1rem); /* Ocupa 50% do espaço com gap ajustado */
+    min-width: 300px;
+    max-width: calc(50% - 1rem); /* Limita a largura máxima dos gráficos */
+    background-color: var(--c-gray-200); /* Fundo claro */
+    padding: 1.5rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    height: 100%; /* Garantir que o gráfico ocupe 100% da altura disponível */
+    max-height: 300px; /* Limita a altura máxima para os gráficos */
+    overflow: hidden; /* Impede o conteúdo de se esticar para fora do gráfico */
+}
+
+.chartContainer h3 {
+    margin-bottom: 1rem;
+    color: var(--c-text-primary);
+}
+
+.chartContainer canvas {
+    width: 100%;
+    height: 200px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+        position: relative;
+    }
+
+    .mainContent {
+        margin-left: 0;
+    }
+
+    .topbar {
+        left: 0;
+    }
+
+    .row {
+        flex-direction: column; /* Empilha os gráficos verticalmente */
+        gap: 2rem;
+    }
+
+    .chartContainer {
+        flex: 1 1 100%; /* Gráficos ocupam 100% do espaço disponível */
+        min-width: 0; /* Remover a largura mínima */
+        max-width: 100%; /* Limitar a largura máxima */
+        height: 300px; /* Define uma altura fixa para gráficos em telas menores */
+    }
+}

@@ -1,9 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
+import { Chart, registerables } from 'chart.js';
 import styles from '../styles/Dashboard.module.css';
+
+Chart.register(...registerables);
 
 const DashboardProfessor = () => {
   const [userData, setUserData] = useState(null);
@@ -16,35 +19,28 @@ const DashboardProfessor = () => {
 
   useEffect(() => {
     const fetchData = async () => {
-      console.log('Iniciando fetchData para buscar dados do professor.');
       try {
         const user = auth.currentUser;
         if (user) {
-          console.log('Usuário autenticado:', user.uid);
           const docRef = doc(db, 'Pessoa', user.uid);
           const docSnap = await getDoc(docRef);
 
           if (docSnap.exists()) {
             const data = docSnap.data();
-            console.log('Dados do usuário:', data);
             if (data.tipo_pessoa === 'professor') {
-              setUserData(data);
+              setUserData({ ...data, uid: user.uid });
             } else {
-              console.warn('Tipo de usuário inválido:', data.tipo_pessoa);
-              setError('Acesso negado. Tipo de usuário inválido.');
+              setError('Acesso negado.');
               navigate('/login');
             }
           } else {
-            console.warn('Documento do usuário não encontrado no Firestore.');
             setError('Documento não encontrado.');
             navigate('/login');
           }
         } else {
-          console.warn('Nenhum usuário autenticado encontrado.');
           navigate('/login');
         }
       } catch (error) {
-        console.error('Erro ao buscar dados do usuário:', error);
         setError('Erro ao buscar dados do usuário!');
       } finally {
         setLoading(false);
@@ -63,6 +59,75 @@ const DashboardProfessor = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  useEffect(() => {
+    const loadCharts = async () => {
+      if (!userData) return;
+
+      try {
+        const alunosQuery = query(collection(db, 'Pessoa'), where('id_professor', '==', userData.uid), where('tipo_pessoa', '==', 'aluno'));
+        const alunosSnapshot = await getDocs(alunosQuery);
+        const totalAlunos = alunosSnapshot.size;
+
+        const treinosQuery = query(
+          collection(db, 'Treino'),
+          where('id_professor', '==', userData.uid)
+        );
+        const treinosSnapshot = await getDocs(treinosQuery);
+
+        const meses = Array(12).fill(0);
+        treinosSnapshot.forEach((doc) => {
+          const dataCriacao = doc.data().data_criacao.toDate();
+          if (dataCriacao.getFullYear() === new Date().getFullYear()) {
+            meses[dataCriacao.getMonth()]++;
+          }
+        });
+
+        // Gráfico de Pizza - Alunos Cadastrados
+        const ctx1 = document.getElementById('alunosCadastradosChart').getContext('2d');
+        new Chart(ctx1, {
+          type: 'pie',
+          data: {
+            labels: ['Alunos Cadastrados'],
+            datasets: [
+              {
+                data: [totalAlunos],
+                backgroundColor: ['#007BFF'],
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+          },
+        });
+
+        // Gráfico de Barras - Treinos Criados
+        const ctx2 = document.getElementById('treinosCriadosChart').getContext('2d');
+        new Chart(ctx2, {
+          type: 'bar',
+          data: {
+            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+            datasets: [
+              {
+                label: 'Treinos Criados',
+                data: meses,
+                backgroundColor: '#45ffbc',
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            maintainAspectRatio: false,
+          },
+        });
+      } catch (error) {
+        console.error('Erro ao carregar gráficos:', error);
+      }
+    };
+
+    loadCharts();
+  }, [userData]);
+
   const toggleSubmenu = (menu) => {
     setActiveMenu((prevMenu) => (prevMenu === menu ? null : menu));
   };
@@ -70,7 +135,6 @@ const DashboardProfessor = () => {
   const handleLogout = async () => {
     try {
       await auth.signOut();
-      console.log('Usuário deslogado com sucesso.');
       navigate('/login');
     } catch (error) {
       console.error('Erro ao deslogar:', error);
@@ -135,6 +199,18 @@ const DashboardProfessor = () => {
           <div className={styles.topbarContent}>
             <div className={styles.welcomeText}>Bem-vindo, {userData?.nome_completo || 'Usuário'}</div>
             <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
+          </div>
+        </div>
+        <div className={styles.contentArea}>
+          <div className={styles.row}>
+            <div className={styles.chartContainer}>
+              <h3>Alunos Cadastrados</h3>
+              <canvas id="alunosCadastradosChart"></canvas>
+            </div>
+            <div className={styles.chartContainer}>
+              <h3>Treinos Criados</h3>
+              <canvas id="treinosCriadosChart"></canvas>
+            </div>
           </div>
         </div>
       </div>

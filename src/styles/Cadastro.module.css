@@ -4,99 +4,102 @@
     justify-content: center;
     align-items: center;
     min-height: 100vh;
-    background: url('images/login.jpg') no-repeat center center;
-    background-size: cover;
-}
-
-/* Container para o formulário de cadastro */
-.cadastroContainer {
-    width: 80vw;
-    max-width: 600px;
-    background: rgba(255, 255, 255, 0.1);
-    padding: 35px;
+    background-color: #ffffff; /* Remove imagem e define fundo branco */
+    padding: 20px;
+  }
+  
+  /* Container para o formulário de cadastro */
+  .cadastroContainer {
+    width: 100%;
+    max-width: 800px; /* Aumenta largura máxima para acomodar campos lado a lado */
+    background-color: #f9f9f9; /* Fundo branco com leve tom */
+    padding: 40px;
     border-radius: 10px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(6px);
-    color: #fff;
-    display: flex;
-    flex-direction: column;
-    gap: 10px; /* Aumenta o espaçamento entre os grupos de campos */
-}
-
-/* Estilo para o cabeçalho */
-.cadastroHeading {
-    font-size: 36px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Estilo para o cabeçalho */
+  .cadastroHeading {
+    font-size: 32px;
+    font-weight: bold;
     text-align: center;
-    margin-bottom: 0px;
-}
-
-/* Estilo para os grupos de campos do formulário */
-.formGroup {
+    margin-bottom: 20px;
+    color: #333333;
+  }
+  
+  /* Grupos de campos lado a lado */
+  .formRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px; /* Espaço entre os campos */
+  }
+  
+  /* Campos ocupam igualmente o espaço */
+  .formGroup {
+    flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 0px; /* Aumenta o espaçamento entre o label e o campo */
-}
-
-/* Estilo para os rótulos */
-.formGroup label {
-    font-size: 17px;
-    font-weight: 500;
-    color: #fff;
-    margin-bottom: 0px; /* Adiciona espaçamento inferior aos rótulos para separar dos campos */
-    line-height: 27px; /* Ajusta o alinhamento vertical da label */
-}
-
-/* Estilo para os campos de input e select */
-.formGroup input,
-.formGroup select {
-    padding: 5px; /* Ajusta o padding para melhorar a aparência e o alinhamento */
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 5px;
-    background: rgba(0, 0, 0, 0.2);
-    color: #fff;
-    font-size: 16px;
-    outline: none;
-    height: 30px; /* Ajusta a altura dos campos para melhorar o alinhamento com a label */
-}
-
-/* Placeholder em branco */
-.formGroup input::placeholder {
-    color: rgba(255, 255, 255, 0.6);
-}
-
-/* Estilo para o botão de submit */
-button[type="submit"] {
-    width: 100%;
-    padding: 10px; /* Aumenta o tamanho do botão */
-    background: #1e90ff;
-    border: none;
-    border-radius: 5px;
-    color: #fff;
-    font-size: 18px;
+    margin-bottom: 20px;
+  }
+  
+  /* Rótulos dos campos */
+  .formGroup label {
+    font-size: 14px;
     font-weight: bold;
-    cursor: pointer;
-    transition: background 0.3s ease;
-    margin-top: 20px; /* Aumenta o espaçamento entre o último campo e o botão */
-}
-
-button[type="submit"]:hover {
-    background: #4682b4;
-}
-/* Estilo para o botão de voltar ao dashboard */
-.backButton {
-    width: 100%;
+    color: #555555;
+    margin-bottom: 8px;
+  }
+  
+  /* Estilo para os campos de input e select */
+  .formGroup input,
+  .formGroup select {
     padding: 10px;
-    background: #ff4500;
+    border: 1px solid #cccccc;
+    border-radius: 5px;
+    background-color: #ffffff;
+    font-size: 14px;
+    color: #333333;
+  }
+  
+  .formGroup input:focus,
+  .formGroup select:focus {
+    outline: none;
+    border-color: #1e90ff;
+  }
+  
+  /* Placeholder mais sutil */
+  .formGroup input::placeholder {
+    color: #aaaaaa;
+  }
+  
+  /* Botões */
+  button[type="submit"],
+  .backButton {
+    width: 100%;
+    padding: 12px;
     border: none;
     border-radius: 5px;
-    color: #fff;
-    font-size: 18px;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    transition: background 0.3s ease;
-    margin-top: 20px; /* Espaçamento entre o botão de voltar e o formulário */
-}
-
-.backButton:hover {
-    background: #ff6347;
-}
+    transition: background-color 0.3s ease;
+  }
+  
+  button[type="submit"] {
+    background-color: #1e90ff;
+    color: #ffffff;
+  }
+  
+  button[type="submit"]:hover {
+    background-color: #4682b4;
+  }
+  
+  .backButton {
+    background-color: #28a745; /* Verde */
+    color: #ffffff; /* Cor do texto */
+    margin-top: 10px;
+  }
+  
+  .backButton:hover {
+    background-color: #218838; /* Verde mais escuro para o hover */
+  }

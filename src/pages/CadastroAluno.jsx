@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useFormik, Formik, Field, Form } from 'formik';
+import { Formik, Field, Form, ErrorMessage } from 'formik'; // Corrigido: Importação do ErrorMessage
 import * as Yup from 'yup';
 import axios from 'axios';
 import { auth, db } from '../config/firebaseConfig';
@@ -40,7 +40,8 @@ const CadastroAluno = () => {
   });
 
   // Envio do formulário
-  const onSubmit = async (values, { resetForm }) => {
+  const onSubmit = async (values, { resetForm, setSubmitting }) => {
+    setSubmitting(true);
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.senha);
       const user = userCredential.user;
@@ -60,6 +61,7 @@ const CadastroAluno = () => {
       console.error('Erro ao cadastrar aluno:', error.message);
       alert(`Erro ao cadastrar aluno: ${error.message}`);
     }
+    setSubmitting(false);
   };
 
   // Função para buscar informações pelo CEP
@@ -106,110 +108,111 @@ const CadastroAluno = () => {
           validationSchema={validationSchema}
           onSubmit={onSubmit}
         >
-          {({ errors, touched, values, setFieldValue }) => (
+          {({ errors, touched, values, setFieldValue, isSubmitting }) => (
             <Form>
-              <div className={styles.formGroup}>
-                <label>Nome Completo</label>
-                <Field name="nome_completo" type="text" placeholder="Nome Completo" />
-                {errors.nome_completo && touched.nome_completo && (
-                  <p className={styles.errorMessage}>{errors.nome_completo}</p>
-                )}
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Nome Completo</label>
+                  <Field name="nome_completo" type="text" className={styles.formControl} />
+                  <ErrorMessage name="nome_completo" component="div" className={styles.error} />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Data de Nascimento</label>
+                  <Field name="data_nascimento" type="date" className={styles.formControl} />
+                  <ErrorMessage name="data_nascimento" component="div" className={styles.error} />
+                </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label>Data de Nascimento</label>
-                <Field name="data_nascimento" type="date" />
-                {errors.data_nascimento && touched.data_nascimento && (
-                  <p className={styles.errorMessage}>{errors.data_nascimento}</p>
-                )}
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Gênero</label>
+                  <Field name="genero" as="select" className={styles.formControl}>
+                    <option value="">Selecione</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Outros">Outros</option>
+                  </Field>
+                  <ErrorMessage name="genero" component="div" className={styles.error} />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>CEP</label>
+                  <Field
+                    name="cep"
+                    type="text"
+                    className={styles.formControl}
+                    onBlur={() => fetchAddressByCep(values.cep, setFieldValue)} // Corrigido o nome da função
+                  />
+                  <ErrorMessage name="cep" component="div" className={styles.error} />
+                </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label>Gênero</label>
-                <Field as="select" name="genero">
-                  <option value="" disabled>
-                    Selecione o Gênero
-                  </option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                  <option value="Outros">Outros</option>
-                </Field>
-                {errors.genero && touched.genero && (
-                  <p className={styles.errorMessage}>{errors.genero}</p>
-                )}
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Cidade</label>
+                  <Field name="cidade" type="text" className={styles.formControl} />
+                  <ErrorMessage name="cidade" component="div" className={styles.error} />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>UF</label>
+                  <Field name="uf" type="text" className={styles.formControl} />
+                  <ErrorMessage name="uf" component="div" className={styles.error} />
+                </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label>CEP</label>
-                <Field
-                  name="cep"
-                  type="text"
-                  placeholder="CEP"
-                  onBlur={(e) => fetchAddressByCep(e.target.value, setFieldValue)}
-                />
-                {errors.cep && touched.cep && (
-                  <p className={styles.errorMessage}>{errors.cep}</p>
-                )}
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Endereço</label>
+                  <Field name="endereco" type="text" className={styles.formControl} />
+                  <ErrorMessage name="endereco" component="div" className={styles.error} />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Número da Residência</label>
+                  <Field name="numero_casa" type="text" className={styles.formControl} />
+                  <ErrorMessage name="numero_casa" component="div" className={styles.error} />
+                </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label>Cidade</label>
-                <Field name="cidade" type="text" placeholder="Cidade" disabled />
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Bairro</label>
+                  <Field name="bairro" type="text" className={styles.formControl} />
+                  <ErrorMessage name="bairro" component="div" className={styles.error} />
+                </div>
+
+                <div className={styles.formGroup}>
+                  <label>Complemento</label>
+                  <Field name="complemento" type="text" className={styles.formControl} />
+                  <ErrorMessage name="complemento" component="div" className={styles.error} />
+                </div>
               </div>
 
-              <div className={styles.formGroup}>
-                <label>UF</label>
-                <Field name="uf" type="text" placeholder="UF" disabled />
-              </div>
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Telefone</label>
+                  <Field name="telefone" type="text" className={styles.formControl} />
+                  <ErrorMessage name="telefone" component="div" className={styles.error} />
+                </div>
 
-              <div className={styles.formGroup}>
-                <label>Endereço</label>
-                <Field name="endereco" type="text" placeholder="Endereço" />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Número da Residência</label>
-                <Field name="numero_casa" type="text" placeholder="Número da Residência" />
-                {errors.numero_casa && touched.numero_casa && (
-                  <p className={styles.errorMessage}>{errors.numero_casa}</p>
-                )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Bairro</label>
-                <Field name="bairro" type="text" placeholder="Bairro" />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Complemento</label>
-                <Field name="complemento" type="text" placeholder="Complemento" />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Telefone</label>
-                <Field name="telefone" type="text" placeholder="Telefone" />
-                {errors.telefone && touched.telefone && (
-                  <p className={styles.errorMessage}>{errors.telefone}</p>
-                )}
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>E-mail</label>
-                <Field name="email" type="email" placeholder="E-mail" />
-                {errors.email && touched.email && (
-                  <p className={styles.errorMessage}>{errors.email}</p>
-                )}
+                <div className={styles.formGroup}>
+                  <label>E-mail</label>
+                  <Field name="email" type="email" className={styles.formControl} />
+                  <ErrorMessage name="email" component="div" className={styles.error} />
+                </div>
               </div>
 
               <div className={styles.formGroup}>
                 <label>Senha</label>
-                <Field name="senha" type="password" placeholder="Senha" />
-                {errors.senha && touched.senha && (
-                  <p className={styles.errorMessage}>{errors.senha}</p>
-                )}
+                <Field name="senha" type="password" className={styles.formControl} />
+                <ErrorMessage name="senha" component="div" className={styles.error} />
               </div>
 
-              <button type="submit">Cadastrar</button>
+              <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+                {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
+              </button>
             </Form>
           )}
         </Formik>

@@ -1,209 +1,95 @@
-/* Importação da fonte Montserrat */
-@import url('https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;600;700&display=swap');
 
-/* Estilo geral */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Montserrat', sans-serif;
-}
-
-/* Estilo específico para a página de login */
 .loginPage {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin: 0;
-    overflow: hidden;
-    position: relative;
-    background: url('images/login.jpg') no-repeat center center;
-    background-size: cover;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #f8f9fa; /* Fundo cinza claro */
+  font-family: 'Montserrat', sans-serif;
 }
 
-/* Container do formulário */
-.loginPage .container {
-    width: 420px; /* Mantido o tamanho original */
-    background: transparent;
-    border: 2px solid rgba(255, 255, 255, .2);
-    backdrop-filter: blur(6px);
-    box-shadow: 0 0 10px rgba(255, 255, 255, .2);
-    color: #fff;
-    padding: 30px 40px; /* Mantido o padding original */
-    border-radius: 30px;
+.container {
+  background: #fff; /* Fundo branco */
+  border-radius: 10px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  padding: 40px 30px;
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Centraliza os elementos horizontalmente */
+  gap: 20px; /* Espaçamento entre os elementos */
 }
 
-/* Estilo para o cabeçalho do formulário */
-.loginPage .heading {
-    font-family: 'Montserrat', sans-serif;
-    font-weight: bold;
-    font-size: 36px; /* Mantido o tamanho original */
-    text-align: center;
-    margin-bottom: 20px; /* Ajustado o espaçamento inferior */
+.logoSection {
+  margin-top: -40px; /* Posiciona a logo mais acima */
 }
 
-/* Estilo para os grupos de campos do formulário */
-.loginPage .formGroup {
-    position: relative;
-    width: 100%;
-    height: 50px; /* Mantida a altura original */
-    margin: 20px 0; /* Ajustado o espaçamento superior e inferior */
+.logo {
+  width: 250px; /* Ajusta o tamanho da logo */
+  height: auto;
 }
 
-/* Estilo para os campos do formulário */
-.loginPage input {
-    width: 100%;
-    height: 100%;
-    background: transparent;
-    font-size: 16px; /* Mantido o tamanho original da fonte */
-    color: #fff;
-    padding: 15px 40px; /* Ajustado o padding para maior conforto */
-    border: none;
-    outline: none;
-    border: 2px solid rgba(255, 255, 255, .2);
-    border-radius: 40px;
+.welcomeText {
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 30px; /* Espaçamento inferior */
+  margin-top: -10px;
 }
 
-.loginPage input::placeholder {
-    color: #fff;
+.formGroup {
+  margin-bottom: 15px;
+  width: 100%; /* Faz os campos ocuparem toda a largura do container */
 }
 
-/* Estilo para os ícones dentro dos campos */
-.loginPage i {
-    position: absolute;
-    right: 20px;
-    top: 50%;
-    transform: translateY(-50%);
-    font-size: 20px; /* Mantido o tamanho original dos ícones */
-    color: #fff;
+input {
+  width: 100%;
+  padding: 10px 15px;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  background: #f9f9f9;
 }
 
-/* Estilo para a seção de lembrete e esqueci a senha */
-.loginPage .remember-forget {
-    display: flex;
-    justify-content: space-between;
-    font-size: 14.5px; /* Mantido o tamanho original da fonte */
-    margin: 20px 0; /* Ajustado o espaçamento superior e inferior */
+input:focus {
+  border-color: #007bff;
 }
 
-.loginPage .remember-forget label input {
-    accent-color: #fff;
-    margin-right: 10px;
+.button {
+  background: #007bff;
+  color: #fff;
+  font-size: 16px;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
 }
 
-.loginPage .remember-forget a {
-    color: #fff;
-    text-decoration: none;
+.button:hover {
+  background: #0056b3;
 }
 
-.loginPage .remember-forget a:hover {
-    text-decoration: underline;
+.errorMessage {
+  color: red;
+  font-size: 14px;
 }
 
-/* Estilo para o botão */
-.loginPage .button {
-    width: 100%;
-    height: 45px; /* Mantida a altura original do botão */
-    background: #fff;
-    border: none;
-    outline: none;
-    border-radius: 40px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, .1);
-    cursor: pointer;
-    color: #333;
-    font-weight: 600;
-    font-size: 19px; /* Aumenta o tamanho da fonte do botão */
-    text-align: center; /* Garante o alinhamento central do texto */
-    line-height: 10px; /* Alinha verticalmente o texto no centro do botão */
-    letter-spacing: 0.5px;
-    text-transform: uppercase;
-    margin-top: 30px; /* Aumentado o espaçamento superior */
-    transition: background-color 0.3s ease-in-out, transform 80ms ease-in;
+.registerLink {
+  margin-top: 15px;
+  text-align: center;
 }
 
-/* Estilo para o botão quando pressionado */
-.loginPage .button:active {
-    background-color: #4a2e7a;
-    transform: scale(0.95);
+.registerLink a {
+  color: #007bff;
+  text-decoration: none;
 }
 
-/* Estilo para o botão ao passar o mouse */
-.loginPage .button:hover {
-    background-color: rgba(255, 255, 255, .2);
-    color: #fff;
-}
-
-/* Estilo para mensagens de erro */
-.loginPage .errorMessage {
-    color: red;
-    margin-top: 1rem; /* Mantido o espaçamento original */
-}
-
-/* Estilo para o link de registro */
-.loginPage .registerLink {
-    font-size: 14.5px; /* Mantido o tamanho original da fonte */
-    text-align: center;
-    margin-top: 30px; /* Aumentado o espaçamento superior */
-}
-
-.loginPage .registerLink p a {
-    color: #fff;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.loginPage .registerLink p a:hover {
-    text-decoration: underline;
-}
-
-/* Estilos para a alternância entre login e cadastro */
-.loginPage .container.active {
-    transform: translateX(-100%);
-}
-
-/* Estilo para o formulário de cadastro */
-.registerPage .container {
-    transform: translateX(100%);
-}
-
-/* Estilo para o botão de alternância */
-.loginPage .toggleButton {
-    background: transparent;
-    border: none;
-    color: #007bff;
-    font-size: 14px;
-    cursor: pointer;
-    margin-top: 1rem;
-    transition: color 0.3s ease;
-}
-
-/* Estilo para o botão de alternância ao passar o mouse */
-.loginPage .toggleButton:hover {
-    color: #0044ff;
-}
-
-/* Estilos para o indicador de alternância */
-.loginPage .toggleContainer {
-    position: absolute;
-    bottom: 1rem;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-}
-
-.loginPage .toggle {
-    width: 50%;
-    height: 4px;
-    background: #007bff;
-    transition: transform 0.3s ease;
-}
-
-/* Estilos para a posição do toggle quando está na tela de login ou cadastro */
-.loginPage .toggleLeft {
-    transform: translateX(0);
-}
-
-.loginPage .toggleRight {
-    transform: translateX(100%);
+.registerLink a:hover {
+  text-decoration: underline;
 }

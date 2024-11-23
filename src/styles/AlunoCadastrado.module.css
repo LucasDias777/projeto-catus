@@ -1,37 +1,38 @@
 /* Estilos para a página de Alunos Cadastrados */
-
 .page {
   padding: 20px;
-  background-color: #000; /* Fundo preto para essa página */
+  background-color: #fff; /* Fundo branco */
   min-height: 100vh;
-  color: #fff;
+  color: #000; /* Texto preto */
 }
 
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #333; /* Barra superior preta */
+  background-color: #f8f9fa; /* Barra superior clara */
   padding: 10px 20px;
-  border-bottom: 2px solid #444;
+  border-bottom: 2px solid #ddd;
+  border-radius: 10px; /* Bordas arredondadas para a barra superior */
 }
 
 h1 {
   font-size: 24px;
-  color: #fff;
+  color: #000; /* Texto preto */
 }
 
 .backButton {
   padding: 10px 15px;
-  background-color: #28a745;
+  background-color: #28a745; /* Verde */
   color: white;
   border: none;
+  border-radius: 5px; /* Adiciona bordas arredondadas */
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .backButton:hover {
-  background-color: #218838;
+  background-color: #218838; /* Verde mais escuro ao passar o mouse */
 }
 
 /* Estilo para o campo de pesquisa */
@@ -44,6 +45,7 @@ h1 {
   border-radius: 5px;
 }
 
+/* Estilos para a tabela */
 .table {
   width: 100%;
   border-collapse: collapse;
@@ -57,12 +59,12 @@ h1 {
 }
 
 .table th {
-  background-color: #444;
-  color: #fff;
+  background-color: #f1f1f1; /* Cabeçalho da tabela com fundo claro */
+  color: #000; /* Texto preto */
 }
 
 .table td {
-  color: #fff;
+  color: #000; /* Texto preto */
 }
 
 .editForm {
@@ -76,11 +78,14 @@ h1 {
 .formGroup label {
   display: block;
   margin-bottom: 5px;
+  color: #000; /* Texto preto */
 }
 
 .formGroup input {
   width: 100%;
   padding: 8px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
   box-sizing: border-box;
 }
 
@@ -88,7 +93,7 @@ h1 {
 .iconButton {
   background: none;
   border: none;
-  color: #fff;
+  color: #000; /* Ícones pretos */
   cursor: pointer;
   padding: 5px;
   margin-right: 10px;
@@ -96,9 +101,9 @@ h1 {
 }
 
 .iconButton:hover {
-  color: #007bff;
-  background-color: rgba(255, 255, 255, 0.2); /* Fundo branco semitransparente */
-  border-radius: 5px; /* Adiciona bordas arredondadas */
+  color: #007bff; /* Azul ao passar o mouse */
+  background-color: rgba(0, 0, 0, 0.1); /* Fundo preto semitransparente */
+  border-radius: 5px;
 }
 
 button {
@@ -106,6 +111,7 @@ button {
   border: none;
   color: white;
   background-color: #007bff;
+  border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -123,7 +129,7 @@ button:hover {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.8); /* Fundo escuro semitransparente */
+  background: rgba(0, 0, 0, 0.5); /* Fundo preto semitransparente */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -153,13 +159,13 @@ button:hover {
   cursor: pointer;
   color: #333;
   transition: color 0.3s ease, background-color 0.3s ease;
-  border-radius: 50%; /* Botão redondo */
-  padding: 5px; /* Espaçamento interno para o botão */
+  border-radius: 50%;
+  padding: 5px;
 }
 
 .modalClose:hover {
   color: #ff0000;
-  background-color: rgba(255, 255, 255, 0.5); /* Fundo branco semitransparente ao passar o mouse */
+  background-color: rgba(255, 255, 255, 0.5);
 }
 
 /* Estilos do cabeçalho e corpo do modal */
@@ -175,12 +181,12 @@ button:hover {
 
 .modalFooter {
   display: flex;
-  flex-direction: column; /* Alinha os botões em coluna */
-  gap: 10px; /* Espaço entre os botões */
+  flex-direction: column;
+  gap: 10px;
 }
 
 .modalFooter button {
-  width: 100%; /* Faz os botões ocuparem toda a largura */
+  width: 100%;
   padding: 10px 20px;
   border-radius: 5px;
   border: none;
@@ -190,7 +196,7 @@ button:hover {
 }
 
 .modalFooter button[type="submit"] {
-  background-color: #007bff; /* Cor do botão "Salvar" */
+  background-color: #007bff;
 }
 
 .modalFooter button[type="submit"]:hover {
@@ -198,13 +204,13 @@ button:hover {
 }
 
 .modalFooter button[type="button"] {
-  background-color: #dc3545; /* Cor do botão "Cancelar" */
+  background-color: #dc3545;
 }
 
 .modalFooter button[type="button"]:hover {
-  background-color: #c82333; /* Cor ao passar o mouse no "Cancelar" */
+  background-color: #c82333;
 }
 
-.errorText { 
-  color: #ff0000; /* Cor vermelha para mensagens de erro */
+.errorText {
+  color: #ff0000;
 }

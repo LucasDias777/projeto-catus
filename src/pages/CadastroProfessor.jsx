@@ -119,94 +119,106 @@ const CadastroProfessor = () => {
         >
           {({ isSubmitting, setFieldValue, values }) => (
             <Form>
-              <div className={styles.formGroup}>
-                <label>Nome Completo</label>
-                <Field name="nome_completo" type="text" className={styles.formControl} />
-                <ErrorMessage name="nome_completo" component="div" className={styles.error} />
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Nome Completo</label>
+                  <Field name="nome_completo" type="text" className={styles.formControl} />
+                  <ErrorMessage name="nome_completo" component="div" className={styles.error} />
+                </div>
+  
+                <div className={styles.formGroup}>
+                  <label>Data de Nascimento</label>
+                  <Field name="data_nascimento" type="date" className={styles.formControl} />
+                  <ErrorMessage name="data_nascimento" component="div" className={styles.error} />
+                </div>
               </div>
-
-              <div className={styles.formGroup}>
-                <label>Data de Nascimento</label>
-                <Field name="data_nascimento" type="date" className={styles.formControl} />
-                <ErrorMessage name="data_nascimento" component="div" className={styles.error} />
+  
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Gênero</label>
+                  <Field name="genero" as="select" className={styles.formControl}>
+                    <option value="">Selecione</option>
+                    <option value="Masculino">Masculino</option>
+                    <option value="Feminino">Feminino</option>
+                    <option value="Outros">Outros</option>
+                  </Field>
+                  <ErrorMessage name="genero" component="div" className={styles.error} />
+                </div>
+  
+                <div className={styles.formGroup}>
+                  <label>CEP</label>
+                  <Field
+                    name="cep"
+                    type="text"
+                    className={styles.formControl}
+                    onBlur={() => buscarEnderecoPorCep(values.cep, setFieldValue)}
+                  />
+                  <ErrorMessage name="cep" component="div" className={styles.error} />
+                </div>
               </div>
-
-              <div className={styles.formGroup}>
-                <label>Gênero</label>
-                <Field name="genero" as="select" className={styles.formControl}>
-                  <option value="">Selecione</option>
-                  <option value="Masculino">Masculino</option>
-                  <option value="Feminino">Feminino</option>
-                  <option value="Outros">Outros</option>
-                </Field>
-                <ErrorMessage name="genero" component="div" className={styles.error} />
+  
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Cidade</label>
+                  <Field name="cidade" type="text" className={styles.formControl} />
+                  <ErrorMessage name="cidade" component="div" className={styles.error} />
+                </div>
+  
+                <div className={styles.formGroup}>
+                  <label>UF</label>
+                  <Field name="uf" type="text" className={styles.formControl} />
+                  <ErrorMessage name="uf" component="div" className={styles.error} />
+                </div>
               </div>
-
-              <div className={styles.formGroup}>
-                <label>CEP</label>
-                <Field
-                  name="cep"
-                  type="text"
-                  className={styles.formControl}
-                  onBlur={() => buscarEnderecoPorCep(values.cep, setFieldValue)}
-                />
-                <ErrorMessage name="cep" component="div" className={styles.error} />
+  
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Endereço</label>
+                  <Field name="endereco" type="text" className={styles.formControl} />
+                  <ErrorMessage name="endereco" component="div" className={styles.error} />
+                </div>
+  
+                <div className={styles.formGroup}>
+                  <label>Número da Residência</label>
+                  <Field name="numero_casa" type="text" className={styles.formControl} />
+                  <ErrorMessage name="numero_casa" component="div" className={styles.error} />
+                </div>
               </div>
-
-              <div className={styles.formGroup}>
-                <label>Cidade</label>
-                <Field name="cidade" type="text" className={styles.formControl} />
-                <ErrorMessage name="cidade" component="div" className={styles.error} />
+  
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Bairro</label>
+                  <Field name="bairro" type="text" className={styles.formControl} />
+                  <ErrorMessage name="bairro" component="div" className={styles.error} />
+                </div>
+  
+                <div className={styles.formGroup}>
+                  <label>Complemento</label>
+                  <Field name="complemento" type="text" className={styles.formControl} />
+                  <ErrorMessage name="complemento" component="div" className={styles.error} />
+                </div>
               </div>
-
-              <div className={styles.formGroup}>
-                <label>UF</label>
-                <Field name="uf" type="text" className={styles.formControl} />
-                <ErrorMessage name="uf" component="div" className={styles.error} />
+  
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Telefone</label>
+                  <Field name="telefone" type="text" className={styles.formControl} />
+                  <ErrorMessage name="telefone" component="div" className={styles.error} />
+                </div>
+  
+                <div className={styles.formGroup}>
+                  <label>E-mail</label>
+                  <Field name="email" type="email" className={styles.formControl} />
+                  <ErrorMessage name="email" component="div" className={styles.error} />
+                </div>
               </div>
-
-              <div className={styles.formGroup}>
-                <label>Endereço</label>
-                <Field name="endereco" type="text" className={styles.formControl} />
-                <ErrorMessage name="endereco" component="div" className={styles.error} />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Número da Residência</label>
-                <Field name="numero_casa" type="text" className={styles.formControl} />
-                <ErrorMessage name="numero_casa" component="div" className={styles.error} />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Bairro</label>
-                <Field name="bairro" type="text" className={styles.formControl} />
-                <ErrorMessage name="bairro" component="div" className={styles.error} />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Complemento</label>
-                <Field name="complemento" type="text" className={styles.formControl} />
-                <ErrorMessage name="complemento" component="div" className={styles.error} />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>Telefone</label>
-                <Field name="telefone" type="text" className={styles.formControl} />
-                <ErrorMessage name="telefone" component="div" className={styles.error} />
-              </div>
-
-              <div className={styles.formGroup}>
-                <label>E-mail</label>
-                <Field name="email" type="email" className={styles.formControl} />
-                <ErrorMessage name="email" component="div" className={styles.error} />
-              </div>
-
+  
               <div className={styles.formGroup}>
                 <label>Senha</label>
                 <Field name="senha" type="password" className={styles.formControl} />
                 <ErrorMessage name="senha" component="div" className={styles.error} />
               </div>
-
+  
               <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
                 {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
               </button>

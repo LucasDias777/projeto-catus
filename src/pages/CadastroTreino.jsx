@@ -3,11 +3,22 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import { db } from '../config/firebaseConfig';
-import { collection, addDoc, getDocs, query, where, serverTimestamp } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  getDocs,
+  query,
+  where,
+  serverTimestamp,
+  updateDoc,
+  deleteDoc,
+  doc,
+  getDoc,
+} from 'firebase/firestore';
 import styles from '../styles/CadastroTreino.module.css';
 
 const CadastroTreino = () => {
-  const { control, handleSubmit, reset, setValue } = useForm();
+  const { control, handleSubmit, reset, setValue, register } = useForm();
   const { fields, append, remove } = useFieldArray({ control, name: 'equipamentos' });
 
   const [equipments, setEquipments] = useState([]);
@@ -15,11 +26,17 @@ const CadastroTreino = () => {
   const [repetitions, setRepetitions] = useState([]);
   const [trainingTypes, setTrainingTypes] = useState([]);
   const [students, setStudents] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false);
+  const [trainings, setTrainings] = useState([]);
+  const [selectedTraining, setSelectedTraining] = useState(null);
+  const [modalType, setModalType] = useState(null);
 
   const navigate = useNavigate();
   const auth = getAuth();
   const currentUser = auth.currentUser;
+
+  useEffect(() => {
+    fetchData();
+  }, []);
 
   const fetchData = async () => {
     if (!currentUser) return;
@@ -27,33 +44,27 @@ const CadastroTreino = () => {
     try {
       const userId = currentUser.uid;
 
-      const equipamentosQuery = query(collection(db, 'Equipamento'), where('id_professor', '==', userId));
-      const equipamentosSnapshot = await getDocs(equipamentosQuery);
-      setEquipments(equipamentosSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || []);
+      const fetchCollection = async (collectionName, conditions = []) => {
+        const baseQuery = query(collection(db, collectionName), ...conditions);
+        const snapshot = await getDocs(baseQuery);
+        return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+      };
 
-      const seriesQuery = query(collection(db, 'Serie'), where('id_professor', '==', userId));
-      const seriesSnapshot = await getDocs(seriesQuery);
-      setSeries(seriesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || []);
-
-      const repetitionsQuery = query(collection(db, 'Repeticao'), where('id_professor', '==', userId));
-      const repetitionsSnapshot = await getDocs(repetitionsQuery);
-      setRepetitions(repetitionsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || []);
-
-      const trainingTypesQuery = query(collection(db, 'Tipo'), where('id_professor', '==', userId));
-      const trainingTypesSnapshot = await getDocs(trainingTypesQuery);
-      setTrainingTypes(trainingTypesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || []);
-
-      const studentsQuery = query(collection(db, 'Pessoa'), where('id_professor', '==', userId), where('tipo_pessoa', '==', 'aluno'));
-      const studentsSnapshot = await getDocs(studentsQuery);
-      setStudents(studentsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) || []);
+      setEquipments(await fetchCollection('Equipamento', [where('id_professor', '==', userId)]));
+      setSeries(await fetchCollection('Serie', [where('id_professor', '==', userId)]));
+      setRepetitions(await fetchCollection('Repeticao', [where('id_professor', '==', userId)]));
+      setTrainingTypes(await fetchCollection('Tipo', [where('id_professor', '==', userId)]));
+      setStudents(
+        await fetchCollection('Pessoa', [
+          where('id_professor', '==', userId),
+          where('tipo_pessoa', '==', 'aluno'),
+        ])
+      );
+      setTrainings(await fetchCollection('Treino', [where('id_professor', '==', userId)]));
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
     }
   };
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const onSubmit = async (data) => {
     if (!currentUser) return;
@@ -65,8 +76,8 @@ const CadastroTreino = () => {
         id_aluno: data.alunoId,
         id_professor: userId,
         id_tipo: data.tipoTreinoId,
-        descricao: data.descricao, // Descrição geral do treino
-        equipamentos: data.equipamentos.map(equip => ({
+        descricao: data.descricao,
+        equipamentos: data.equipamentos.map((equip) => ({
           id_equipamento: equip.equipamentoId,
           id_serie: equip.serieId,
           id_repeticao: equip.repeticaoId,
@@ -74,32 +85,111 @@ const CadastroTreino = () => {
         data_criacao: serverTimestamp(),
       };
 
-      await addDoc(collection(db, 'Treino'), treinoData);
+      if (modalType === 'edit' && selectedTraining) {
+        await updateDoc(doc(db, 'Treino', selectedTraining.id), treinoData);
+      } else {
+        await addDoc(collection(db, 'Treino'), treinoData);
+      }
 
+      fetchData();
       reset();
-      setModalVisible(false);
+      handleCloseModal();
     } catch (error) {
       console.error('Erro ao salvar treino:', error);
     }
   };
 
+  const handleEdit = async (training) => {
+    setSelectedTraining(training);
+
+    try {
+      const alunoDoc = await getDoc(doc(db, 'Pessoa', training.id_aluno));
+      const tipoDoc = await getDoc(doc(db, 'Tipo', training.id_tipo));
+
+      setValue('alunoId', training.id_aluno);
+      setValue('tipoTreinoId', training.id_tipo);
+      setValue('descricao', training.descricao || '');
+      setValue('alunoNome', alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Desconhecido');
+      setValue('tipoTreinoNome', tipoDoc.exists() ? tipoDoc.data().nome : 'Desconhecido');
+    } catch (error) {
+      console.error('Erro ao buscar informações adicionais para edição:', error);
+    }
+
+    const equipamentosFormatados = training.equipamentos.map((equip) => ({
+      equipamentoId: equip.id_equipamento || '',
+      serieId: equip.id_serie || '',
+      repeticaoId: equip.id_repeticao || '',
+    }));
+
+    reset({ equipamentos: equipamentosFormatados });
+    setModalType('edit');
+  };
+
+  const handleCreate = () => {
+    reset({ alunoId: '', tipoTreinoId: '', descricao: '', equipamentos: [] });
+    setSelectedTraining(null);
+    setModalType('create');
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, 'Treino', id));
+      fetchData();
+    } catch (error) {
+      console.error('Erro ao excluir treino:', error);
+    }
+  };
+
+  const handleCloseModal = () => {
+    reset();
+    setModalType(null);
+    setSelectedTraining(null);
+  };
+
+  const getStudentName = (id) =>
+    students.find((student) => student.id === id)?.nome_completo || 'Desconhecido';
+  const getTrainingTypeName = (id) =>
+    trainingTypes.find((type) => type.id === id)?.nome || 'Desconhecido';
+
   return (
     <div className={styles.pageContainer}>
       <div className={styles.topBar}>
         <h2>Cadastro de Treino</h2>
-        <button onClick={() => setModalVisible(true)} className={styles.addButton}>
+        <button onClick={handleCreate} className={styles.addButton}>
           Adicionar Treino
         </button>
-        <button onClick={() => navigate('/dashboard-professor')} className={styles.backButton}>
+        <button
+          onClick={() => navigate('/dashboard-professor')}
+          className={styles.backButton}
+        >
           Voltar ao Dashboard
         </button>
       </div>
 
-      {modalVisible && (
-        <div className={`${styles.modal} ${styles.visible}`} onClick={() => setModalVisible(false)}>
-          <div className={styles.modalContent} onClick={(e) => e.stopPropagation()}>
+      <div className={styles.treinosContainer}>
+        {trainings.map((training) => (
+          <div key={training.id} className={styles.treinoCard}>
+            <h3>Treino</h3>
+            <p>Aluno: {getStudentName(training.id_aluno)}</p>
+            <p>Tipo de Treino: {getTrainingTypeName(training.id_tipo)}</p>
+            <p>Descrição: {training.descricao}</p>
+            <div className={styles.treinoButtons}>
+              <button onClick={() => handleEdit(training)} className={styles.editButton}>
+                Editar
+              </button>
+              <button onClick={() => handleDelete(training.id)} className={styles.deleteButton}>
+                Remover
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {modalType && (
+        <div className={`${styles.modal} ${styles.visible}`}>
+          <div className={styles.modalContent}>
+            <h3>{modalType === 'create' ? 'Adicionar Treino' : 'Editar Treino'}</h3>
             <form onSubmit={handleSubmit(onSubmit)}>
-              <h3>Adicionar Treino</h3>
               <div>
                 <Controller
                   name="alunoId"
@@ -107,8 +197,10 @@ const CadastroTreino = () => {
                   defaultValue=""
                   render={({ field }) => (
                     <select {...field} required>
-                      <option value="">Selecione um aluno</option>
-                      {students.map(student => (
+                      <option value="" disabled>
+                        Selecione um aluno
+                      </option>
+                      {students.map((student) => (
                         <option key={student.id} value={student.id}>
                           {student.nome_completo}
                         </option>
@@ -117,7 +209,6 @@ const CadastroTreino = () => {
                   )}
                 />
               </div>
-
               <div>
                 <Controller
                   name="tipoTreinoId"
@@ -125,8 +216,10 @@ const CadastroTreino = () => {
                   defaultValue=""
                   render={({ field }) => (
                     <select {...field} required>
-                      <option value="">Selecione um tipo</option>
-                      {trainingTypes.map(type => (
+                      <option value="" disabled>
+                        Selecione um tipo de treino
+                      </option>
+                      {trainingTypes.map((type) => (
                         <option key={type.id} value={type.id}>
                           {type.nome}
                         </option>
@@ -135,17 +228,18 @@ const CadastroTreino = () => {
                   )}
                 />
               </div>
-
               {fields.map((item, index) => (
-                <div key={item.id} className={styles.equipmentGroup}>
+                <div key={item.id} className={styles.equipmentContainer}>
                   <Controller
                     name={`equipamentos[${index}].equipamentoId`}
                     control={control}
                     defaultValue=""
                     render={({ field }) => (
                       <select {...field} required>
-                        <option value="">Equipamento</option>
-                        {equipments.map(equip => (
+                        <option value="" disabled>
+                          Selecione um equipamento
+                        </option>
+                        {equipments.map((equip) => (
                           <option key={equip.id} value={equip.id}>
                             {equip.nome}
                           </option>
@@ -159,8 +253,10 @@ const CadastroTreino = () => {
                     defaultValue=""
                     render={({ field }) => (
                       <select {...field} required>
-                        <option value="">Série</option>
-                        {series.map(serie => (
+                        <option value="" disabled>
+                          Selecione uma série
+                        </option>
+                        {series.map((serie) => (
                           <option key={serie.id} value={serie.id}>
                             {serie.nome}
                           </option>
@@ -174,8 +270,10 @@ const CadastroTreino = () => {
                     defaultValue=""
                     render={({ field }) => (
                       <select {...field} required>
-                        <option value="">Repetição</option>
-                        {repetitions.map(rep => (
+                        <option value="" disabled>
+                          Selecione uma repetição
+                        </option>
+                        {repetitions.map((rep) => (
                           <option key={rep.id} value={rep.id}>
                             {rep.nome}
                           </option>
@@ -183,27 +281,37 @@ const CadastroTreino = () => {
                       </select>
                     )}
                   />
-                  <button type="button" onClick={() => remove(index)}>
-                    Remover
+                  <button
+                    type="button"
+                    className={styles.removeEquipmentButton}
+                    onClick={() => remove(index)}
+                  >
+                    Remover Equipamento
                   </button>
                 </div>
               ))}
-
-              <button type="button" onClick={() => append({ equipamentoId: '', serieId: '', repeticaoId: '' })}>
+              <button
+                type="button"
+                className={styles.addEquipmentButton}
+                onClick={() => append({ equipamentoId: '', serieId: '', repeticaoId: '' })}
+              >
                 Adicionar Equipamento
               </button>
-
               <div>
-                <label>Descrição Geral</label>
-                <Controller
-                  name="descricao"
-                  control={control}
-                  defaultValue=""
-                  render={({ field }) => <textarea {...field} placeholder="Informações adicionais do treino" />}
-                />
+                <label>Descrição Geral:</label>
+                <textarea
+                {...register('descricao', { required: true })}
+                className={styles.descricaoGeral}
+                ></textarea>
               </div>
-
-              <button type="submit">Salvar</button>
+              <div className={styles.modalFooter}>
+                <button type="submit" className={styles.saveButton}>
+                  Salvar
+                </button>
+                <button type="button" onClick={handleCloseModal} className={styles.cancelButton}>
+                  Cancelar
+                </button>
+              </div>
             </form>
           </div>
         </div>
@@ -213,3 +321,4 @@ const CadastroTreino = () => {
 };
 
 export default CadastroTreino;
+
