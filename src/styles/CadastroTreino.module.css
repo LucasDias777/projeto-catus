@@ -1,7 +1,7 @@
 /* Container da página */
 .pageContainer {
-  background-color: #f5f5f5;
-  color: #333;
+  background-color: #f5f5f5; /* Tons de branco */
+  color: #333; /* Texto cinza escuro */
   min-height: 100vh;
   padding: 20px;
   display: flex;
@@ -12,14 +12,14 @@
 /* Barra superior */
 .topBar {
   width: 100%;
-  background-color: #fff;
-  color: #333;
+  background-color: #fff; /* Branco */
+  color: #333; /* Texto cinza escuro */
   padding: 15px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd;
-  border-radius: 10px;
+  border-bottom: 1px solid #ddd; /* Linha de divisão */
+  border-radius: 10px; /* Bordas arredondadas na barra superior */
 }
 
 /* Botões na barra superior */
@@ -61,40 +61,6 @@
   color: #333;
 }
 
-/* Estilo dos botões de editar/remover treino */
-.treinoButtons {
-  display: flex;
-  justify-content: flex-start;
-  gap: 10px;
-  margin-top: 10px;
-}
-
-.editButton,
-.deleteButton {
-  padding: 5px 10px;
-  border-radius: 5px;
-  font-size: 14px;
-  cursor: pointer;
-}
-
-.editButton {
-  background-color: #007bff;
-  color: #fff;
-}
-
-.editButton:hover {
-  background-color: #0056b3;
-}
-
-.deleteButton {
-  background-color: #dc3545;
-  color: #fff;
-}
-
-.deleteButton:hover {
-  background-color: #b22222;
-}
-
 /* Estilo dos modais */
 .modal {
   position: fixed;
@@ -124,14 +90,19 @@
   max-width: 90%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   overflow-y: auto;
-  overflow-x: hidden; /* Impede rolagem horizontal */
   max-height: 80vh;
-  text-align: center;
+  text-align: center; /* Centraliza os conteúdos */
 }
 
+/* Centraliza os textos no modal */
 .modalContent h3 {
   text-align: center;
   margin-bottom: 20px;
+}
+
+/* Adiciona espaçamento entre os botões principais */
+.modalContent button[type="button"] {
+  margin-top: 15px;
 }
 
 .modalContent label {
@@ -140,53 +111,120 @@
   font-size: 16px;
 }
 
+.modalContent select,
+.modalContent textarea,
+.modalContent input {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 15px;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  font-size: 16px;
+}
+
 .modalContent textarea {
-  margin-top: 20px; /* Espaçamento ajustado */
   height: 100px;
 }
 
-/* Botões no modal */
+/* Estilo para os botões dentro do modal */
+.modalContent button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.modalContent button:hover {
+  background-color: #0056b3;
+}
+
+/* Estilo do botão de cancelar */
 .modalFooter {
   display: flex;
   justify-content: center;
   gap: 15px;
 }
 
-.modalFooter .saveButton,
-.modalFooter .cancelButton {
+.modalFooter button {
   padding: 10px 20px;
   border-radius: 5px;
   font-size: 16px;
 }
 
-.modalFooter .cancelButton {
+.modalFooter button[type="button"] {
   background-color: #dc3545;
 }
 
-.modalFooter .cancelButton:hover {
+.modalFooter button[type="button"]:hover {
   background-color: #c82333;
 }
 
-/* Botões de adicionar/remover equipamentos */
-.equipmentContainer {
+/* Botões de adicionar/remover equipamento centralizados */
+.modalContent .equipment-buttons {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: center;
   gap: 10px;
-  align-items: center;
-  margin-bottom: 10px;
 }
 
-.addEquipmentButton,
-.removeEquipmentButton {
-  padding: 5px 10px;
+/* Ajuste na descrição geral */
+.modalContent label + textarea {
+  margin-top: 10px;
+}
+
+/* Espaçamento entre "Adicionar Treino" e "Editar Treino" */
+.modalContent h3 span {
+  margin: 0 10px;
+}
+/* Botões para editar/remover treino */
+.treinoButtons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+}
+
+.editButton {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
   border-radius: 5px;
-  font-size: 14px;
+  padding: 5px 10px;
   cursor: pointer;
+}
+
+.editButton:hover {
+  background-color: #0056b3;
+}
+
+.deleteButton {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  background-color: #b22222;
+}
+
+/* Ajuste entre botões de equipamentos */
+.equipmentContainer {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
 }
 
 .addEquipmentButton {
   background-color: #28a745;
   color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
 }
 
 .addEquipmentButton:hover {
@@ -196,13 +234,12 @@
 .removeEquipmentButton {
   background-color: #dc3545;
   color: #fff;
+  border: none;
+  border-radius: 5px;
+  padding: 5px 10px;
+  cursor: pointer;
 }
 
 .removeEquipmentButton:hover {
   background-color: #b22222;
-}
-
-/* Classe específica para a descrição geral */
-.descricaoGeral {
-  margin-top: 30px; /* Espaçamento ajustado */
 }
