@@ -1,7 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serverTimestamp 
+import {
+  collection,
+  query,
+  where,
+  getDocs,
+  doc,
+  getDoc,
+  addDoc,
+  updateDoc,
+  serverTimestamp,
 } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../contexts/authContext';
@@ -21,7 +29,6 @@ const VisualizarTreino = () => {
       try {
         const alunoId = currentUser.uid;
 
-        // Consulta para buscar treinos do aluno
         const treinosQuery = query(collection(db, 'Treino'), where('id_aluno', '==', alunoId));
         const querySnapshot = await getDocs(treinosQuery);
 
@@ -29,7 +36,6 @@ const VisualizarTreino = () => {
           querySnapshot.docs.map(async (docTreino) => {
             const treinoData = docTreino.data();
 
-            // Buscar detalhes dos equipamentos, séries e repetições
             const equipamentosDetalhados = await Promise.all(
               (treinoData.equipamentos || []).map(async (equipamento) => {
                 const equipDoc = await getDoc(doc(db, 'Equipamento', equipamento.id_equipamento));
@@ -114,52 +120,59 @@ const VisualizarTreino = () => {
   };
 
   return (
-    <div className={styles.pageContainer}>
+    <>
       <div className={styles.header}>
         <h2>Seus Treinos</h2>
-        <button 
-          className={styles.backButton} 
-          onClick={() => navigate('/dashboard-aluno')}
-        >
+        <button className={styles.backButton} onClick={() => navigate('/dashboard-aluno')}>
           Voltar ao Dashboard
         </button>
       </div>
-      <div className={styles.searchContainer}>
-        <input 
-          type="text" 
-          className={styles.searchInput} 
-          placeholder="Pesquisar tipo de treino" 
-          value={searchTerm} 
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </div>
-      <div className={styles.treinoContainer}>
-        {filteredTreinos.length === 0 ? (
-          <p>Você ainda não tem treinos disponíveis.</p>
-        ) : (
-          filteredTreinos.map((treino) => (
-            <div key={treino.id} className={styles.treinoCard}>
-              <div><strong>Tipo de Treino:</strong> {treino.tipo}</div>
-              <div><strong>Equipamentos:</strong> {treino.equipamento}</div>
-              <div><strong>Séries:</strong> {treino.serie}</div>
-              <div><strong>Repetições:</strong> {treino.repeticao}</div>
-              <div><strong>Descrição Geral:</strong> {treino.descricao}</div>
-              <button 
-                onClick={() => iniciarTreino(treino.id)} 
-                disabled={inProgress === treino.id}
-              >
-                {inProgress === treino.id ? 'Treino em Progresso' : 'Iniciar Treino'}
-              </button>
-              {inProgress === treino.id && (
-                <button onClick={terminarTreino}>
-                  Terminar Treino
+      <div className={styles.pageContainer}>
+        <div className={styles.searchContainer}>
+          <input
+            type="text"
+            className={styles.searchInput}
+            placeholder="Pesquisar pelo Tipo de Treino"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+        <div className={styles.treinoContainer}>
+          {filteredTreinos.length === 0 ? (
+            <p>Você ainda não tem treinos disponíveis.</p>
+          ) : (
+            filteredTreinos.map((treino) => (
+              <div key={treino.id} className={styles.treinoCard}>
+                <div>
+                  <strong>Tipo de Treino:</strong> {treino.tipo}
+                </div>
+                <div>
+                  <strong>Equipamentos:</strong> {treino.equipamento}
+                </div>
+                <div>
+                  <strong>Séries:</strong> {treino.serie}
+                </div>
+                <div>
+                  <strong>Repetições:</strong> {treino.repeticao}
+                </div>
+                <div>
+                  <strong>Descrição Geral:</strong> {treino.descricao}
+                </div>
+                <button
+                  onClick={() => iniciarTreino(treino.id)}
+                  disabled={inProgress === treino.id}
+                >
+                  {inProgress === treino.id ? 'Treino em Progresso' : 'Iniciar Treino'}
                 </button>
-              )}
-            </div>
-          ))
-        )}
+                {inProgress === treino.id && (
+                  <button onClick={terminarTreino}>Terminar Treino</button>
+                )}
+              </div>
+            ))
+          )}
+        </div>
       </div>
-    </div>
+    </>
   );
 };
 
