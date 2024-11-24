@@ -1,0 +1,162 @@
+/* Container principal */
+.container {
+    padding: 20px;
+}
+
+/* Barra superior */
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #d3d3d3; /* Somente a barra superior tem o tom de cor #d3d3d3 */
+    padding: 10px 20px; /* Padding aplicado somente na barra superior */
+    border-radius: 8px; /* Bordas arredondadas para a barra superior */
+    margin-bottom: 20px;
+}
+
+/* Título na barra superior */
+.topBar h2 {
+    margin: 0;
+    color: black;
+}
+
+/* Botão de voltar */
+.backButton {
+    background-color: #28a745; /* Verde */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para o botão */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.backButton:hover,
+.backButton:focus {
+    background-color: #218838; /* Verde mais escuro */
+}
+
+/* Container do formulário */
+.formContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+/* Grupo de campos no formulário */
+.formGroup {
+    display: flex;
+    gap: 10px;
+}
+
+/* Campo de entrada */
+.inputField {
+    padding: 10px;
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Bordas arredondadas para os campos de entrada */
+}
+
+/* Botão de adicionar */
+.addButton {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para o botão */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.addButton:hover,
+.addButton:focus {
+    background-color: #0056b3; /* Azul mais escuro */
+}
+
+/* Campo de filtro */
+.filterInput {
+    margin-bottom: 20px;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Bordas arredondadas para o campo de filtro */
+}
+
+/* Lista de itens */
+.list {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Bordas arredondadas para a lista */
+    padding: 10px;
+}
+
+/* Item da lista */
+.listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px; /* Bordas arredondadas para os itens da lista */
+}
+
+/* Botões de ação */
+.actionButtons button {
+    margin-left: 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para os botões de ação */
+    cursor: pointer;
+}
+
+/* Botão de editar */
+.editButton {
+    background-color: #007bff;
+    color: white;
+}
+
+.editButton:hover,
+.editButton:focus {
+    background-color: #0056b3; /* Azul mais escuro */
+}
+
+/* Botão de deletar */
+.deleteButton {
+    background-color: #dc3545;
+    color: white;
+}
+
+.deleteButton:hover,
+.deleteButton:focus {
+    background-color: #c82333; /* Vermelho mais escuro */
+}
+
+/* Botão de salvar */
+.saveButton {
+    background-color: #28a745;
+    color: white;
+}
+
+.saveButton:hover,
+.saveButton:focus {
+    background-color: #218838; /* Verde mais escuro */
+}
+
+/* Botão de cancelar */
+.cancelButton {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancelButton:hover,
+.cancelButton:focus {
+    background-color: #5a6268; /* Cinza mais escuro */
+}
+
+/* Grupo de edição */
+.editGroup {
+    display: flex;
+    gap: 10px;
+}

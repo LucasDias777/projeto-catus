@@ -1,11 +1,12 @@
-import React, { useEffect, useState, useContext } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getFirestore, collection, query, where, getDocs, getDoc, doc } from 'firebase/firestore';
-import { app } from '../config/firebaseConfig'; // Importa a configuração do Firebase
+import { app } from '../config/firebaseConfig';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { useAuth } from '../contexts/authContext';  // Corrigido para usar o hook useAuth
+import { useAuth } from '../contexts/authContext';
+import styles from '../styles/RelatorioTreino.module.css';
 
 const RelatorioTreino = ({ userId }) => {
   const [relatorio, setRelatorio] = useState([]);
@@ -17,9 +18,8 @@ const RelatorioTreino = ({ userId }) => {
 
   const db = getFirestore(app);
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // Usando o hook useAuth
+  const { currentUser } = useAuth();
 
-  // Função para buscar o tipo de pessoa (aluno ou professor)
   const fetchTipoPessoa = async (uid) => {
     try {
       const pessoaDoc = await getDoc(doc(db, 'Pessoa', uid));
@@ -31,7 +31,6 @@ const RelatorioTreino = ({ userId }) => {
     }
   };
 
-  // Função para buscar os relatórios de treino
   const fetchRelatorio = async () => {
     try {
       const treinosQuery = query(
@@ -76,7 +75,6 @@ const RelatorioTreino = ({ userId }) => {
     }
   };
 
-  // Função para gerar o PDF
   const gerarPDF = () => {
     const doc = new jsPDF();
     doc.text('Relatório de Treinos', 10, 10);
@@ -98,7 +96,6 @@ const RelatorioTreino = ({ userId }) => {
     doc.save('Relatorio_Treinos.pdf');
   };
 
-  // Função para gerar o Excel
   const gerarExcel = () => {
     const ws = XLSX.utils.json_to_sheet(
       relatorio.map((treino) => ({
@@ -115,7 +112,6 @@ const RelatorioTreino = ({ userId }) => {
     XLSX.writeFile(wb, 'Relatorio_Treinos.xlsx');
   };
 
-  // Função para voltar ao dashboard correto
   const voltarDashboard = () => {
     if (tipoPessoa === 'aluno') {
       navigate('/dashboard-aluno');
@@ -126,55 +122,64 @@ const RelatorioTreino = ({ userId }) => {
 
   useEffect(() => {
     if (currentUser) {
-      fetchTipoPessoa(currentUser.uid); // Verifica o tipo de pessoa do usuário logado
+      fetchTipoPessoa(currentUser.uid);
     }
     fetchRelatorio();
   }, [currentUser, filtroAluno, dataInicio, dataFim, statusTreino, tipoPessoa]);
 
   return (
-    <div>
-      <button onClick={voltarDashboard}>Voltar ao Dashboard</button>
-      <h2>Relatório de Treinos</h2>
-      <div>
-        <label>
-          Filtrar por Aluno:
-          <input
-            type="text"
-            value={filtroAluno}
-            onChange={(e) => setFiltroAluno(e.target.value)}
-            placeholder="Nome do Aluno"
-          />
-        </label>
-        <label>
-          Data de Início:
-          <input
-            type="date"
-            value={dataInicio}
-            onChange={(e) => setDataInicio(e.target.value)}
-          />
-        </label>
-        <label>
-          Data de Fim:
-          <input
-            type="date"
-            value={dataFim}
-            onChange={(e) => setDataFim(e.target.value)}
-          />
-        </label>
-        <label>
-          Status:
-          <select value={statusTreino} onChange={(e) => setStatusTreino(e.target.value)}>
-            <option value="">Todos</option>
-            <option value="concluido">Concluídos</option>
-            <option value="nao_concluido">Não Concluídos</option>
-          </select>
-        </label>
-        <button onClick={fetchRelatorio}>Filtrar</button>
-        <button onClick={gerarPDF}>Gerar PDF</button>
-        <button onClick={gerarExcel}>Gerar Excel</button>
+    <div className={styles.container}>
+      <div className={styles.topBar}>
+        <h2>Relatório de Treinos</h2>
+        <button className={styles.backButton} onClick={voltarDashboard}>
+          Voltar ao Dashboard
+        </button>
       </div>
+      <div className={styles.filters}>
+  <label>
+    Filtrar por Aluno:
+    <input
+      type="text"
+      value={filtroAluno}
+      onChange={(e) => setFiltroAluno(e.target.value)}
+      placeholder="Nome do Aluno"
+    />
+  </label>
+  <label>
+    Data de Início:
+    <input
+      type="date"
+      value={dataInicio}
+      onChange={(e) => setDataInicio(e.target.value)}
+    />
+  </label>
+  <label>
+    Data de Fim:
+    <input
+      type="date"
+      value={dataFim}
+      onChange={(e) => setDataFim(e.target.value)}
+    />
+  </label>
+  <label>
+    Status:
+    <select value={statusTreino} onChange={(e) => setStatusTreino(e.target.value)}>
+      <option value="">Todos</option>
+      <option value="concluido">Concluídos</option>
+      <option value="nao_concluido">Não Concluídos</option>
+    </select>
+  </label>
+  <button onClick={fetchRelatorio}>Filtrar</button>
+  <button className={styles.pdfButton} onClick={gerarPDF}>
+    Gerar PDF
+  </button>
+  <button className={styles.excelButton} onClick={gerarExcel}>
+    Gerar Excel
+  </button>
+</div>
+
       {relatorio.length > 0 ? (
-        <table>
+        <table className={styles.table}>
           <thead>
             <tr>
               <th>Aluno</th>

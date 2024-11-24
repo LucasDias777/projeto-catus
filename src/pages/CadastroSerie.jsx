@@ -1,31 +1,44 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/authContext'; // Importando o contexto de autenticação
-import { db } from '../config/firebaseConfig'; // Importa a configuração do Firebase
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, query, where, onSnapshot, doc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '../contexts/authContext';
+import { db } from '../config/firebaseConfig';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  onSnapshot,
+  doc,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import styles from '../styles/Serie.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // Validação com Yup
 const validationSchema = Yup.object({
-  numeroSeries: Yup.string()
+  numeroSeries: Yup.number()
     .required('Número de séries é obrigatório')
-    .min(1, 'O número de séries deve ter pelo menos 1 caractere')
-    .max(10, 'O número de séries não pode ter mais que 10 caracteres'),
+    .positive('Deve ser um número positivo')
+    .integer('Deve ser um número inteiro')
+    .min(1, 'O número de séries deve ser pelo menos 1'),
 });
 
 const CadastroSerie = () => {
   const [series, setSeries] = useState([]);
+  const [filteredSeries, setFilteredSeries] = useState([]);
   const [editId, setEditId] = useState(null);
   const [editNumeroSeries, setEditNumeroSeries] = useState('');
+  const [filter, setFilter] = useState('');
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // Obtendo o usuário atual
+  const { currentUser } = useAuth();
 
   useEffect(() => {
     if (!currentUser) return;
 
-    // Listener para atualizações em tempo real
     const unsubscribe = onSnapshot(
       query(collection(db, 'Serie'), where('id_professor', '==', currentUser.uid)),
       (snapshot) => {
@@ -34,13 +47,12 @@ const CadastroSerie = () => {
           ...doc.data(),
         }));
         setSeries(updatedSeries);
+        setFilteredSeries(updatedSeries);
       },
-      (error) => {
-        console.error('Erro ao escutar séries:', error);
-      }
+      (error) => console.error('Erro ao escutar séries:', error)
     );
 
-    return () => unsubscribe(); // Cleanup ao desmontar o componente
+    return () => unsubscribe();
   }, [currentUser]);
 
   const handleAdd = async (values, { resetForm }) => {
@@ -52,11 +64,11 @@ const CadastroSerie = () => {
     try {
       await addDoc(collection(db, 'Serie'), {
         nome: values.numeroSeries,
-        id_professor: currentUser.uid, // Associando a série ao professor que a criou
-        data_criacao: serverTimestamp(), // Adicionando data de criação
+        id_professor: currentUser.uid,
+        data_criacao: serverTimestamp(),
       });
       alert('Série cadastrada com sucesso!');
-      resetForm(); // Resetando o formulário
+      resetForm();
     } catch (error) {
       console.error('Erro ao cadastrar série:', error);
       alert('Erro ao cadastrar série.');
@@ -88,61 +100,101 @@ const CadastroSerie = () => {
     }
   };
 
+  const handleFilter = (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    setFilter(searchTerm);
+    setFilteredSeries(
+      series.filter((s) => s.nome.toString().toLowerCase().includes(searchTerm))
+    );
+  };
+
   return (
-    <div>
-      <h2>Cadastrar Séries</h2>
-      <Formik
-        initialValues={{ numeroSeries: '' }}
-        validationSchema={validationSchema}
-        onSubmit={handleAdd}
-      >
-        {({ touched, errors }) => (
-          <Form>
-            <div>
+    <div className={styles.container}>
+      <div className={styles.topBar}>
+        <h2>Cadastrar Série</h2>
+        <button
+          className={styles.backButton}
+          onClick={() => navigate('/dashboard-professor')}
+        >
+          Voltar ao Dashboard
+        </button>
+      </div>
+
+      <div className={styles.formContainer}>
+        <Formik
+          initialValues={{ numeroSeries: '' }}
+          validationSchema={validationSchema}
+          onSubmit={handleAdd}
+        >
+          {() => (
+            <Form className={styles.formGroup}>
               <Field
-                type="text"
+                type="number"
                 name="numeroSeries"
+                className={styles.inputField}
                 placeholder="Número de Séries"
-                className={styles.input}
               />
               <ErrorMessage name="numeroSeries" component="div" className={styles.error} />
-            </div>
-            <button type="submit" className={styles.submitButton}>Cadastrar Séries</button>
-          </Form>
-        )}
-      </Formik>
-
-      <h3>Séries Cadastradas:</h3>
-      {series.map((s) => (
-        <div key={s.id}>
-          {editId === s.id ? (
-            <div>
-              <input
-                type="text"
-                value={editNumeroSeries}
-                onChange={(e) => setEditNumeroSeries(e.target.value)}
-                placeholder="Número de Séries"
-              />
-              <button onClick={() => handleEdit(s.id)}>Salvar</button>
-              <button onClick={() => setEditId(null)}>Cancelar</button>
-            </div>
-          ) : (
-            <div>
-              <span>{s.nome}</span>
-              <button
-                onClick={() => {
-                  setEditId(s.id);
-                  setEditNumeroSeries(s.nome);
-                }}
-              >
-                Editar
+              <button type="submit" className={styles.addButton}>
+                <i className="fa-solid fa-plus"></i> Cadastrar Série
               </button>
-              <button onClick={() => handleDelete(s.id)}>Remover</button>
-            </div>
+            </Form>
           )}
-        </div>
-      ))}
-      <button onClick={() => navigate('/dashboard-professor')}>Voltar</button>
+        </Formik>
+      </div>
+
+      <input
+        type="text"
+        className={styles.filterInput}
+        placeholder="Filtrar pelo Número de Séries"
+        value={filter}
+        onChange={handleFilter}
+      />
+
+      <div className={styles.list}>
+        {filteredSeries.map((s) => (
+          <div key={s.id} className={styles.listItem}>
+            {editId === s.id ? (
+              <div className={styles.editGroup}>
+                <input
+                  type="number"
+                  value={editNumeroSeries}
+                  onChange={(e) => setEditNumeroSeries(e.target.value)}
+                  className={styles.inputField}
+                  placeholder="Número de Séries"
+                />
+                <button className={`${styles.saveButton}`} onClick={() => handleEdit(s.id)}>
+                  <i className="fa-solid fa-check"></i> Salvar
+                </button>
+                <button className={`${styles.cancelButton}`} onClick={() => setEditId(null)}>
+                  <i className="fa-solid fa-xmark"></i> Cancelar
+                </button>
+              </div>
+            ) : (
+              <>
+                <span>{s.nome}</span>
+                <div className={styles.actionButtons}>
+                  <button
+                    className={styles.editButton}
+                    onClick={() => {
+                      setEditId(s.id);
+                      setEditNumeroSeries(s.nome);
+                    }}
+                  >
+                    <i className="fa-solid fa-pencil"></i> Editar
+                  </button>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => handleDelete(s.id)}
+                  >
+                    <i className="fa-solid fa-trash-can"></i> Remover
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

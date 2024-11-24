@@ -6,14 +6,16 @@
   color: #000; /* Texto preto */
 }
 
+/* Barra Superior */
 .topbar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f8f9fa; /* Barra superior clara */
-  padding: 10px 20px;
+  background-color: #d3d3d3; /* Cor ajustada para a barra superior */
+  padding: 10px 20px; /* Espaço interno da barra superior */
+  border-radius: 8px; /* Bordas arredondadas para a barra superior */
+  margin-bottom: 20px; /* Ajusta o espaço abaixo da barra */
   border-bottom: 2px solid #ddd;
-  border-radius: 10px; /* Bordas arredondadas para a barra superior */
 }
 
 h1 {
@@ -21,12 +23,13 @@ h1 {
   color: #000; /* Texto preto */
 }
 
+/* Botão de Voltar */
 .backButton {
   padding: 10px 15px;
   background-color: #28a745; /* Verde */
   color: white;
   border: none;
-  border-radius: 5px; /* Adiciona bordas arredondadas */
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -42,7 +45,7 @@ h1 {
   width: 100%;
   max-width: 300px;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
 }
 
 /* Estilos para a tabela */
@@ -67,6 +70,7 @@ h1 {
   color: #000; /* Texto preto */
 }
 
+/* Estilos para o formulário de edição */
 .editForm {
   margin-top: 20px;
 }
@@ -85,7 +89,7 @@ h1 {
   width: 100%;
   padding: 8px;
   border: 1px solid #ddd;
-  border-radius: 5px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
   box-sizing: border-box;
 }
 
@@ -103,15 +107,16 @@ h1 {
 .iconButton:hover {
   color: #007bff; /* Azul ao passar o mouse */
   background-color: rgba(0, 0, 0, 0.1); /* Fundo preto semitransparente */
-  border-radius: 5px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
 }
 
+/* Estilo dos botões padrão */
 button {
   padding: 10px 15px;
   border: none;
   color: white;
   background-color: #007bff;
-  border-radius: 5px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
@@ -188,7 +193,7 @@ button:hover {
 .modalFooter button {
   width: 100%;
   padding: 10px 20px;
-  border-radius: 5px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
   border: none;
   cursor: pointer;
   color: white;

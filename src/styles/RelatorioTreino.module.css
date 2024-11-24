@@ -1,0 +1,114 @@
+/* Container principal */
+.container {
+    padding: 20px;
+}
+
+/* Barra Superior */
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #d3d3d3; /* Cor ajustada para a barra superior */
+    padding: 10px 20px; /* Padding apenas para a barra superior */
+    border-radius: 8px; /* Bordas arredondadas para a barra superior */
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra leve para a barra superior */
+}
+
+.topBar h2 {
+    color: black;
+    margin: 0;
+}
+
+/* Botão de Voltar */
+.backButton {
+    background-color: #28a745; /* Verde principal */
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para o botão */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.backButton:hover,
+.backButton:focus {
+    background-color: #218838; /* Verde mais escuro */
+}
+
+/* Filtros */
+.filters {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.filters label {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.filters input,
+.filters select {
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Bordas arredondadas para os campos de filtro */
+    width: 200px;
+    background-color: #fff;
+}
+
+.filters button {
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para os botões */
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+/* Botão PDF */
+.pdfButton {
+    background-color: #ffa500; /* Laranja neutro */
+    color: white;
+    border-radius: 8px; /* Bordas arredondadas */
+}
+
+.pdfButton:hover,
+.pdfButton:focus {
+    background-color: #e69500; /* Laranja mais escuro */
+    transform: scale(1.05);
+}
+
+/* Botão Excel */
+.excelButton {
+    background-color: #32cd32; /* Verde neutro */
+    color: white;
+    border-radius: 8px; /* Bordas arredondadas */
+}
+
+.excelButton:hover,
+.excelButton:focus {
+    background-color: #28a428; /* Verde mais escuro */
+    transform: scale(1.05);
+}
+
+/* Tabela */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.table th,
+.table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    border-radius: 8px; /* Bordas arredondadas para as células da tabela */
+}
+
+.table th {
+    background-color: #f2f2f2;
+    text-align: left;
+}

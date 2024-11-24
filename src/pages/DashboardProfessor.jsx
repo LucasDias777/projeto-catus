@@ -227,7 +227,7 @@ const DashboardProfessor = () => {
               <li><button onClick={() => navigate('/cadastro-serie')}>Cadastrar Séries</button></li>
               <li><button onClick={() => navigate('/cadastro-repeticao')}>Cadastrar Repetições</button></li>
               <li><button onClick={() => navigate('/cadastro-tipo')}>Cadastrar Tipo de Treino</button></li>
-              <li><button onClick={() => navigate('/cadastro-treino')}>Criar Treino</button></li>
+              <li><button onClick={() => navigate('/cadastro-treino')}>Cadastrar Treino</button></li>
             </ul>
           </li>
           <li

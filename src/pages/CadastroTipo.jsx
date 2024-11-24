@@ -2,11 +2,21 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext'; // Importando o contexto de autenticação
 import { db } from '../config/firebaseConfig'; // Importa a configuração do Firebase
-import { collection, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, doc } from 'firebase/firestore';
+import {
+  collection,
+  addDoc,
+  updateDoc,
+  deleteDoc,
+  query,
+  where,
+  onSnapshot,
+  doc,
+} from 'firebase/firestore';
 import { serverTimestamp } from 'firebase/firestore'; // Importando o serverTimestamp
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import styles from '../styles/Tipo.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 // Validação com Yup
 const validationSchema = Yup.object({
@@ -18,8 +28,10 @@ const validationSchema = Yup.object({
 
 const CadastroTipo = () => {
   const [tipos, setTipos] = useState([]);
+  const [filteredTipos, setFilteredTipos] = useState([]);
   const [editId, setEditId] = useState(null);
   const [editNome, setEditNome] = useState('');
+  const [filter, setFilter] = useState('');
   const navigate = useNavigate();
   const { currentUser } = useAuth(); // Obtendo o usuário atual
 
@@ -35,6 +47,7 @@ const CadastroTipo = () => {
           ...doc.data(),
         }));
         setTipos(tiposList);
+        setFilteredTipos(tiposList);
       },
       (error) => {
         console.error('Erro ao escutar tipos de treino:', error);
@@ -89,61 +102,103 @@ const CadastroTipo = () => {
     }
   };
 
+  const handleFilter = (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    setFilter(searchTerm);
+    setFilteredTipos(
+      tipos.filter((t) => t.nome.toLowerCase().includes(searchTerm))
+    );
+  };
+
   return (
-    <div>
-      <h2>Cadastrar Tipo de Treino</h2>
-      <Formik
-        initialValues={{ nome: '' }}
-        validationSchema={validationSchema}
-        onSubmit={handleAdd}
-      >
-        {({ touched, errors }) => (
-          <Form>
-            <div>
+    <div className={styles.container}>
+      <div className={styles.topBar}>
+        <h2>Cadastrar Tipo de Treino</h2>
+        <button
+          className={styles.backButton}
+          onClick={() => navigate('/dashboard-professor')}
+        >
+          Voltar ao Dashboard
+        </button>
+      </div>
+
+      <div className={styles.formContainer}>
+        <Formik
+          initialValues={{ nome: '' }}
+          validationSchema={validationSchema}
+          onSubmit={handleAdd}
+        >
+          {() => (
+            <Form className={styles.formGroup}>
               <Field
                 type="text"
                 name="nome"
                 placeholder="Nome do Tipo de Treino"
-                className={styles.input}
+                className={styles.inputField}
               />
               <ErrorMessage name="nome" component="div" className={styles.error} />
-            </div>
-            <button type="submit" className={styles.submitButton}>Cadastrar Tipo de Treino</button>
-          </Form>
-        )}
-      </Formik>
-
-      <h3>Tipos de Treino Cadastrados:</h3>
-      {tipos.map((t) => (
-        <div key={t.id}>
-          {editId === t.id ? (
-            <div>
-              <input
-                type="text"
-                value={editNome}
-                onChange={(e) => setEditNome(e.target.value)}
-                placeholder="Nome do Tipo de Treino"
-              />
-              <button onClick={() => handleEdit(t.id)}>Salvar</button>
-              <button onClick={() => setEditId(null)}>Cancelar</button>
-            </div>
-          ) : (
-            <div>
-              <span>{t.nome}</span>
-              <button
-                onClick={() => {
-                  setEditId(t.id);
-                  setEditNome(t.nome);
-                }}
-              >
-                Editar
+              <button type="submit" className={styles.addButton}>
+                <i className="fa-solid fa-plus"></i> Cadastrar Tipo de Treino
               </button>
-              <button onClick={() => handleDelete(t.id)}>Remover</button>
-            </div>
+            </Form>
           )}
-        </div>
-      ))}
-      <button onClick={() => navigate('/dashboard-professor')}>Voltar</button>
+        </Formik>
+      </div>
+
+      <input
+        type="text"
+        className={styles.filterInput}
+        placeholder="Filtrar pelo Nome do Tipo de Treino"
+        value={filter}
+        onChange={handleFilter}
+      />
+
+      <div className={styles.list}>
+        {filteredTipos.map((t) => (
+          <div key={t.id} className={styles.listItem}>
+            {editId === t.id ? (
+              <div className={styles.editGroup}>
+                <input
+                  type="text"
+                  value={editNome}
+                  onChange={(e) => setEditNome(e.target.value)}
+                  className={styles.inputField}
+                />
+                <button className={styles.saveButton} onClick={() => handleEdit(t.id)}>
+                  <i className="fa-solid fa-check"></i> Salvar
+                </button>
+                <button
+                  className={styles.cancelButton}
+                  onClick={() => setEditId(null)}
+                >
+                  <i className="fa-solid fa-xmark"></i> Cancelar
+                </button>
+              </div>
+            ) : (
+              <>
+                <span>{t.nome}</span>
+                <div className={styles.actionButtons}>
+                  <button
+                    className={styles.editButton}
+                    onClick={() => {
+                      setEditId(t.id);
+                      setEditNome(t.nome);
+                    }}
+                  >
+                    <i className="fa-solid fa-pencil"></i> Editar
+                  </button>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => handleDelete(t.id)}
+                  >
+                    <i className="fa-solid fa-trash-can"></i> Remover
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

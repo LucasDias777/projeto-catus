@@ -1,3 +1,4 @@
+/* Container da página */
 .pageContainer {
   max-width: 800px;
   margin: 0 auto; /* Centraliza horizontalmente */
@@ -5,20 +6,21 @@
   position: relative; /* Garante que elementos filhos usem este como referência */
 }
 
+/* Barra Superior */
 .header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  background-color: #f0f0f0;
-  padding: 10px 20px; /* Espaço interno */
-  border-radius: 15px;
-  margin-bottom: 20px; /* Ajusta o espaço abaixo */
+  background-color: #d3d3d3; /* Cor ajustada para a barra superior */
+  padding: 10px 20px; /* Espaço interno da barra superior */
+  border-radius: 8px; /* Bordas arredondadas para a barra superior */
+  margin-bottom: 20px; /* Ajusta o espaço abaixo da barra */
   position: fixed; /* Mantém a barra fixa no topo */
-  top: 20px; /* Posiciona mais próximo ao topo */
+  top: 20px; /* Posiciona a barra mais próxima ao topo */
   left: 20px; /* Ajusta a posição à esquerda */
   width: calc(100% - 40px); /* Preenche a largura quase completa com margem lateral */
   z-index: 10;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); /* Sombra leve */
 }
 
 .title {
@@ -27,28 +29,32 @@
   margin: 0;
 }
 
+/* Botão de Voltar */
 .backButton {
   background-color: #28a745;
   color: white;
   padding: 10px 20px;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
   cursor: pointer;
+  transition: background-color 0.3s ease;
 }
 
 .backButton:hover {
   background-color: #218838;
 }
 
+/* Container Principal */
 .container {
   background-color: #ffffff;
   padding: 20px;
-  border-radius: 8px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* Sombra leve */
   max-width: 800px;
   margin: 120px auto 0 auto; /* Adiciona espaçamento após a barra fixa */
 }
 
+/* Formulário */
 .form {
   display: flex;
   flex-direction: column;
@@ -75,7 +81,7 @@ label {
 .formControl {
   padding: 10px;
   border: 1px solid #ccc;
-  border-radius: 5px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
 }
 
 button[type="submit"] {
@@ -83,15 +89,17 @@ button[type="submit"] {
   color: white;
   padding: 10px;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
   cursor: pointer;
   align-self: center;
+  transition: background-color 0.3s ease;
 }
 
 button[type="submit"]:hover {
   background-color: #4682b4;
 }
 
+/* Estilo de erro */
 .error {
   color: red;
   text-align: center;

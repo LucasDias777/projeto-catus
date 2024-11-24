@@ -1,34 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/authContext'; // Importando o contexto de autenticação
-import { db } from '../config/firebaseConfig'; // Importa a configuração do Firebase
-import { collection, addDoc, getDocs, updateDoc, deleteDoc, query, where, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
+import { useAuth } from '../contexts/authContext';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
-import * as Yup from 'yup'; // Biblioteca de validação
+import * as Yup from 'yup';
 import styles from '../styles/Repeticao.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css'; // FontAwesome para ícones
 
 const CadastroRepeticao = () => {
   const [repeticoes, setRepeticoes] = useState([]);
+  const [filter, setFilter] = useState('');
   const [editId, setEditId] = useState(null);
-  const [editNumeroRepeticoes, setEditNumeroRepeticoes] = useState('');
+  const [editNumero, setEditNumero] = useState('');
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // Obtendo o usuário atual do contexto
+  const { currentUser } = useAuth();
 
   useEffect(() => {
-    const fetchRepeticoes = async () => {
-      if (!currentUser) return;
+    if (!currentUser) return;
 
+    const fetchRepeticoes = async () => {
       try {
         const q = query(
           collection(db, 'Repeticao'),
           where('id_professor', '==', currentUser.uid)
         );
-        const querySnapshot = await getDocs(q);
-        const repeticoesList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setRepeticoes(repeticoesList);
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const repeticoesList = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setRepeticoes(repeticoesList);
+        });
+
+        return unsubscribe;
       } catch (error) {
         console.error('Erro ao buscar repetições:', error);
       }
@@ -38,153 +44,148 @@ const CadastroRepeticao = () => {
   }, [currentUser]);
 
   const handleAdd = async (values, { resetForm }) => {
-    if (!currentUser) {
-      alert('Você precisa estar autenticado para adicionar repetições.');
-      return;
-    }
+    if (!currentUser) return;
 
     try {
       await addDoc(collection(db, 'Repeticao'), {
-        nome: values.numeroRepeticoes,
+        nome: values.numeroRepeticoes,  // Alterado para 'nome' ao invés de 'numero'
         id_professor: currentUser.uid,
         data_criacao: serverTimestamp(),
       });
       alert('Repetição cadastrada com sucesso!');
       resetForm();
-
-      // Atualizar lista de repetições
-      const q = query(
-        collection(db, 'Repeticao'),
-        where('id_professor', '==', currentUser.uid)
-      );
-      const querySnapshot = await getDocs(q);
-      const repeticoesList = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setRepeticoes(repeticoesList);
     } catch (error) {
       console.error('Erro ao cadastrar repetição:', error);
-      alert('Erro ao cadastrar repetição.');
     }
   };
 
   const handleEdit = async (id) => {
     try {
       const docRef = doc(db, 'Repeticao', id);
-      await updateDoc(docRef, { nome: editNumeroRepeticoes });
+      await updateDoc(docRef, { nome: editNumero }); // Alterado para 'nome' ao invés de 'numero'
       alert('Repetição atualizada com sucesso!');
       setEditId(null);
-      setEditNumeroRepeticoes('');
-
-      // Atualizar lista de repetições
-      const q = query(
-        collection(db, 'Repeticao'),
-        where('id_professor', '==', currentUser.uid)
-      );
-      const querySnapshot = await getDocs(q);
-      const repeticoesList = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setRepeticoes(repeticoesList);
+      setEditNumero('');
     } catch (error) {
       console.error('Erro ao atualizar repetição:', error);
-      alert('Erro ao atualizar repetição.');
     }
   };
 
   const handleDelete = async (id) => {
-    if (window.confirm('Você tem certeza que deseja excluir esta repetição?')) {
+    if (window.confirm('Tem certeza que deseja excluir esta repetição?')) {
       try {
         await deleteDoc(doc(db, 'Repeticao', id));
         alert('Repetição removida com sucesso!');
-
-        // Atualizar lista de repetições
-        const q = query(
-          collection(db, 'Repeticao'),
-          where('id_professor', '==', currentUser.uid)
-        );
-        const querySnapshot = await getDocs(q);
-        const repeticoesList = querySnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        setRepeticoes(repeticoesList);
       } catch (error) {
         console.error('Erro ao remover repetição:', error);
-        alert('Erro ao remover repetição.');
       }
     }
   };
 
-  // Validação com Yup
   const validationSchema = Yup.object({
     numeroRepeticoes: Yup.number()
       .required('Número de repetições é obrigatório')
-      .positive('O número deve ser positivo')
+      .positive('Deve ser um número positivo')
       .integer('Deve ser um número inteiro')
-      .min(1, 'Deve ter pelo menos 1 repetição'),
+      .min(1, 'Deve ser pelo menos 1'),
   });
 
+  const filteredRepeticoes = repeticoes.filter((repeticao) =>
+    String(repeticao.nome).includes(filter) // Alterado para 'nome' ao invés de 'numero'
+  );
+
   return (
-    <div>
-      <h2>Cadastrar Repetições</h2>
-      <Formik
-        initialValues={{ numeroRepeticoes: '' }}
-        validationSchema={validationSchema}
-        onSubmit={handleAdd}
-      >
-        {({ values, handleChange, handleBlur, errors, touched }) => (
-          <Form>
-            <div className={styles.formGroup}>
+    <div className={styles.container}>
+      <div className={styles.topBar}>
+        <h2>Cadastrar Repetição</h2>
+        <button
+          className={styles.backButton}
+          onClick={() => navigate('/dashboard-professor')}
+        >
+          Voltar ao Dashboard
+        </button>
+      </div>
+
+      <div className={styles.formContainer}>
+        <Formik
+          initialValues={{ numeroRepeticoes: '' }}
+          validationSchema={validationSchema}
+          onSubmit={handleAdd}
+        >
+          {() => (
+            <Form className={styles.formGroup}>
               <Field
                 type="number"
                 name="numeroRepeticoes"
-                placeholder="Número de Repetições"
-                value={values.numeroRepeticoes}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={errors.numeroRepeticoes && touched.numeroRepeticoes ? styles.errorInput : ''}
-              />
-              <ErrorMessage name="numeroRepeticoes" component="div" className={styles.errorMessage} />
-            </div>
-            <button type="submit">Cadastrar Repetições</button>
-          </Form>
-        )}
-      </Formik>
-
-      <h3>Repetições Cadastradas:</h3>
-      {repeticoes.map((r) => (
-        <div key={r.id}>
-          {editId === r.id ? (
-            <div>
-              <input
-                type="number"
-                value={editNumeroRepeticoes}
-                onChange={(e) => setEditNumeroRepeticoes(e.target.value)}
+                className={styles.inputField}
                 placeholder="Número de Repetições"
               />
-              <button onClick={() => handleEdit(r.id)}>Salvar</button>
-              <button onClick={() => setEditId(null)}>Cancelar</button>
-            </div>
-          ) : (
-            <div>
-              <span>{r.nome}</span>
-              <button
-                onClick={() => {
-                  setEditId(r.id);
-                  setEditNumeroRepeticoes(r.nome);
-                }}
-              >
-                Editar
+              <ErrorMessage name="numeroRepeticoes" component="div" />
+              <button type="submit" className={styles.addButton}>
+                <i className="fa-solid fa-plus"></i> Cadastrar Repetição
               </button>
-              <button onClick={() => handleDelete(r.id)}>Remover</button>
-            </div>
+            </Form>
           )}
-        </div>
-      ))}
-      <button onClick={() => navigate('/dashboard-professor')}>Voltar</button>
+        </Formik>
+      </div>
+
+      <input
+        type="text"
+        className={styles.filterInput}
+        placeholder="Filtrar pelo Número de Repetições"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
+
+      <div className={styles.list}>
+        {filteredRepeticoes.map((repeticao) => (
+          <div key={repeticao.id} className={styles.listItem}>
+            {editId === repeticao.id ? (
+              <div className={styles.editGroup}>
+                <input
+                  type="number"
+                  value={editNumero}
+                  onChange={(e) => setEditNumero(e.target.value)}
+                  className={styles.inputField}
+                />
+                <button
+                  className={styles.saveButton}
+                  onClick={() => handleEdit(repeticao.id)}
+                >
+                  <i className="fa-solid fa-check"></i> Salvar
+                </button>
+                <button
+                  className={styles.cancelButton}
+                  onClick={() => setEditId(null)}
+                >
+                  <i className="fa-solid fa-xmark"></i> Cancelar
+                </button>
+              </div>
+            ) : (
+              <>
+                <span>{repeticao.nome}</span> {/* Alterado para 'nome' ao invés de 'numero' */}
+                <div className={styles.actionButtons}>
+                  <button
+                    className={styles.editButton}
+                    onClick={() => {
+                      setEditId(repeticao.id);
+                      setEditNumero(repeticao.nome); // Alterado para 'nome' ao invés de 'numero'
+                    }}
+                  >
+                    <i className="fa-solid fa-pencil"></i> Editar
+                  </button>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => handleDelete(repeticao.id)}
+                  >
+                    <i className="fa-solid fa-trash-can"></i> Remover
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

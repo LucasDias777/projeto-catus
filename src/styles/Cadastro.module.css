@@ -1,105 +1,105 @@
 /* Estilo para a página de cadastro */
 .cadastroPage {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    background-color: #ffffff; /* Remove imagem e define fundo branco */
-    padding: 20px;
-  }
-  
-  /* Container para o formulário de cadastro */
-  .cadastroContainer {
-    width: 100%;
-    max-width: 800px; /* Aumenta largura máxima para acomodar campos lado a lado */
-    background-color: #f9f9f9; /* Fundo branco com leve tom */
-    padding: 40px;
-    border-radius: 10px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-  }
-  
-  /* Estilo para o cabeçalho */
-  .cadastroHeading {
-    font-size: 32px;
-    font-weight: bold;
-    text-align: center;
-    margin-bottom: 20px;
-    color: #333333;
-  }
-  
-  /* Grupos de campos lado a lado */
-  .formRow {
-    display: flex;
-    justify-content: space-between;
-    gap: 20px; /* Espaço entre os campos */
-  }
-  
-  /* Campos ocupam igualmente o espaço */
-  .formGroup {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    margin-bottom: 20px;
-  }
-  
-  /* Rótulos dos campos */
-  .formGroup label {
-    font-size: 14px;
-    font-weight: bold;
-    color: #555555;
-    margin-bottom: 8px;
-  }
-  
-  /* Estilo para os campos de input e select */
-  .formGroup input,
-  .formGroup select {
-    padding: 10px;
-    border: 1px solid #cccccc;
-    border-radius: 5px;
-    background-color: #ffffff;
-    font-size: 14px;
-    color: #333333;
-  }
-  
-  .formGroup input:focus,
-  .formGroup select:focus {
-    outline: none;
-    border-color: #1e90ff;
-  }
-  
-  /* Placeholder mais sutil */
-  .formGroup input::placeholder {
-    color: #aaaaaa;
-  }
-  
-  /* Botões */
-  button[type="submit"],
-  .backButton {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 5px;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-  }
-  
-  button[type="submit"] {
-    background-color: #1e90ff;
-    color: #ffffff;
-  }
-  
-  button[type="submit"]:hover {
-    background-color: #4682b4;
-  }
-  
-  .backButton {
-    background-color: #28a745; /* Verde */
-    color: #ffffff; /* Cor do texto */
-    margin-top: 10px;
-  }
-  
-  .backButton:hover {
-    background-color: #218838; /* Verde mais escuro para o hover */
-  }
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #ffffff; /* Remove imagem e define fundo branco */
+  padding: 20px;
+}
+
+/* Container para o formulário de cadastro */
+.cadastroContainer {
+  width: 100%;
+  max-width: 800px; /* Aumenta largura máxima para acomodar campos lado a lado */
+  background-color: #f9f9f9; /* Fundo branco com leve tom */
+  padding: 40px;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilo para o cabeçalho */
+.cadastroHeading {
+  font-size: 32px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 20px;
+  color: #333333;
+}
+
+/* Grupos de campos lado a lado */
+.formRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px; /* Espaço entre os campos */
+}
+
+/* Campos ocupam igualmente o espaço */
+.formGroup {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 20px;
+}
+
+/* Rótulos dos campos */
+.formGroup label {
+  font-size: 14px;
+  font-weight: bold;
+  color: #555555;
+  margin-bottom: 8px;
+}
+
+/* Estilo para os campos de input e select */
+.formGroup input,
+.formGroup select {
+  padding: 10px;
+  border: 1px solid #cccccc;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
+  background-color: #ffffff;
+  font-size: 14px;
+  color: #333333;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  outline: none;
+  border-color: #1e90ff;
+}
+
+/* Placeholder mais sutil */
+.formGroup input::placeholder {
+  color: #aaaaaa;
+}
+
+/* Botões */
+button[type="submit"],
+.backButton {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+button[type="submit"] {
+  background-color: #1e90ff;
+  color: #ffffff;
+}
+
+button[type="submit"]:hover {
+  background-color: #4682b4;
+}
+
+.backButton {
+  background-color: #28a745; /* Verde */
+  color: #ffffff; /* Cor do texto */
+  margin-top: 10px;
+}
+
+.backButton:hover {
+  background-color: #218838; /* Verde mais escuro para o hover */
+}

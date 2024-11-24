@@ -7,26 +7,26 @@
     color: #000; /* Cor do texto preto para contraste */
     height: 100vh;
     box-sizing: border-box;
-    padding-top: 60px; /* Espaço para a barra superior com um pequeno afastamento */
+    padding-top: 70px; /* Espaço para a barra superior com um pequeno afastamento */
     padding-bottom: 20px; /* Espaço para a parte inferior da página */
     position: relative;
+    border-radius: 8px; /* Bordas arredondadas para todo o container */
 }
 
 /* Barra superior */
 .header {
     width: 100%;
-    background-color: #f8f9fa; /* Barra superior clara */
+    max-width: 1200px;
+    margin: 10px auto; /* Adiciona espaço antes da barra superior */
+    background-color: #d3d3d3; /* Cor cinza para barra superior */
     color: black; /* Texto preto */
     display: flex;
     justify-content: space-between;
     align-items: center;
     padding: 10px 20px; /* Espaçamento ao redor dos itens */
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra mais leve */
-    border-bottom: 2px solid #ddd; /* Borda inferior */
+    border-radius: 8px; /* Bordas arredondadas para a barra superior */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra leve */
+    border: 1px solid #ccc; /* Borda clara */
 }
 
 /* Título na barra superior */
@@ -40,14 +40,16 @@
     background-color: #4CAF50; /* Verde */
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 8px; /* Bordas arredondadas para o botão */
     padding: 10px 20px;
     cursor: pointer;
     font-size: 16px;
     text-align: center;
+    transition: background-color 0.3s ease;
 }
 
-.backButton:hover {
+.backButton:hover,
+.backButton:focus {
     background-color: #45a049; /* Verde mais escuro para hover */
 }
 
@@ -59,39 +61,31 @@
     transform: translateX(-50%);
     width: 100%;
     max-width: 800px; /* Largura máxima do filtro de pesquisa */
-    background-color: #f9f9f9; /* Fundo claro */
     padding: 10px 20px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra leve */
     z-index: 999; /* Para garantir que fique sobre outros elementos */
     box-sizing: border-box;
-    border-radius: 4px; /* Bordas arredondadas */
-    border: 1px solid #ddd; /* Borda para destacar */
+    border-radius: 8px; /* Bordas arredondadas */
+    background-color: #fff; /* Campo branco */
 }
 
-/* Linha horizontal de destaque */
 .searchContainer::after {
-    content: '';
-    display: block;
-    width: 100%; /* Largura do container de pesquisa */
-    height: 2px;
-    background: linear-gradient(to right, rgba(0, 0, 0, 0.1), transparent, rgba(0, 0, 0, 0.1));
-    margin: 10px 0 0; /* Margem para alinhar com o padding da barra */
+    content: ''; /* Remove linhas e outros elementos decorativos */
+    display: none;
 }
 
 /* Campo de pesquisa */
 .searchInput {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ddd; /* Cor de borda clara */
-    border-radius: 4px;
+    border: none; /* Remove bordas */
     font-size: 16px;
-    background-color: #fff; /* Fundo branco */
+    background-color: transparent; /* Transparente para manter o estilo limpo */
     color: #000; /* Cor do texto no campo de pesquisa */
+    border-radius: 8px; /* Bordas arredondadas para o campo de pesquisa */
 }
 
-/* Placeholder do campo de pesquisa */
 .searchInput::placeholder {
-    color: #666; /* Cor do placeholder mais clara */
+    color: #666; /* Placeholder em cinza claro */
 }
 
 /* Container para os treinos */
@@ -108,7 +102,7 @@
 /* Card de treino */
 .treinoCard {
     background-color: #f9f9f9; /* Fundo claro para os cards */
-    border-radius: 8px;
+    border-radius: 8px; /* Bordas arredondadas para os cards */
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Sombra leve */
     padding: 20px;
     width: 300px; /* Ajuste o tamanho conforme necessário */

@@ -160,12 +160,12 @@ const CadastroTreino = () => {
         </button>
         <button
           onClick={() => navigate('/dashboard-professor')}
-          className={styles.backButton}
+          className={styles.backToDashboardButton}
         >
           Voltar ao Dashboard
         </button>
       </div>
-
+  
       <div className={styles.treinosContainer}>
         {trainings.map((training) => (
           <div key={training.id} className={styles.treinoCard}>
@@ -184,7 +184,7 @@ const CadastroTreino = () => {
           </div>
         ))}
       </div>
-
+  
       {modalType && (
         <div className={`${styles.modal} ${styles.visible}`}>
           <div className={styles.modalContent}>
@@ -300,8 +300,8 @@ const CadastroTreino = () => {
               <div>
                 <label>Descrição Geral:</label>
                 <textarea
-                {...register('descricao', { required: true })}
-                className={styles.descricaoGeral}
+                  {...register('descricao', { required: true })}
+                  className={styles.descricaoGeral}
                 ></textarea>
               </div>
               <div className={styles.modalFooter}>
@@ -321,4 +321,3 @@ const CadastroTreino = () => {
 };
 
 export default CadastroTreino;
-

@@ -1,0 +1,155 @@
+/* Container principal */
+.container {
+    padding: 20px;
+}
+
+/* Barra Superior */
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #d3d3d3; /* Cor apenas para a barra superior */
+    padding: 10px 20px; /* Padding apenas para a barra superior */
+    border-radius: 8px; /* Bordas arredondadas para a barra superior */
+    margin-bottom: 20px;
+}
+
+.topBar h2 {
+    margin: 0;
+    color: black;
+}
+
+/* Botão de Voltar */
+.backButton {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 15px;
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para o botão */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.backButton:hover,
+.backButton:focus {
+    background-color: #218838;
+}
+
+/* Formulário e Inputs */
+.formContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.formGroup {
+    display: flex;
+    gap: 10px;
+}
+
+.inputField {
+    padding: 10px;
+    width: 250px;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Bordas arredondadas para os campos de entrada */
+}
+
+.addButton {
+    background-color: #007bff;
+    color: white;
+    padding: 8px 12px;
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para o botão */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.addButton:hover,
+.addButton:focus {
+    background-color: #0056b3;
+}
+
+/* Filtro */
+.filterInput {
+    margin-bottom: 20px;
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Bordas arredondadas para o campo de filtro */
+}
+
+/* Lista */
+.list {
+    background-color: #ffffff;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Bordas arredondadas para a lista */
+    padding: 10px;
+}
+
+/* Itens da Lista */
+.listItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 8px; /* Bordas arredondadas para os itens da lista */
+}
+
+/* Botões de Ação */
+.actionButtons button {
+    margin-left: 5px;
+    padding: 5px 10px;
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para os botões */
+    cursor: pointer;
+}
+
+/* Botões de Ação (Editar, Excluir, Salvar, Cancelar) */
+.editButton {
+    background-color: #007bff;
+    color: white;
+}
+
+.editButton:hover,
+.editButton:focus {
+    background-color: #0056b3;
+}
+
+.deleteButton {
+    background-color: #dc3545;
+    color: white;
+}
+
+.deleteButton:hover,
+.deleteButton:focus {
+    background-color: #c82333;
+}
+
+.saveButton {
+    background-color: #28a745;
+    color: white;
+}
+
+.saveButton:hover,
+.saveButton:focus {
+    background-color: #218838;
+}
+
+.cancelButton {
+    background-color: #6c757d;
+    color: white;
+}
+
+.cancelButton:hover,
+.cancelButton:focus {
+    background-color: #5a6268;
+}
+
+/* Grupo de Edição */
+.editGroup {
+    display: flex;
+    gap: 10px;
+}

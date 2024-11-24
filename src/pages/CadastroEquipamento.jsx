@@ -1,70 +1,66 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../config/firebaseConfig'; // Certifique-se de importar corretamente sua configuração do Firebase
-import { useAuth } from '../contexts/authContext'; // Contexto de autenticação
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../config/firebaseConfig';
+import { useAuth } from '../contexts/authContext';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
-import * as Yup from 'yup'; // Biblioteca de validação
+import * as Yup from 'yup';
 import styles from '../styles/Equipamento.module.css';
+
+// Importando o FontAwesome para os ícones
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const CadastroEquipamento = () => {
   const [equipamentos, setEquipamentos] = useState([]);
+  const [filter, setFilter] = useState('');
   const [editId, setEditId] = useState(null);
   const [editNome, setEditNome] = useState('');
   const navigate = useNavigate();
-  const { currentUser } = useAuth(); // Usuário logado
+  const { currentUser } = useAuth();
 
-  // Carregar os equipamentos do professor logado
   useEffect(() => {
     if (!currentUser) return;
 
     const fetchEquipamentos = async () => {
       try {
-        const equipamentosRef = collection(db, 'Equipamento');
-        const q = query(equipamentosRef, where('id_professor', '==', currentUser.uid));
-        const querySnapshot = await getDocs(q);
-        const equipamentosList = querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setEquipamentos(equipamentosList);
+        const q = query(
+          collection(db, 'Equipamento'),
+          where('id_professor', '==', currentUser.uid)
+        );
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+          const equipamentosList = snapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setEquipamentos(equipamentosList);
+        });
+
+        return unsubscribe;
       } catch (error) {
         console.error('Erro ao buscar equipamentos:', error);
       }
     };
 
-    // Monitorar mudanças em tempo real na coleção
-    const unsubscribe = onSnapshot(
-      query(collection(db, 'Equipamento'), where('id_professor', '==', currentUser.uid)),
-      (snapshot) => {
-        const updatedEquipamentos = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-        setEquipamentos(updatedEquipamentos);
-      }
-    );
-
     fetchEquipamentos();
-    return () => unsubscribe();
   }, [currentUser]);
 
-  // Adicionar equipamento
   const handleAdd = async (values, { resetForm }) => {
-    if (!currentUser) {
-      alert('Você precisa estar logado para cadastrar um equipamento.');
-      return;
-    }
+    if (!currentUser) return;
 
     try {
       await addDoc(collection(db, 'Equipamento'), {
         nome: values.nome,
-        id_professor: currentUser.uid, // Associando ao professor logado
-        data_criacao: serverTimestamp(), // Usando o timestamp do servidor
+        id_professor: currentUser.uid,
+        data_criacao: serverTimestamp(),
       });
       alert('Equipamento cadastrado com sucesso!');
       resetForm();
     } catch (error) {
       console.error('Erro ao cadastrar equipamento:', error);
-      alert('Erro ao cadastrar equipamento.');
     }
   };
 
-  // Editar equipamento
   const handleEdit = async (id) => {
     try {
       const docRef = doc(db, 'Equipamento', id);
@@ -74,11 +70,9 @@ const CadastroEquipamento = () => {
       setEditNome('');
     } catch (error) {
       console.error('Erro ao atualizar equipamento:', error);
-      alert('Erro ao atualizar equipamento.');
     }
   };
 
-  // Excluir equipamento
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este equipamento?')) {
       try {
@@ -86,74 +80,110 @@ const CadastroEquipamento = () => {
         alert('Equipamento removido com sucesso!');
       } catch (error) {
         console.error('Erro ao remover equipamento:', error);
-        alert('Erro ao remover equipamento.');
       }
     }
   };
 
-  // Validação com Yup
   const validationSchema = Yup.object({
-    nome: Yup.string().required('Nome do equipamento é obrigatório').min(3, 'Nome deve ter no mínimo 3 caracteres'),
+    nome: Yup.string().required('Campo obrigatório').min(3, 'Mínimo 3 caracteres'),
   });
 
+  const filteredEquipamentos = equipamentos.filter((equipamento) =>
+    equipamento.nome.toLowerCase().includes(filter.toLowerCase())
+  );
+
   return (
-    <div>
-      <h2>Cadastrar Equipamento</h2>
-      <Formik
-        initialValues={{ nome: '' }}
-        validationSchema={validationSchema}
-        onSubmit={handleAdd}
-      >
-        {({ values, handleChange, handleBlur, errors, touched }) => (
-          <Form>
-            <div className={styles.formGroup}>
+    <div className={styles.container}>
+      <div className={styles.topBar}>
+        <h2>Cadastrar Equipamento</h2>
+        <button
+          className={styles.backButton}
+          onClick={() => navigate('/dashboard-professor')}
+        >
+          Voltar ao Dashboard
+        </button>
+      </div>
+
+      <div className={styles.formContainer}>
+        <Formik
+          initialValues={{ nome: '' }}
+          validationSchema={validationSchema}
+          onSubmit={handleAdd}
+        >
+          {() => (
+            <Form className={styles.formGroup}>
               <Field
                 type="text"
                 name="nome"
-                placeholder="Nome do Equipamento"
-                value={values.nome}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                className={errors.nome && touched.nome ? styles.errorInput : ''}
-              />
-              <ErrorMessage name="nome" component="div" className={styles.errorMessage} />
-            </div>
-            <button type="submit">Cadastrar Equipamento</button>
-          </Form>
-        )}
-      </Formik>
-
-      <h3>Equipamentos Cadastrados:</h3>
-      {equipamentos.map((equipamento) => (
-        <div key={equipamento.id}>
-          {editId === equipamento.id ? (
-            <div>
-              <input
-                type="text"
-                value={editNome}
-                onChange={(e) => setEditNome(e.target.value)}
+                className={styles.inputField}
                 placeholder="Nome do Equipamento"
               />
-              <button onClick={() => handleEdit(equipamento.id)}>Salvar</button>
-              <button onClick={() => setEditId(null)}>Cancelar</button>
-            </div>
-          ) : (
-            <div>
-              <span>{equipamento.nome}</span>
-              <button
-                onClick={() => {
-                  setEditId(equipamento.id);
-                  setEditNome(equipamento.nome);
-                }}
-              >
-                Editar
+              <ErrorMessage name="nome" component="div" />
+              <button type="submit" className={styles.addButton}>
+                <i className="fa-solid fa-plus"></i> Cadastrar Equipamento
               </button>
-              <button onClick={() => handleDelete(equipamento.id)}>Remover</button>
-            </div>
+            </Form>
           )}
-        </div>
-      ))}
-      <button onClick={() => navigate('/dashboard-professor')}>Voltar</button>
+        </Formik>
+      </div>
+
+      <input
+        type="text"
+        className={styles.filterInput}
+        placeholder="Filtrar pelo Nome do Equipamento"
+        value={filter}
+        onChange={(e) => setFilter(e.target.value)}
+      />
+
+      <div className={styles.list}>
+        {filteredEquipamentos.map((equipamento) => (
+          <div key={equipamento.id} className={styles.listItem}>
+            {editId === equipamento.id ? (
+              <div className={styles.editGroup}>
+                <input
+                  type="text"
+                  value={editNome}
+                  onChange={(e) => setEditNome(e.target.value)}
+                  className={styles.inputField}
+                />
+                <button
+                  className={styles.saveButton}
+                  onClick={() => handleEdit(equipamento.id)}
+                >
+                  <i className="fa-solid fa-check"></i> Salvar
+                </button>
+                <button
+                  className={styles.cancelButton}
+                  onClick={() => setEditId(null)}
+                >
+                  <i className="fa-solid fa-xmark"></i> Cancelar
+                </button>
+              </div>
+            ) : (
+              <>
+                <span>{equipamento.nome}</span>
+                <div className={styles.actionButtons}>
+                  <button
+                    className={styles.editButton}
+                    onClick={() => {
+                      setEditId(equipamento.id);
+                      setEditNome(equipamento.nome);
+                    }}
+                  >
+                    <i className="fa-solid fa-pencil"></i> Editar
+                  </button>
+                  <button
+                    className={styles.deleteButton}
+                    onClick={() => handleDelete(equipamento.id)}
+                  >
+                    <i className="fa-solid fa-trash-can"></i> Remover
+                  </button>
+                </div>
+              </>
+            )}
+          </div>
+        ))}
+      </div>
     </div>
   );
 };

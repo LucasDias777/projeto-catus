@@ -67,7 +67,7 @@ const AlunoCadastrado = () => {
       </div>
       <input
         type="text"
-        placeholder="Pesquisar aluno"
+        placeholder="Pesquisar pelo Nome do Aluno"
         value={searchTerm}
         onChange={handleSearchChange}
         className={styles.searchInput}

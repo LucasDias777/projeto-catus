@@ -1,33 +1,34 @@
 /* Container da página */
 .pageContainer {
-  background-color: #f5f5f5; /* Tons de branco */
-  color: #333; /* Texto cinza escuro */
+  background-color: #f5f5f5;
+  color: #333;
   min-height: 100vh;
   padding: 20px;
   display: flex;
   flex-direction: column;
   align-items: center;
+  border-radius: 8px;
 }
 
 /* Barra superior */
 .topBar {
   width: 100%;
-  background-color: #fff; /* Branco */
-  color: #333; /* Texto cinza escuro */
-  padding: 15px;
+  background-color: #d3d3d3;
+  color: #333;
+  padding: 10px 20px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid #ddd; /* Linha de divisão */
-  border-radius: 10px; /* Bordas arredondadas na barra superior */
+  border-bottom: 1px solid #ddd;
+  border-radius: 8px;
 }
 
-/* Botões na barra superior */
+/* Botão de adicionar treino */
 .addButton {
   background-color: #007bff;
   color: #fff;
   border: none;
-  border-radius: 5px;
+  border-radius: 8px;
   padding: 10px 15px;
   cursor: pointer;
   font-size: 16px;
@@ -35,6 +36,20 @@
 
 .addButton:hover {
   background-color: #0056b3;
+}
+
+/* Botão de voltar ao Dashboard */
+.backToDashboardButton {
+  background-color: #28a745;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 10px 15px;
+  cursor: pointer;
+}
+
+.backToDashboardButton:hover {
+  background-color: #218838;
 }
 
 /* Lista de treinos */
@@ -61,6 +76,40 @@
   color: #333;
 }
 
+/* Botões para editar/remover treino */
+.treinoButtons {
+  display: flex;
+  justify-content: space-between;
+  gap: 5px;
+  margin-top: 10px;
+}
+
+.editButton {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.editButton:hover {
+  background-color: #0056b3;
+}
+
+.deleteButton {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+}
+
+.deleteButton:hover {
+  background-color: #b22222;
+}
+
 /* Estilo dos modais */
 .modal {
   position: fixed;
@@ -85,7 +134,7 @@
 .modalContent {
   background-color: #fff;
   padding: 20px;
-  border-radius: 10px;
+  border-radius: 8px; /* Bordas arredondadas */
   width: 600px;
   max-width: 90%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
@@ -94,39 +143,26 @@
   text-align: center; /* Centraliza os conteúdos */
 }
 
-/* Centraliza os textos no modal */
-.modalContent h3 {
-  text-align: center;
-  margin-bottom: 20px;
+.modalFooter {
+  display: flex;
+  justify-content: space-between; /* Botões lado a lado */
+  gap: 10px;
 }
 
-/* Adiciona espaçamento entre os botões principais */
-.modalContent button[type="button"] {
-  margin-top: 15px;
-}
-
-.modalContent label {
-  display: block;
-  margin-bottom: 8px;
-  font-size: 16px;
-}
-
-.modalContent select,
-.modalContent textarea,
-.modalContent input {
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 15px;
-  border: 1px solid #ddd;
+.modalFooter button {
+  padding: 10px 20px;
   border-radius: 5px;
   font-size: 16px;
 }
 
-.modalContent textarea {
-  height: 100px;
+.modalFooter button[type="button"] {
+  background-color: #dc3545; /* Cor vermelha */
 }
 
-/* Estilo para os botões dentro do modal */
+.modalFooter button[type="button"]:hover {
+  background-color: #c82333;
+}
+
 .modalContent button {
   background-color: #007bff;
   color: #fff;
@@ -141,77 +177,7 @@
   background-color: #0056b3;
 }
 
-/* Estilo do botão de cancelar */
-.modalFooter {
-  display: flex;
-  justify-content: center;
-  gap: 15px;
-}
-
-.modalFooter button {
-  padding: 10px 20px;
-  border-radius: 5px;
-  font-size: 16px;
-}
-
-.modalFooter button[type="button"] {
-  background-color: #dc3545;
-}
-
-.modalFooter button[type="button"]:hover {
-  background-color: #c82333;
-}
-
-/* Botões de adicionar/remover equipamento centralizados */
-.modalContent .equipment-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-}
-
-/* Ajuste na descrição geral */
-.modalContent label + textarea {
-  margin-top: 10px;
-}
-
-/* Espaçamento entre "Adicionar Treino" e "Editar Treino" */
-.modalContent h3 span {
-  margin: 0 10px;
-}
-/* Botões para editar/remover treino */
-.treinoButtons {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 10px;
-}
-
-.editButton {
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.editButton:hover {
-  background-color: #0056b3;
-}
-
-.deleteButton {
-  background-color: #dc3545;
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
-}
-
-.deleteButton:hover {
-  background-color: #b22222;
-}
-
-/* Ajuste entre botões de equipamentos */
+/* Botões para gerenciar equipamentos */
 .equipmentContainer {
   display: flex;
   gap: 10px;
@@ -219,7 +185,7 @@
 }
 
 .addEquipmentButton {
-  background-color: #28a745;
+  background-color: #28a745; /* Cor verde */
   color: #fff;
   border: none;
   border-radius: 5px;
@@ -232,7 +198,7 @@
 }
 
 .removeEquipmentButton {
-  background-color: #dc3545;
+  background-color: #dc3545; /* Cor vermelha */
   color: #fff;
   border: none;
   border-radius: 5px;
