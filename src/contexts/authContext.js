@@ -1,12 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { auth, db } from '../config/firebaseConfig';
-import { 
-  signInWithEmailAndPassword, 
-  signOut, 
-  onAuthStateChanged, 
-  browserLocalPersistence, 
-  setPersistence 
-} from 'firebase/auth';
+import { signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const AuthContext = createContext();
@@ -24,12 +18,12 @@ export const AuthProvider = ({ children }) => {
   };
 
   // Recupera as credenciais do localStorage
-  const getStoredCredentials = async () => {
+  const getStoredCredentials = () => {
     const storedData = localStorage.getItem('authCredentials');
     if (storedData) {
       return JSON.parse(storedData);
     }
-    throw new Error('Credenciais não estão disponíveis. Faça login novamente.');
+    return null;
   };
 
   const login = async (email, password) => {
@@ -43,7 +37,6 @@ export const AuthProvider = ({ children }) => {
         collection(db, 'Pessoa'),
         where('email', '==', email)
       );
-
       const querySnapshot = await getDocs(userQuery);
 
       if (!querySnapshot.empty) {
@@ -101,6 +94,12 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     });
+
+    // Verificar as credenciais armazenadas e reautenticar automaticamente se necessário
+    const storedCredentials = getStoredCredentials();
+    if (storedCredentials) {
+      login(storedCredentials.email, storedCredentials.password);
+    }
 
     return unsubscribe;
   }, []);

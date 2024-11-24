@@ -11,7 +11,7 @@ import styles from '../styles/Cadastro.module.css';
 
 const CadastroAluno = () => {
   const navigate = useNavigate();
-  const { currentUser, getStoredCredentials } = useAuth(); // Obter credenciais armazenadas (adapte o contexto, se necessário)
+  const { currentUser, getStoredCredentials } = useAuth();
   const [isReauthenticating, setIsReauthenticating] = useState(false);
 
   // Redirecionar para login caso o usuário não esteja autenticado
@@ -21,7 +21,6 @@ const CadastroAluno = () => {
     }
   }, [currentUser, navigate]);
 
-  // Validação com Yup
   const validationSchema = Yup.object({
     nome_completo: Yup.string().required('Nome completo é obrigatório'),
     data_nascimento: Yup.date().required('Data de nascimento é obrigatória'),
@@ -40,34 +39,50 @@ const CadastroAluno = () => {
     senha: Yup.string().required('Senha é obrigatória'),
   });
 
-  // Reautenticar o usuário
-  const reauthenticateUser = async () => {
+  // Função para reautenticar o professor
+  const reauthenticateUser = async (password) => {
     if (currentUser) {
       setIsReauthenticating(true);
       try {
-        const { email, password } = await getStoredCredentials(); // Obtenha email e senha do contexto
+        const { email } = await getStoredCredentials(); // Pegando o email do professor armazenado
         const credential = EmailAuthProvider.credential(email, password);
-        await reauthenticateWithCredential(auth.currentUser, credential);
+        await reauthenticateWithCredential(auth.currentUser, credential); // Tentando reautenticar
         setIsReauthenticating(false);
+        return true;
       } catch (error) {
         setIsReauthenticating(false);
         console.error('Erro ao reautenticar:', error.message);
-        alert('Erro na reautenticação. Por favor, faça login novamente.');
-        navigate('/login');
+        alert('Senha incorreta. Tente novamente!');
+        return false;
       }
     }
+    return false;
   };
 
-  // Envio do formulário
+  // Função chamada ao submeter o formulário
   const onSubmit = async (values, { resetForm, setSubmitting }) => {
     setSubmitting(true);
-    try {
-      await reauthenticateUser();
+    
+    // Solicitar a senha do professor para confirmar a ação
+    const professorPassword = prompt('Digite sua senha para confirmar o cadastro do aluno:');
+    
+    if (!professorPassword) {
+      alert('Ação cancelada. Senha não fornecida.');
+      setSubmitting(false);
+      return;
+    }
 
+    const isAuthenticated = await reauthenticateUser(professorPassword);
+
+    if (!isAuthenticated) {
+      setSubmitting(false);
+      return;
+    }
+
+    try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.senha);
       const user = userCredential.user;
 
-      // Registro do aluno na coleção "Pessoa"
       await setDoc(doc(db, 'Pessoa', user.uid), {
         ...values,
         id_aluno: user.uid,
@@ -78,6 +93,9 @@ const CadastroAluno = () => {
 
       alert('Aluno cadastrado com sucesso!');
       resetForm();
+
+      // Ao invés de redirecionar para o login, vamos manter o professor no dashboard
+      navigate('/dashboard-professor');
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error.message);
       alert(`Erro ao cadastrar aluno: ${error.message}`);
@@ -85,7 +103,7 @@ const CadastroAluno = () => {
     setSubmitting(false);
   };
 
-  // Função para buscar informações pelo CEP
+  // Função para buscar o endereço pelo CEP
   const fetchAddressByCep = async (cep, setFieldValue) => {
     if (!cep) return;
     try {
