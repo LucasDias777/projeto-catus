@@ -13,7 +13,6 @@ const DashboardProfessor = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeMenu, setActiveMenu] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth > 767);
   const navigate = useNavigate();
   const auth = getAuth();
 
@@ -51,23 +50,20 @@ const DashboardProfessor = () => {
   }, [navigate, auth]);
 
   useEffect(() => {
-    const handleResize = () => {
-      setSidebarOpen(window.innerWidth > 767);
-    };
-
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
-  useEffect(() => {
     const loadCharts = async () => {
       if (!userData) return;
 
       try {
-        const alunosQuery = query(collection(db, 'Pessoa'), where('id_professor', '==', userData.uid), where('tipo_pessoa', '==', 'aluno'));
+        // Consultar alunos cadastrados
+        const alunosQuery = query(
+          collection(db, 'Pessoa'),
+          where('id_professor', '==', userData.uid),
+          where('tipo_pessoa', '==', 'aluno')
+        );
         const alunosSnapshot = await getDocs(alunosQuery);
         const totalAlunos = alunosSnapshot.size;
 
+        // Consultar treinos criados
         const treinosQuery = query(
           collection(db, 'Treino'),
           where('id_professor', '==', userData.uid)
@@ -82,44 +78,10 @@ const DashboardProfessor = () => {
           }
         });
 
-        // Gráfico de Pizza - Alunos Cadastrados
-        const ctx1 = document.getElementById('alunosCadastradosChart').getContext('2d');
-        new Chart(ctx1, {
-          type: 'pie',
-          data: {
-            labels: ['Alunos Cadastrados'],
-            datasets: [
-              {
-                data: [totalAlunos],
-                backgroundColor: ['#007BFF'],
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-          },
-        });
-
-        // Gráfico de Barras - Treinos Criados
-        const ctx2 = document.getElementById('treinosCriadosChart').getContext('2d');
-        new Chart(ctx2, {
-          type: 'bar',
-          data: {
-            labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
-            datasets: [
-              {
-                label: 'Treinos Criados',
-                data: meses,
-                backgroundColor: '#45ffbc',
-              },
-            ],
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-          },
-        });
+        // Criar gráficos
+        createPieChart('alunosCadastradosChart', ['Alunos Cadastrados'], [totalAlunos], ['#007BFF']);
+        createBarChart('treinosCriadosChart', meses, '#45ffbc');
+        await createCadastroCharts(userData.uid);
       } catch (error) {
         console.error('Erro ao carregar gráficos:', error);
       }
@@ -127,6 +89,96 @@ const DashboardProfessor = () => {
 
     loadCharts();
   }, [userData]);
+
+  const createPieChart = (id, labels, data, backgroundColor) => {
+    const ctx = document.getElementById(id).getContext('2d');
+    new Chart(ctx, {
+      type: 'pie',
+      data: {
+        labels,
+        datasets: [
+          {
+            data,
+            backgroundColor,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  };
+
+  const createBarChart = (id, data, backgroundColor) => {
+    const ctx = document.getElementById(id).getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
+        datasets: [
+          {
+            label: 'Treinos Criados',
+            data,
+            backgroundColor,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+      },
+    });
+  };
+
+  const createHorizontalBarChart = (id, labels, data, backgroundColor) => {
+    const ctx = document.getElementById(id).getContext('2d');
+    new Chart(ctx, {
+      type: 'bar',
+      data: {
+        labels,
+        datasets: [
+          {
+            label: 'Quantidade de Cadastros',
+            data,
+            backgroundColor,
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        indexAxis: 'y',
+      },
+    });
+  };
+
+  const createCadastroCharts = async (professorId) => {
+    const collections = ['Equipamento', 'Serie', 'Repeticao', 'Tipo'];
+    const counts = [];
+
+    for (const collectionName of collections) {
+      const querySnapshot = await getDocs(
+        query(collection(db, collectionName), where('id_professor', '==', professorId))
+      );
+      counts.push(querySnapshot.size);
+    }
+
+    const totalCadastros = counts.reduce((sum, count) => sum + count, 0);
+
+    const labels = ['Equipamentos', 'Séries', 'Repetições', 'Tipos de Treino'];
+    const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0'];
+
+    createHorizontalBarChart('quantidadeCadastroChart', labels, counts, colors);
+
+    // Novo gráfico de pizza para total de cadastros com cor laranja
+    createPieChart(
+      'totalCadastroChart',
+      ['Total de Cadastros'],
+      [totalCadastros],
+      ['#FFA500']
+    );
+  };
 
   const toggleSubmenu = (menu) => {
     setActiveMenu((prevMenu) => (prevMenu === menu ? null : menu));
@@ -157,8 +209,12 @@ const DashboardProfessor = () => {
           >
             Aluno
             <ul className={`${styles.submenu} ${activeMenu === 'aluno' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/cadastro-aluno')}>Cadastrar Aluno</button></li>
-              <li><button onClick={() => navigate('/aluno-cadastrado')}>Alunos Cadastrados</button></li>
+              <li>
+                <button onClick={() => navigate('/cadastro-aluno')}>Cadastrar Aluno</button>
+              </li>
+              <li>
+                <button onClick={() => navigate('/aluno-cadastrado')}>Alunos Cadastrados</button>
+              </li>
             </ul>
           </li>
           <li
@@ -197,7 +253,7 @@ const DashboardProfessor = () => {
       <div className={styles.mainContent}>
         <div className={styles.topbar}>
           <div className={styles.topbarContent}>
-            <div className={styles.welcomeText}>Bem-vindo, {userData?.nome_completo || 'Usuário'}</div>
+            <div>Bem-vindo, {userData?.nome_completo || 'Usuário'}</div>
             <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
           </div>
         </div>
@@ -210,6 +266,16 @@ const DashboardProfessor = () => {
             <div className={styles.chartContainer}>
               <h3>Treinos Criados</h3>
               <canvas id="treinosCriadosChart"></canvas>
+            </div>
+          </div>
+          <div className={styles.row}>
+            <div className={styles.chartContainer}>
+              <h3>Quantidade de Cadastros</h3>
+              <canvas id="quantidadeCadastroChart"></canvas>
+            </div>
+            <div className={styles.chartContainer}>
+              <h3>Total de Cadastros</h3>
+              <canvas id="totalCadastroChart"></canvas>
             </div>
           </div>
         </div>

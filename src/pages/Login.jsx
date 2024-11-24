@@ -22,6 +22,9 @@ const Login = () => {
       const userCredential = await signInWithEmailAndPassword(auth, email, senha);
       const user = userCredential.user;
 
+      // Armazena as credenciais no localStorage
+      localStorage.setItem('authCredentials', JSON.stringify({ email, password: senha }));
+
       const professorQuery = query(
         collection(db, 'Pessoa'),
         where('id_professor', '==', user.uid)
@@ -35,9 +38,9 @@ const Login = () => {
       const alunoSnapshot = await getDocs(alunoQuery);
 
       if (!professorSnapshot.empty) {
-        navigate('/dashboard-professor');
+        navigate('/dashboard-professor'); // Redireciona para o dashboard do professor
       } else if (!alunoSnapshot.empty) {
-        navigate('/dashboard-aluno');
+        navigate('/dashboard-aluno'); // Redireciona para o dashboard do aluno
       } else {
         setError('Usuário não encontrado na base de dados.');
       }

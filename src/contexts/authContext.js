@@ -1,6 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { auth, db,} from '../config/firebaseConfig';
-import { signInWithEmailAndPassword, signOut, onAuthStateChanged, browserLocalPersistence, setPersistence } from 'firebase/auth';
+import { auth, db } from '../config/firebaseConfig';
+import { 
+  signInWithEmailAndPassword, 
+  signOut, 
+  onAuthStateChanged, 
+  browserLocalPersistence, 
+  setPersistence 
+} from 'firebase/auth';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 
 const AuthContext = createContext();
@@ -11,6 +17,20 @@ export const AuthProvider = ({ children }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [userType, setUserType] = useState(null);
   const [loading, setLoading] = useState(true);
+
+  // Armazena as credenciais no localStorage
+  const saveCredentials = (email, password) => {
+    localStorage.setItem('authCredentials', JSON.stringify({ email, password }));
+  };
+
+  // Recupera as credenciais do localStorage
+  const getStoredCredentials = async () => {
+    const storedData = localStorage.getItem('authCredentials');
+    if (storedData) {
+      return JSON.parse(storedData);
+    }
+    throw new Error('Credenciais não estão disponíveis. Faça login novamente.');
+  };
 
   const login = async (email, password) => {
     try {
@@ -32,7 +52,11 @@ export const AuthProvider = ({ children }) => {
         setCurrentUser({
           uid: user.uid,
           ...userData,
-        }); // Inclui o UID e dados do Firestore no estado
+        });
+
+        // Salva as credenciais no localStorage
+        saveCredentials(email, password);
+
         return userData.tipo_pessoa;
       } else {
         throw new Error('Usuário não encontrado no Banco de Dados.');
@@ -47,6 +71,7 @@ export const AuthProvider = ({ children }) => {
       await signOut(auth);
       setCurrentUser(null);
       setUserType(null);
+      localStorage.removeItem('authCredentials'); // Remove as credenciais armazenadas
     } catch (error) {
       console.error('Erro ao fazer logout:', error.message);
     }
@@ -85,7 +110,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   return (
-    <AuthContext.Provider value={{ currentUser, userType, login, logout }}>
+    <AuthContext.Provider value={{ currentUser, userType, login, logout, getStoredCredentials }}>
       {children}
     </AuthContext.Provider>
   );

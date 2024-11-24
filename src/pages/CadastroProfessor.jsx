@@ -219,13 +219,15 @@ const CadastroProfessor = () => {
                 <ErrorMessage name="senha" component="div" className={styles.error} />
               </div>
   
-              <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
-                {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
-              </button>
+              <div className={styles.formGroup}>
+                <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+                  {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
+                </button>
+              </div>
             </Form>
           )}
         </Formik>
-        <button onClick={() => navigate('/login')} className={styles.backButton}>
+	<button onClick={() => navigate('/login')} className={styles.backButton}>
           Voltar
         </button>
       </div>

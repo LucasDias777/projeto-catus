@@ -1,17 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Formik, Field, Form, ErrorMessage } from 'formik'; // Corrigido: Importação do ErrorMessage
+import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { auth, db } from '../config/firebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/authContext';
 import styles from '../styles/Cadastro.module.css';
 
 const CadastroAluno = () => {
   const navigate = useNavigate();
-  const { currentUser } = useAuth();
+  const { currentUser, getStoredCredentials } = useAuth(); // Obter credenciais armazenadas (adapte o contexto, se necessário)
+  const [isReauthenticating, setIsReauthenticating] = useState(false);
 
   // Redirecionar para login caso o usuário não esteja autenticado
   useEffect(() => {
@@ -39,10 +40,30 @@ const CadastroAluno = () => {
     senha: Yup.string().required('Senha é obrigatória'),
   });
 
+  // Reautenticar o usuário
+  const reauthenticateUser = async () => {
+    if (currentUser) {
+      setIsReauthenticating(true);
+      try {
+        const { email, password } = await getStoredCredentials(); // Obtenha email e senha do contexto
+        const credential = EmailAuthProvider.credential(email, password);
+        await reauthenticateWithCredential(auth.currentUser, credential);
+        setIsReauthenticating(false);
+      } catch (error) {
+        setIsReauthenticating(false);
+        console.error('Erro ao reautenticar:', error.message);
+        alert('Erro na reautenticação. Por favor, faça login novamente.');
+        navigate('/login');
+      }
+    }
+  };
+
   // Envio do formulário
   const onSubmit = async (values, { resetForm, setSubmitting }) => {
     setSubmitting(true);
     try {
+      await reauthenticateUser();
+
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.senha);
       const user = userCredential.user;
 
@@ -217,7 +238,7 @@ const CadastroAluno = () => {
           )}
         </Formik>
         <button onClick={() => navigate('/dashboard-professor')} className={styles.backButton}>
-          Voltar
+          Voltar ao Dashboard
         </button>
       </div>
     </div>
