@@ -11,6 +11,7 @@ O **StriveFlow** é uma aplicação que permite gerenciar treinos, com funcional
 - **Visualização de dados em gráficos dinâmicos** utilizando Chart.js.
 - **Validação de formulários** com Formik e Yup.
 - **Consulta de dados externos** via integração com APIs, como o ViaCEP.
+- **Ícones personalizados** para melhorar a interface usando FontAwesome.
 
 ---
 
@@ -23,6 +24,7 @@ O **StriveFlow** é uma aplicação que permite gerenciar treinos, com funcional
 - **Formik**: Construção e gerenciamento de formulários.
 - **Yup**: Validação de esquemas para formulários.
 - **Axios**: Realização de requisições HTTP, como consulta de CEP no ViaCEP.
+- **FontAwesome**: Ícones estilizados para melhorar a interface.
 
 ### Firebase
 - **Authentication**: Gerenciamento de autenticação de usuários.
@@ -39,7 +41,7 @@ O **StriveFlow** é uma aplicação que permite gerenciar treinos, com funcional
 
 ## 📂 Estrutura do Projeto
 
-- **components/**: Componentes reutilizáveis, como botões, cards e gráficos.
+- **components/**: Componentes reutilizáveis, como botões, cards, gráficos e ícones.
 - **pages/**: Páginas principais da aplicação (ex.: Login, Cadastro, Dashboard).
 - **styles/**: Arquivos de estilos usando CSS Modules.
 - **config/**: Configurações e integrações (ex.: Firebase e API ViaCEP).
@@ -82,6 +84,7 @@ Acesse a aplicação em [http://localhost:3000](http://localhost:3000).
 - **Formik**: Para criação e gerenciamento de formulários.
 - **Yup**: Para validação de dados nos formulários.
 - **Chart.js**: Para exibição de gráficos dinâmicos.
+- **FontAwesome**: Para inclusão de ícones estilizados.
 - **jsPDF** e **jspdf-autotable**: Para geração de relatórios em PDF.
 - **XLSX**: Para exportação de dados em Excel.
 
@@ -90,3 +93,5 @@ Acesse a aplicação em [http://localhost:3000](http://localhost:3000).
 ## 🌐 URLs Padrão
 
 - **Frontend**: [http://localhost:3000](http://localhost:3000)
+
+---
