@@ -6,7 +6,7 @@ import { createUserWithEmailAndPassword, deleteUser } from 'firebase/auth';
 import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios'; // Para realizar a requisição à API ViaCEP
-import styles from '../styles/Cadastro.module.css';
+import styles from '../styles/CadastroProfessor.module.css';
 
 const CadastroProfessor = () => {
   const navigate = useNavigate();
@@ -88,6 +88,7 @@ const CadastroProfessor = () => {
       setFieldValue('bairro', response.data.bairro || '');
       setFieldValue('cidade', response.data.localidade || '');
       setFieldValue('uf', response.data.uf || '');
+      setFieldValue('complemento', response.data.complemento || '');
     } catch (error) {
       console.error('Erro ao buscar o CEP:', error);
       alert('Erro ao buscar o CEP. Tente novamente.');

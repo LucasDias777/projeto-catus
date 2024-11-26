@@ -5,6 +5,7 @@ import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { db } from '../config/firebaseConfig';
 import { Chart, registerables } from 'chart.js';
 import styles from '../styles/Dashboard.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 Chart.register(...registerables);
 
@@ -212,9 +213,6 @@ const DashboardProfessor = () => {
               <li>
                 <button onClick={() => navigate('/cadastro-aluno')}>Cadastrar Aluno</button>
               </li>
-              <li>
-                <button onClick={() => navigate('/aluno-cadastrado')}>Alunos Cadastrados</button>
-              </li>
             </ul>
           </li>
           <li
@@ -236,7 +234,10 @@ const DashboardProfessor = () => {
           >
             Relatórios
             <ul className={`${styles.submenu} ${activeMenu === 'relatorio' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/relatorio-treino')}>Relatório de Treinos</button></li>
+              <li><button onClick={() => navigate('/relatorio-treino-professor')}>Relatório de Treinos</button></li>
+              <li>
+                <button onClick={() => navigate('/aluno-cadastrado')}>Alunos Cadastrados</button>
+              </li>
             </ul>
           </li>
           <li
@@ -254,7 +255,8 @@ const DashboardProfessor = () => {
         <div className={styles.topbar}>
           <div className={styles.topbarContent}>
             <div>Bem-vindo, {userData?.nome_completo || 'Usuário'}</div>
-            <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
+            <button className={styles.logoutButton} onClick={handleLogout}>
+            <i className="fa-solid fa-right-from-bracket"></i> Logout</button>
           </div>
         </div>
         <div className={styles.contentArea}>

@@ -1,16 +1,15 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { auth, db } from '../config/firebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { useAuth } from '../contexts/authContext';
 import styles from '../styles/Login.module.css';
-import logo from '../styles/images/logo.png'; // Importa a logo
+import logo from '../styles/images/logo.png';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const { login } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -19,30 +18,14 @@ const Login = () => {
     setError(null);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, senha);
-      const user = userCredential.user;
+      const userType = await login(email, senha);
 
-      // Armazena as credenciais no localStorage
-      localStorage.setItem('authCredentials', JSON.stringify({ email, password: senha }));
-
-      const professorQuery = query(
-        collection(db, 'Pessoa'),
-        where('id_professor', '==', user.uid)
-      );
-      const professorSnapshot = await getDocs(professorQuery);
-
-      const alunoQuery = query(
-        collection(db, 'Pessoa'),
-        where('id_aluno', '==', user.uid)
-      );
-      const alunoSnapshot = await getDocs(alunoQuery);
-
-      if (!professorSnapshot.empty) {
-        navigate('/dashboard-professor'); // Redireciona para o dashboard do professor
-      } else if (!alunoSnapshot.empty) {
-        navigate('/dashboard-aluno'); // Redireciona para o dashboard do aluno
+      if (userType === 'professor') {
+        navigate('/dashboard-professor');
+      } else if (userType === 'aluno') {
+        navigate('/dashboard-aluno');
       } else {
-        setError('Usuário não encontrado na base de dados.');
+        setError('Tipo de usuário inválido.');
       }
     } catch (error) {
       if (error.message.includes('auth/wrong-password')) {
@@ -65,11 +48,7 @@ const Login = () => {
     <div className={styles.loginPage}>
       <div className={styles.container}>
         <div className={styles.logoSection}>
-          <img
-            src={logo} // Usa a logo importada
-            alt="Logo"
-            className={styles.logo}
-          />
+          <img src={logo} alt="Logo" className={styles.logo} />
         </div>
         <h4 className={styles.welcomeText}>LOGIN</h4>
         <form onSubmit={handleSubmit}>

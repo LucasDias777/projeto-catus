@@ -7,17 +7,19 @@ import { auth, db } from '../config/firebaseConfig';
 import { createUserWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/authContext';
-import styles from '../styles/Cadastro.module.css';
+import styles from '../styles/CadastroAluno.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const CadastroAluno = () => {
   const navigate = useNavigate();
   const { currentUser, getStoredCredentials } = useAuth();
-  const [isReauthenticating, setIsReauthenticating] = useState(false);
 
-  // Redirecionar para login caso o usuário não esteja autenticado
   useEffect(() => {
     if (!currentUser) {
-      navigate('/login');
+      console.warn('Nenhum usuário logado. Redirecionando para o Dashboard.');
+      navigate('/dashboard-professor');
+    } else {
+      console.log('Usuário atual:', currentUser);
     }
   }, [currentUser, navigate]);
 
@@ -39,45 +41,29 @@ const CadastroAluno = () => {
     senha: Yup.string().required('Senha é obrigatória'),
   });
 
-  // Função para reautenticar o professor
-  const reauthenticateUser = async (password) => {
-    if (currentUser) {
-      setIsReauthenticating(true);
-      try {
-        const { email } = await getStoredCredentials(); // Pegando o email do professor armazenado
-        const credential = EmailAuthProvider.credential(email, password);
-        await reauthenticateWithCredential(auth.currentUser, credential); // Tentando reautenticar
-        setIsReauthenticating(false);
-        return true;
-      } catch (error) {
-        setIsReauthenticating(false);
-        console.error('Erro ao reautenticar:', error.message);
-        alert('Senha incorreta. Tente novamente!');
-        return false;
+  const reauthenticateUser = async () => {
+    try {
+      if (getStoredCredentials) {
+        const storedCredentials = getStoredCredentials();
+        if (storedCredentials) {
+          const { email, password } = storedCredentials;
+          const credential = EmailAuthProvider.credential(email, password);
+          await reauthenticateWithCredential(auth.currentUser, credential);
+          console.log('Reautenticação bem-sucedida.');
+        } else {
+          console.warn('Credenciais ausentes no armazenamento local.');
+        }
+      } else {
+        console.warn('Função getStoredCredentials não encontrada.');
       }
+    } catch (error) {
+      console.error('Erro na reautenticação:', error.message);
+      throw error;
     }
-    return false;
   };
 
-  // Função chamada ao submeter o formulário
   const onSubmit = async (values, { resetForm, setSubmitting }) => {
     setSubmitting(true);
-    
-    // Solicitar a senha do professor para confirmar a ação
-    const professorPassword = prompt('Digite sua senha para confirmar o cadastro do aluno:');
-    
-    if (!professorPassword) {
-      alert('Ação cancelada. Senha não fornecida.');
-      setSubmitting(false);
-      return;
-    }
-
-    const isAuthenticated = await reauthenticateUser(professorPassword);
-
-    if (!isAuthenticated) {
-      setSubmitting(false);
-      return;
-    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.senha);
@@ -94,16 +80,15 @@ const CadastroAluno = () => {
       alert('Aluno cadastrado com sucesso!');
       resetForm();
 
-      // Ao invés de redirecionar para o login, vamos manter o professor no dashboard
       navigate('/dashboard-professor');
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error.message);
       alert(`Erro ao cadastrar aluno: ${error.message}`);
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
 
-  // Função para buscar o endereço pelo CEP
   const fetchAddressByCep = async (cep, setFieldValue) => {
     if (!cep) return;
     try {
@@ -115,39 +100,53 @@ const CadastroAluno = () => {
         setFieldValue('uf', data.uf || '');
         setFieldValue('endereco', data.logradouro || '');
         setFieldValue('bairro', data.bairro || '');
+        setFieldValue('complemento', data.complemento || '');
       } else {
-        alert('CEP inválido!');
+        alert('CEP inválido ou não encontrado!');
       }
     } catch (error) {
-      console.error('Erro ao buscar o CEP:', error);
       alert('Erro ao buscar informações do CEP.');
+    }
+  };
+
+  const voltarAoDashboard = async () => {
+    if (currentUser) {
+      navigate('/dashboard-professor');
+    } else {
+      alert('Erro: Faça login novamente.');
+      navigate('/login');
     }
   };
 
   return (
     <div className={styles.cadastroPage}>
+      <div className={styles.topBar}>
+        <h2 className={styles.cadastroHeading}>Cadastrar Aluno</h2>
+        <button onClick={voltarAoDashboard} className={styles.backButton}>
+        <i className="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
+        </button>
+      </div>
       <div className={styles.cadastroContainer}>
-        <h1 className={styles.cadastroHeading}>Cadastrar Aluno</h1>
         <Formik
           initialValues={{
-            nome_completo: '',
-            data_nascimento: '',
-            genero: '',
-            cep: '',
-            cidade: '',
-            uf: '',
-            endereco: '',
-            numero_casa: '',
-            bairro: '',
-            complemento: '',
-            telefone: '',
-            email: '',
-            senha: '',
+            nome_completo: "",
+            data_nascimento: "",
+            genero: "",
+            cep: "",
+            cidade: "",
+            uf: "",
+            endereco: "",
+            numero_casa: "",
+            bairro: "",
+            complemento: "",
+            telefone: "",
+            email: "",
+            senha: "",
           }}
           validationSchema={validationSchema}
           onSubmit={onSubmit}
         >
-          {({ errors, touched, values, setFieldValue, isSubmitting }) => (
+          {({ setFieldValue, values, isSubmitting }) => (
             <Form>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
@@ -155,14 +154,12 @@ const CadastroAluno = () => {
                   <Field name="nome_completo" type="text" className={styles.formControl} />
                   <ErrorMessage name="nome_completo" component="div" className={styles.error} />
                 </div>
-
                 <div className={styles.formGroup}>
                   <label>Data de Nascimento</label>
                   <Field name="data_nascimento" type="date" className={styles.formControl} />
                   <ErrorMessage name="data_nascimento" component="div" className={styles.error} />
                 </div>
               </div>
-
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Gênero</label>
@@ -174,19 +171,17 @@ const CadastroAluno = () => {
                   </Field>
                   <ErrorMessage name="genero" component="div" className={styles.error} />
                 </div>
-
                 <div className={styles.formGroup}>
                   <label>CEP</label>
                   <Field
                     name="cep"
                     type="text"
                     className={styles.formControl}
-                    onBlur={() => fetchAddressByCep(values.cep, setFieldValue)} // Corrigido o nome da função
+                    onBlur={() => fetchAddressByCep(values.cep, setFieldValue)}
                   />
                   <ErrorMessage name="cep" component="div" className={styles.error} />
                 </div>
               </div>
-
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Cidade</label>
@@ -248,16 +243,20 @@ const CadastroAluno = () => {
                 <Field name="senha" type="password" className={styles.formControl} />
                 <ErrorMessage name="senha" component="div" className={styles.error} />
               </div>
-
-              <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
-                {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
-              </button>
+              <div className={styles.formGroup}>
+                <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <span>Cadastrando...</span>
+                  ) : (
+                    <>
+                      <i className="fa-solid fa-plus"></i> Cadastrar
+                    </>
+                  )}
+                </button>
+              </div>
             </Form>
           )}
         </Formik>
-        <button onClick={() => navigate('/dashboard-professor')} className={styles.backButton}>
-          Voltar ao Dashboard
-        </button>
       </div>
     </div>
   );

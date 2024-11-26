@@ -6,9 +6,7 @@ import { useAuth } from '../contexts/authContext';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import styles from '../styles/Equipamento.module.css';
-
-// Importando o FontAwesome para os ícones
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import '@fortawesome/fontawesome-free/css/all.min.css'; // Importando o FontAwesome para os ícones
 
 const CadastroEquipamento = () => {
   const [equipamentos, setEquipamentos] = useState([]);
@@ -100,7 +98,8 @@ const CadastroEquipamento = () => {
           className={styles.backButton}
           onClick={() => navigate('/dashboard-professor')}
         >
-          Voltar ao Dashboard
+         <i class="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
+          
         </button>
       </div>
 

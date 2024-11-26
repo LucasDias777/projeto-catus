@@ -13,18 +13,20 @@
   background: #fff; /* Fundo branco */
   border-radius: 10px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
-  padding: 40px 30px;
+  padding: 30px 20px; /* Reduzido para que o conteúdo suba um pouco */
   width: 100%;
   max-width: 400px;
   text-align: center;
   display: flex;
   flex-direction: column;
-  align-items: center; /* Centraliza os elementos horizontalmente */
+  align-items: center;
   gap: 20px; /* Espaçamento entre os elementos */
+  position: relative; /* Necessário para ajustar elementos internamente */
 }
 
 .logoSection {
-  margin-top: -40px; /* Posiciona a logo mais acima */
+  margin-bottom: -20px; /* Logo mais próxima do texto */
+  margin-top: -30px; /* Logo mais próxima do texto */
 }
 
 .logo {
@@ -36,8 +38,8 @@
   font-size: 24px;
   font-weight: 600;
   color: #333;
-  margin-bottom: 30px; /* Espaçamento inferior */
-  margin-top: -10px;
+  margin-bottom: 20px; /* Reduz o espaçamento inferior */
+  margin-top: -20px; /* Traz o texto "LOGIN" para cima */
 }
 
 .formGroup {
@@ -81,7 +83,7 @@ input:focus {
 }
 
 .registerLink {
-  margin-top: 15px;
+  margin-top: 10px; /* Reduzido para manter o conteúdo compacto */
   text-align: center;
 }
 

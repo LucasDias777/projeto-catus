@@ -3,19 +3,9 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import { db } from '../config/firebaseConfig';
-import {
-  collection,
-  addDoc,
-  getDocs,
-  query,
-  where,
-  serverTimestamp,
-  updateDoc,
-  deleteDoc,
-  doc,
-  getDoc,
-} from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, doc, getDoc} from 'firebase/firestore';
 import styles from '../styles/CadastroTreino.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const CadastroTreino = () => {
   const { control, handleSubmit, reset, setValue, register } = useForm();
@@ -156,13 +146,13 @@ const CadastroTreino = () => {
       <div className={styles.topBar}>
         <h2>Cadastro de Treino</h2>
         <button onClick={handleCreate} className={styles.addButton}>
-          Adicionar Treino
+        <i className="fa-solid fa-plus"></i> Adicionar Treino
         </button>
         <button
           onClick={() => navigate('/dashboard-professor')}
           className={styles.backToDashboardButton}
         >
-          Voltar ao Dashboard
+         <i class="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
         </button>
       </div>
   
@@ -175,10 +165,10 @@ const CadastroTreino = () => {
             <p>Descrição: {training.descricao}</p>
             <div className={styles.treinoButtons}>
               <button onClick={() => handleEdit(training)} className={styles.editButton}>
-                Editar
+              <i className="fa-solid fa-pencil"></i> Editar
               </button>
               <button onClick={() => handleDelete(training.id)} className={styles.deleteButton}>
-                Remover
+              <i className="fa-solid fa-trash-can"></i> Remover
               </button>
             </div>
           </div>
@@ -286,7 +276,7 @@ const CadastroTreino = () => {
                     className={styles.removeEquipmentButton}
                     onClick={() => remove(index)}
                   >
-                    Remover Equipamento
+                  <i className="fa-solid fa-trash-can"></i>  Remover Equipamento
                   </button>
                 </div>
               ))}
@@ -295,7 +285,7 @@ const CadastroTreino = () => {
                 className={styles.addEquipmentButton}
                 onClick={() => append({ equipamentoId: '', serieId: '', repeticaoId: '' })}
               >
-                Adicionar Equipamento
+               <i className="fa-solid fa-plus"></i> Adicionar Equipamento
               </button>
               <div>
                 <label>Descrição Geral:</label>
@@ -306,10 +296,10 @@ const CadastroTreino = () => {
               </div>
               <div className={styles.modalFooter}>
                 <button type="submit" className={styles.saveButton}>
-                  Salvar
+                <i className="fa-solid fa-check"></i>  Salvar
                 </button>
                 <button type="button" onClick={handleCloseModal} className={styles.cancelButton}>
-                  Cancelar
+                <i class="fa-solid fa-xmark"></i> Cancelar
                 </button>
               </div>
             </form>

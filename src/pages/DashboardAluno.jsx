@@ -5,6 +5,8 @@ import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { db } from '../config/firebaseConfig';
 import { Chart, registerables } from 'chart.js';
 import styles from '../styles/Dashboard.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
+
 
 Chart.register(...registerables);
 
@@ -169,7 +171,7 @@ const DashboardAluno = () => {
           >
             Relatórios
             <ul className={`${styles.submenu} ${activeMenu === 'relatorios' ? styles.show : ''}`}>
-              <li><button onClick={() => navigate('/relatorio-treino')}>Relatório de Treinos</button></li>
+              <li><button onClick={() => navigate('/relatorio-treino-aluno')}>Relatório de Treinos</button></li>
             </ul>
           </li>
           <li
@@ -187,7 +189,8 @@ const DashboardAluno = () => {
         <div className={styles.topbar}>
           <div className={styles.topbarContent}>
             <div className={styles.welcomeText}>Bem-vindo, {userData?.nome_completo}</div>
-            <button className={styles.logoutButton} onClick={handleLogout}>Logout</button>
+            <button className={styles.logoutButton} onClick={handleLogout}>
+            <i class="fa-solid fa-right-from-bracket"></i> Logout</button>
           </div>
         </div>
         <div className={styles.contentArea}>

@@ -5,6 +5,7 @@ import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthPro
 import { auth, db } from '../config/firebaseConfig';
 import { useAuth } from '../contexts/authContext';
 import styles from '../styles/EditarUsuario.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const EditarUsuario = () => {
   const [formData, setFormData] = useState({
@@ -168,7 +169,7 @@ const EditarUsuario = () => {
       <div className={styles.header}>
         <h1 className={styles.title}>Editar Informações</h1>
         <button onClick={handleBackToDashboard} className={styles.backButton}>
-          Voltar ao Dashboard
+        <i class="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
         </button>
       </div>
 
@@ -331,7 +332,8 @@ const EditarUsuario = () => {
           </div>
           
           <div className={styles.formGroup}>
-            <button type="submit">Atualizar</button>
+            <button type="submit">
+            <i class="fa-solid fa-pen-to-square"></i> Atualizar</button>
           </div>
         </form>
       </div>

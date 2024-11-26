@@ -42,7 +42,7 @@ h1 {
 .searchInput {
   margin: 20px 0;
   padding: 10px;
-  width: 100%;
+  width: 250px;
   max-width: 300px;
   border: 1px solid #ddd;
   border-radius: 8px; /* Bordas arredondadas ajustadas */
@@ -219,3 +219,41 @@ button:hover {
 .errorText {
   color: #ff0000;
 }
+.filters select {
+  padding: 10px;
+  width: 250px; /* Largura consistente com os inputs */
+  border: 1px solid #ddd;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
+}
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 20px; /* Espaçamento entre os filtros */
+  margin-bottom: 20px;
+}
+.generateButton {
+  padding: 12px 20px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  color: white;
+  margin-left: 10px;
+  transition: background-color 0.3s ease;
+  height: 40px;
+  margin-top: 18px;
+}
+
+.pdfButton {
+  background-color: orange;
+}
+
+.excelButton {
+  background-color: green;
+}
+.excelButton:hover {
+  background-color: #0a640a; /* Verde mais escuro no hover */
+}
+.pdfButton:hover {
+  background-color: #e69500; /* Laranja mais escuro no hover */
+}
+

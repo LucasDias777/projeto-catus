@@ -18,7 +18,7 @@
 
     --c-white: var(--c-gray-100);
 
-    --c-text-primary: #000000; /* Texto preto para fundo claro */
+    --c-text-primary: #000000;
     --c-text-secondary: var(--c-gray-500);
     --c-text-tertiary: var(--c-gray-400);
 }
@@ -27,17 +27,17 @@
 .dashboardPage {
     font-family: 'Be Vietnam Pro', sans-serif;
     color: var(--c-text-primary);
-    background-color: var(--c-gray-100); /* Fundo branco */
+    background-color: var(--c-gray-100);
     min-height: 100vh;
     display: flex;
-    flex-direction: column; /* Garantir que o conteúdo fique na coluna */
+    flex-direction: column;
     overflow: hidden;
 }
 
 /* Barra lateral */
 .sidebar {
-    background-color: var(--c-blue-500); /* Azul */
-    color: var(--c-white); /* Texto branco */
+    background-color: var(--c-blue-500);
+    color: var(--c-white);
     padding: 1.5rem;
     width: 300px;
     height: 100vh;
@@ -46,7 +46,7 @@
     left: 0;
     display: flex;
     flex-direction: column;
-    border-right: 2px solid var(--c-gray-300); /* Borda clara */
+    border-right: 2px solid var(--c-gray-300);
 }
 
 .sidebarHeader {
@@ -56,12 +56,13 @@
 .painelName {
     font-size: 1.5rem;
     font-weight: 700;
-    color: var(--c-white); /* Texto branco */
+    color: var(--c-white);
     text-align: center;
 }
 
+/* Menu da barra lateral */
 .sidebarMenu {
-    list-style: none;
+    list-style: none; /* Remove as bolinhas */
     padding: 0;
     margin: 0;
     flex: 1;
@@ -73,6 +74,7 @@
     font-size: 1rem;
     color: var(--c-gray-100);
     transition: color 0.3s ease;
+    text-decoration: none; /* Garante que não haja sublinhado */
 }
 
 .menuItem.active {
@@ -87,18 +89,18 @@
 /* Conteúdo principal */
 .mainContent {
     flex: 1;
-    background-color: var(--c-gray-100); /* Fundo branco */
+    background-color: var(--c-gray-100);
     padding: 2rem;
     margin-left: 302px;
     overflow-y: auto;
-    height: calc(100vh - 60px); /* Ajusta a altura para evitar o esticamento */
+    height: calc(100vh - 60px);
     display: flex;
     flex-direction: column;
 }
 
 /* Barra superior */
 .topbar {
-    background-color: var(--c-gray-200); /* Cinza claro */
+    background-color: var(--c-gray-200);
     padding: 1rem;
     position: fixed;
     top: 0;
@@ -125,8 +127,8 @@
 }
 
 .logoutButton {
-    background-color: #dc3545; /* Cor de fundo vermelha */
-    color: var(--c-white); /* Cor do texto */
+    background-color: #dc3545;
+    color: var(--c-white);
     border: none;
     padding: 0.5rem 1rem;
     border-radius: 6px;
@@ -137,17 +139,16 @@
 
 .logoutButton:hover,
 .logoutButton:focus {
-    background-color: #c82333; /* Cor vermelha mais escura no hover/focus */
+    background-color: #c82333;
 }
-
 
 /* Área de conteúdo */
 .contentArea {
-    padding-top: 5rem; /* Evita sobreposição com a barra superior */
+    padding-top: 5rem;
     display: flex;
     flex-direction: column;
-    gap: 2rem; /* Espaçamento entre blocos de gráficos */
-    overflow: hidden; /* Impede que o conteúdo ultrapasse o contêiner */
+    gap: 2rem;
+    overflow: hidden;
 }
 
 /* Linha de gráficos */
@@ -155,28 +156,28 @@
     display: flex;
     flex-wrap: wrap;
     gap: 1rem;
-    justify-content: flex-start; /* Alinha os gráficos à esquerda */
+    justify-content: flex-start;
     margin: 0;
-    overflow: hidden; /* Impede o overflow dos gráficos */
+    overflow: hidden;
 }
 
 /* Estilos para gráficos */
 .chartContainer {
-    flex: 1 1 calc(50% - 1rem); /* Ocupa 50% do espaço com gap ajustado */
+    flex: 1 1 calc(50% - 1rem);
     min-width: 300px;
-    max-width: calc(50% - 1rem); /* Limita a largura máxima dos gráficos */
-    background-color: var(--c-gray-200); /* Fundo claro */
+    max-width: calc(50% - 1rem);
+    background-color: var(--c-gray-200);
     padding: 1.5rem;
     border-radius: 8px;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Sombra suave */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     text-align: center;
-    height: 100%; /* Garantir que o gráfico ocupe 100% da altura disponível */
-    max-height: 300px; /* Limita a altura máxima para os gráficos */
-    overflow: hidden; /* Impede o conteúdo de se esticar para fora do gráfico */
+    height: 100%;
+    max-height: 300px;
+    overflow: hidden;
 }
 
 .chartContainer h3 {
@@ -206,14 +207,14 @@
     }
 
     .row {
-        flex-direction: column; /* Empilha os gráficos verticalmente */
+        flex-direction: column;
         gap: 2rem;
     }
 
     .chartContainer {
-        flex: 1 1 100%; /* Gráficos ocupam 100% do espaço disponível */
-        min-width: 0; /* Remover a largura mínima */
-        max-width: 100%; /* Limitar a largura máxima */
-        height: 300px; /* Define uma altura fixa para gráficos em telas menores */
+        flex: 1 1 100%;
+        min-width: 0;
+        max-width: 100%;
+        height: 300px;
     }
 }

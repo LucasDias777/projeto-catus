@@ -118,7 +118,7 @@ const CadastroTipo = () => {
           className={styles.backButton}
           onClick={() => navigate('/dashboard-professor')}
         >
-          Voltar ao Dashboard
+         <i class="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
         </button>
       </div>
 

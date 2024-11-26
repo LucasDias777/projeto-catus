@@ -1,19 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  collection,
-  query,
-  where,
-  getDocs,
-  doc,
-  getDoc,
-  addDoc,
-  updateDoc,
-  serverTimestamp,
-} from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serverTimestamp} from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../contexts/authContext';
 import styles from '../styles/VisualizarTreino.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const VisualizarTreino = () => {
   const [treinos, setTreinos] = useState([]);
@@ -124,7 +115,7 @@ const VisualizarTreino = () => {
       <div className={styles.header}>
         <h2>Seus Treinos</h2>
         <button className={styles.backButton} onClick={() => navigate('/dashboard-aluno')}>
-          Voltar ao Dashboard
+        <i class="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
         </button>
       </div>
       <div className={styles.pageContainer}>
@@ -158,14 +149,25 @@ const VisualizarTreino = () => {
                 <div>
                   <strong>Descrição Geral:</strong> {treino.descricao}
                 </div>
-                <button
-                  onClick={() => iniciarTreino(treino.id)}
-                  disabled={inProgress === treino.id}
-                >
-                  {inProgress === treino.id ? 'Treino em Progresso' : 'Iniciar Treino'}
+                <div>
+                  <button
+                    onClick={() => iniciarTreino(treino.id)}
+                    disabled={inProgress === treino.id}
+                  >
+                  {inProgress === treino.id ? (
+                  <>
+                  <i className="fa-duotone fa-solid fa-spinner fa-spin"></i> Treino em Progresso
+                  </>
+                  ) : (
+                  <>
+                  <i className="fa-solid fa-play"></i> Iniciar Treino
+                  </>
+                  )}
                 </button>
+                </div>
                 {inProgress === treino.id && (
-                  <button onClick={terminarTreino}>Terminar Treino</button>
+                  <button onClick={terminarTreino}>
+                   <i class="fa-solid fa-medal"></i> Terminar Treino</button>
                 )}
               </div>
             ))

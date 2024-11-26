@@ -1,0 +1,117 @@
+/* Estilo para a página de cadastro */
+.cadastroPage {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    background-color: #ffffff;
+    padding: 20px;
+}
+
+/* Barra Superior */
+.topBar {
+    display: flex;
+    justify-content: space-between; /* Ajusta a posição do título e botão */
+    align-items: center;
+    width: 100%;
+    background-color: #d3d3d3;
+    padding: 10px 20px; /* Ajuste de espaçamento */
+    border-radius: 8px;
+    margin-bottom: 40px;
+    position: relative; /* Necessário para posicionamento absoluto do botão */
+}
+
+/* Botão de Voltar */
+.backButton {
+    background-color: #28a745;
+    color: white;
+    padding: 10px 15px; /* Tamanho especificado */
+    border: none;
+    border-radius: 8px; /* Bordas arredondadas para o botão */
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.backButton:hover {
+    background-color: #218838; /* Verde mais escuro para o hover */
+}
+
+/* Título do Cadastro */
+.cadastroHeading {
+    font-size: 27px;
+    font-weight: bold;
+    color: black;
+    margin: 0; /* Remove margem extra */
+    text-align: left; /* Alinha o texto à esquerda */
+}
+
+/* Container para o formulário de cadastro */
+.cadastroContainer {
+    width: 100%;
+    max-width: 800px; /* Aumenta largura máxima para acomodar campos lado a lado */
+    background-color: #f9f9f9; /* Fundo branco com leve tom */
+    padding: 40px;
+    border-radius: 8px; /* Bordas arredondadas ajustadas */
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Grupos de campos lado a lado */
+.formRow {
+    display: flex;
+    justify-content: space-between;
+    gap: 20px; /* Espaço entre os campos */
+}
+
+/* Campos ocupam igualmente o espaço */
+.formGroup {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 20px;
+}
+
+/* Rótulos dos campos */
+.formGroup label {
+    font-size: 14px;
+    font-weight: bold;
+    color: black;
+    margin-bottom: 8px;
+}
+
+/* Estilo para os campos de input e select */
+.formGroup input,
+.formGroup select {
+    padding: 10px;
+    border: 1px solid #cccccc;
+    border-radius: 8px; /* Bordas arredondadas ajustadas */
+    background-color: #ffffff;
+    font-size: 14px;
+    color: #333333;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+    outline: none;
+    border-color: #1e90ff;
+}
+
+/* Placeholder mais sutil */
+.formGroup input::placeholder {
+    color: #aaaaaa;
+}
+
+/* Botão de Enviar */
+.submitButton {
+    width: 100%;
+    padding: 12px;
+    background-color: #1e90ff;
+    color: #ffffff;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+button[type="submit"]:hover {
+    background-color: #4682b4;
+}
