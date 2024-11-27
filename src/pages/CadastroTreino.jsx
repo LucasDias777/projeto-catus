@@ -10,7 +10,6 @@ import '@fortawesome/fontawesome-free/css/all.min.css';
 const CadastroTreino = () => {
   const { control, handleSubmit, reset, setValue, register } = useForm();
   const { fields, append, remove } = useFieldArray({ control, name: 'equipamentos' });
-
   const [equipments, setEquipments] = useState([]);
   const [series, setSeries] = useState([]);
   const [repetitions, setRepetitions] = useState([]);
@@ -56,6 +55,8 @@ const CadastroTreino = () => {
     }
   };
 
+  
+
   const onSubmit = async (data) => {
     if (!currentUser) return;
 
@@ -91,28 +92,33 @@ const CadastroTreino = () => {
 
   const handleEdit = async (training) => {
     setSelectedTraining(training);
-
+    setModalType('edit');
+  
     try {
+      // Busca os nomes dos alunos e tipos de treino, se necessário
       const alunoDoc = await getDoc(doc(db, 'Pessoa', training.id_aluno));
       const tipoDoc = await getDoc(doc(db, 'Tipo', training.id_tipo));
-
-      setValue('alunoId', training.id_aluno);
-      setValue('tipoTreinoId', training.id_tipo);
-      setValue('descricao', training.descricao || '');
+  
+      const equipamentosFormatados = training.equipamentos.map((equip) => ({
+        equipamentoId: equip.id_equipamento || '',
+        serieId: equip.id_serie || '',
+        repeticaoId: equip.id_repeticao || '',
+      }));
+  
+      // Atualiza o estado do formulário com os dados do treino
+      reset({
+        alunoId: training.id_aluno,
+        tipoTreinoId: training.id_tipo,
+        descricao: training.descricao || '',
+        equipamentos: equipamentosFormatados,
+      });
+  
+      // Opcional: Atualizar valores adicionais para exibição
       setValue('alunoNome', alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Desconhecido');
       setValue('tipoTreinoNome', tipoDoc.exists() ? tipoDoc.data().nome : 'Desconhecido');
     } catch (error) {
       console.error('Erro ao buscar informações adicionais para edição:', error);
     }
-
-    const equipamentosFormatados = training.equipamentos.map((equip) => ({
-      equipamentoId: equip.id_equipamento || '',
-      serieId: equip.id_serie || '',
-      repeticaoId: equip.id_repeticao || '',
-    }));
-
-    reset({ equipamentos: equipamentosFormatados });
-    setModalType('edit');
   };
 
   const handleCreate = () => {
