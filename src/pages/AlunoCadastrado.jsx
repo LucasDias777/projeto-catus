@@ -99,7 +99,7 @@ const AlunoCadastrado = () => {
       body: tableData,
     });
 
-    doc.save('Relatório_Alunos.pdf');
+    doc.save('Relatório de Alunos.pdf');
   };
 
   const generateExcel = () => {
@@ -115,7 +115,7 @@ const AlunoCadastrado = () => {
 
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, 'Alunos');
-    XLSX.writeFile(workbook, 'Relatório_Alunos.xlsx');
+    XLSX.writeFile(workbook, 'Relatório de Alunos.xlsx');
   };
 
   return (
@@ -179,8 +179,8 @@ const AlunoCadastrado = () => {
             <tr>
               <th>Nome</th>
               <th>Email</th>
+              <th>Celular</th>
               <th>Telefone</th>
-              <th>Cidade</th>
               <th>UF</th>
             </tr>
           </thead>

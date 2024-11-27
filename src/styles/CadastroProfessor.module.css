@@ -103,3 +103,6 @@ button[type="submit"]:hover {
 .backButton:hover {
   background-color: #218838; /* Verde mais escuro para o hover */
 }
+.error {
+  color: #e74c3c; /* Cor vermelha para mensagens de erro */
+}

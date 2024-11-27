@@ -115,3 +115,6 @@
 button[type="submit"]:hover {
     background-color: #4682b4;
 }
+.error {
+    color: #e74c3c; /* Cor vermelha para mensagens de erro */
+  }

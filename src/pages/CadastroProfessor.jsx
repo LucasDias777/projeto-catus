@@ -25,8 +25,8 @@ const CadastroProfessor = () => {
     numero_casa: Yup.string().required('Número da residência é obrigatório'),
     bairro: Yup.string().required('Bairro é obrigatório'),
     telefone: Yup.string()
-      .matches(/^\(\d{2}\) \d{4,5}-\d{4}$/, 'Telefone inválido')
-      .required('Telefone é obrigatório'),
+      .matches(/^\(\d{2}\) \d{5}-\d{4}$/, 'Telefone inválido. Use o formato (xx) xxxxx-xxxx')
+      .required('Telefone é obrigatório. Use o formato (xx) xxxxx-xxxx'),
     email: Yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
     senha: Yup.string()
       .min(6, 'Senha deve ter pelo menos 6 caracteres')
@@ -72,6 +72,36 @@ const CadastroProfessor = () => {
     }
   };
 
+  const handleTelefoneChange = (e, setFieldValue) => {
+    const input = e.target;
+    const rawValue = input.value.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+    let formatted = '';
+
+    // Formata o número enquanto digita
+    if (rawValue.length > 0) {
+      formatted = `(${rawValue.slice(0, 2)}`; // Adiciona o DDD com parênteses
+      if (rawValue.length > 2) {
+        formatted += `) ${rawValue.slice(2, 7)}`; // Adiciona o espaço e os primeiros dígitos
+      }
+      if (rawValue.length > 7) {
+        formatted += `-${rawValue.slice(7, 11)}`; // Adiciona o hífen e os dígitos finais
+      }
+    }
+
+    // Atualiza o valor do telefone no Formik
+    setFieldValue('telefone', formatted);
+
+    // Reposiciona o cursor
+    const cursorPosition = input.selectionStart;
+    const diff = formatted.length - input.value.length;
+
+    // O cursor será ajustado mesmo ao apagar símbolos como "-"
+    requestAnimationFrame(() => {
+      const adjustedPosition = Math.max(0, cursorPosition + diff);
+      input.setSelectionRange(adjustedPosition, adjustedPosition);
+    });
+  };
+
   // Função para buscar informações do CEP
   const buscarEnderecoPorCep = async (cep, setFieldValue) => {
     if (!cep) return;
@@ -90,7 +120,7 @@ const CadastroProfessor = () => {
       setFieldValue('uf', response.data.uf || '');
       setFieldValue('complemento', response.data.complemento || '');
     } catch (error) {
-      console.error('Erro ao buscar o CEP:', error);
+      console.error('Erro ao buscar o CEP: Deve Conter no mínimo 8 Dígitos', error);
       alert('Erro ao buscar o CEP. Tente novamente.');
     }
   };
@@ -153,6 +183,7 @@ const CadastroProfessor = () => {
                     type="text"
                     className={styles.formControl}
                     onBlur={() => buscarEnderecoPorCep(values.cep, setFieldValue)}
+                    placeholder="00000-000"
                   />
                   <ErrorMessage name="cep" component="div" className={styles.error} />
                 </div>
@@ -196,39 +227,49 @@ const CadastroProfessor = () => {
                 <div className={styles.formGroup}>
                   <label>Complemento</label>
                   <Field name="complemento" type="text" className={styles.formControl} />
-                  <ErrorMessage name="complemento" component="div" className={styles.error} />
                 </div>
               </div>
   
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Telefone</label>
-                  <Field name="telefone" type="text" className={styles.formControl} />
+                  <Field
+                    name="telefone"
+                    type="text"
+                    className={styles.formControl}
+                    value={values.telefone}
+                    onChange={(e) => handleTelefoneChange(e, setFieldValue)}
+                    placeholder="(xx) xxxxx-xxxx"
+                  />
                   <ErrorMessage name="telefone" component="div" className={styles.error} />
                 </div>
   
                 <div className={styles.formGroup}>
                   <label>E-mail</label>
-                  <Field name="email" type="email" className={styles.formControl} />
+                  <Field name="email" type="email" className={styles.formControl} 
+                  placeholder="exemplo@exemplo.com"
+                  />
                   <ErrorMessage name="email" component="div" className={styles.error} />
                 </div>
               </div>
   
-              <div className={styles.formGroup}>
-                <label>Senha</label>
-                <Field name="senha" type="password" className={styles.formControl} />
-                <ErrorMessage name="senha" component="div" className={styles.error} />
+              <div className={styles.formRow}>
+                <div className={styles.formGroup}>
+                  <label>Senha</label>
+                  <Field name="senha" type="password" className={styles.formControl} />
+                  <ErrorMessage name="senha" component="div" className={styles.error} />
+                </div>
               </div>
   
               <div className={styles.formGroup}>
-                <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
                   {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
                 </button>
               </div>
             </Form>
           )}
         </Formik>
-	<button onClick={() => navigate('/login')} className={styles.backButton}>
+        <button onClick={() => navigate('/login')} className={styles.backButton}>
           Voltar
         </button>
       </div>

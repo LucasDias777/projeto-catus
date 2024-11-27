@@ -14,6 +14,22 @@ const CadastroAluno = () => {
   const navigate = useNavigate();
   const { currentUser, getStoredCredentials } = useAuth();
 
+  const [formData, setFormData] = useState({
+    nome_completo: '',
+    data_nascimento: '',
+    genero: '',
+    cep: '',
+    cidade: '',
+    uf: '',
+    endereco: '',
+    numero_casa: '',
+    bairro: '',
+    complemento: '',
+    telefone: '',
+    email: '',
+    senha: '',
+  });
+
   useEffect(() => {
     if (!currentUser) {
       console.warn('Nenhum usuário logado. Redirecionando para o Dashboard.');
@@ -23,22 +39,26 @@ const CadastroAluno = () => {
     }
   }, [currentUser, navigate]);
 
+  // Schema de validação com Yup
   const validationSchema = Yup.object({
     nome_completo: Yup.string().required('Nome completo é obrigatório'),
     data_nascimento: Yup.date().required('Data de nascimento é obrigatória'),
     genero: Yup.string().required('Gênero é obrigatório'),
     cep: Yup.string()
       .matches(/^\d{5}-?\d{3}$/, 'CEP inválido')
-      .notRequired(),
+      .nullable(), // CEP não obrigatório
+    cidade: Yup.string().required('Cidade é obrigatória'),
+    uf: Yup.string().length(2, 'UF deve ter 2 caracteres').required('UF é obrigatório'),
+    endereco: Yup.string().required('Endereço é obrigatório'),
     numero_casa: Yup.string().required('Número da residência é obrigatório'),
+    bairro: Yup.string().required('Bairro é obrigatório'),
     telefone: Yup.string()
-      .matches(
-        /^\(\d{2}\) \d{4,5}-\d{4}$/,
-        'Telefone inválido. Use o formato (xx) xxxx-xxxx ou (xx) xxxxx-xxxx'
-      )
-      .required('Telefone é obrigatório'),
+      .matches(/^\(\d{2}\) \d{5}-\d{4}$/, 'Telefone inválido. Use o formato (xx) xxxxx-xxxx')
+      .required('Telefone é obrigatório. Use o formato (xx) xxxxx-xxxx'),
     email: Yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
-    senha: Yup.string().required('Senha é obrigatória'),
+    senha: Yup.string()
+      .min(6, 'Senha deve ter pelo menos 6 caracteres')
+      .required('Senha é obrigatória'),
   });
 
   const reauthenticateUser = async () => {
@@ -105,7 +125,7 @@ const CadastroAluno = () => {
         alert('CEP inválido ou não encontrado!');
       }
     } catch (error) {
-      alert('Erro ao buscar informações do CEP.');
+      alert('Erro ao buscar informações do CEP: Deve Conter no mínimo 8 Dígitos');
     }
   };
 
@@ -117,6 +137,37 @@ const CadastroAluno = () => {
       navigate('/login');
     }
   };
+
+  const handleTelefoneChange = (e, setFieldValue) => {
+    const input = e.target;
+    const rawValue = input.value.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
+    let formatted = '';
+
+    // Formata o número enquanto digita
+    if (rawValue.length > 0) {
+      formatted = `(${rawValue.slice(0, 2)}`; // Adiciona o DDD com parênteses
+      if (rawValue.length > 2) {
+        formatted += `) ${rawValue.slice(2, 7)}`; // Adiciona o espaço e os primeiros dígitos
+      }
+      if (rawValue.length > 7) {
+        formatted += `-${rawValue.slice(7, 11)}`; // Adiciona o hífen e os dígitos finais
+      }
+    }
+
+    // Atualiza o valor do telefone no Formik
+    setFieldValue('telefone', formatted);
+
+    // Reposiciona o cursor
+    const cursorPosition = input.selectionStart;
+    const diff = formatted.length - input.value.length;
+
+    // O cursor será ajustado mesmo ao apagar símbolos como "-"
+    requestAnimationFrame(() => {
+      const adjustedPosition = Math.max(0, cursorPosition + diff);
+      input.setSelectionRange(adjustedPosition, adjustedPosition);
+    });
+  };
+  
 
   return (
     <div className={styles.cadastroPage}>
@@ -178,6 +229,7 @@ const CadastroAluno = () => {
                     type="text"
                     className={styles.formControl}
                     onBlur={() => fetchAddressByCep(values.cep, setFieldValue)}
+                    placeholder="00000-000"
                   />
                   <ErrorMessage name="cep" component="div" className={styles.error} />
                 </div>
@@ -227,13 +279,22 @@ const CadastroAluno = () => {
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
                   <label>Telefone</label>
-                  <Field name="telefone" type="text" className={styles.formControl} />
+                  <Field
+                    name="telefone"
+                    type="text"
+                    className={styles.formControl}
+                    value={values.telefone}
+                    onChange={(e) => handleTelefoneChange(e, setFieldValue)}
+                    placeholder="(xx) xxxxx-xxxx"
+                  />
                   <ErrorMessage name="telefone" component="div" className={styles.error} />
                 </div>
-
-                <div className={styles.formGroup}>
+              
+              <div className={styles.formGroup}>
                   <label>E-mail</label>
-                  <Field name="email" type="email" className={styles.formControl} />
+                  <Field name="email" type="email" className={styles.formControl} 
+                  placeholder="exemplo@exemplo.com"
+                  />
                   <ErrorMessage name="email" component="div" className={styles.error} />
                 </div>
               </div>

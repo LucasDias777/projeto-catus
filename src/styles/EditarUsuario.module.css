@@ -103,4 +103,11 @@ button[type="submit"]:hover {
 .error {
   color: red;
   text-align: center;
+ 
 }
+.disabled {
+  background-color: #e0e0e0;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+

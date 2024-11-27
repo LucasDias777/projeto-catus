@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { doc, getDoc, updateDoc, query, where, getDocs, collection } from 'firebase/firestore';
-import { updateEmail, updatePassword, reauthenticateWithCredential, EmailAuthProvider, sendEmailVerification } from 'firebase/auth';
+import { doc, getDoc, updateDoc } from 'firebase/firestore';
+import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
 import { auth, db } from '../config/firebaseConfig';
 import { useAuth } from '../contexts/authContext';
 import styles from '../styles/EditarUsuario.module.css';
@@ -20,7 +20,6 @@ const EditarUsuario = () => {
     bairro: '',
     complemento: '',
     telefone: '',
-    email: '',
     senha: '',
   });
 
@@ -40,7 +39,7 @@ const EditarUsuario = () => {
 
         if (userSnap.exists()) {
           const data = userSnap.data();
-          setFormData({ ...data, senha: '' });
+          setFormData({ ...data, senha: '' }); // Limpa o campo de senha no formulário
           setOriginalData(data);
           setTipoPessoa(data.tipo_pessoa || '');
         } else {
@@ -59,32 +58,65 @@ const EditarUsuario = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleCEPChange = async (e) => {
-    const cep = e.target.value.replace(/\D/g, '');
-    setFormData({ ...formData, cep });
+  const handleTelefoneChange = (e) => {
+    const input = e.target;
+    const rawValue = input.value.replace(/\D/g, ''); // Remove caracteres não numéricos
+    let formatted = '';
 
-    if (cep.length === 8) {
-      try {
-        const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
-        const data = await response.json();
-        if (data.erro) throw new Error('CEP não encontrado.');
-
-        setFormData({
-          ...formData,
-          cep,
-          cidade: data.localidade || '',
-          uf: data.uf || '',
-          endereco: data.logradouro || '',
-          bairro: data.bairro || '',
-          complemento: data.complemento || '',
-        });
-      } catch (error) {
-        console.error('Erro ao buscar informações do CEP:', error);
-        setError('CEP inválido ou não encontrado.');
+    if (rawValue.length > 0) {
+      formatted = `(${rawValue.slice(0, 2)}`;
+      if (rawValue.length > 2) {
+        formatted += `) ${rawValue.slice(2, 7)}`;
+      }
+      if (rawValue.length > 7) {
+        formatted += `-${rawValue.slice(7, 11)}`;
       }
     }
+
+    setFormData({ ...formData, telefone: formatted });
+
+    const cursorPosition = input.selectionStart;
+    const diff = formatted.length - input.value.length;
+
+    requestAnimationFrame(() => {
+      const adjustedPosition = Math.max(0, cursorPosition + diff);
+      input.setSelectionRange(adjustedPosition, adjustedPosition);
+    });
   };
 
+  const handleCEPBlur = async () => {
+    const cep = formData.cep.replace(/\D/g, '');
+    setError(null); // Limpa o erro anterior
+  
+    if (cep.length !== 8) {
+      setError('CEP inválido. Deve conter exatamente 8 dígitos.');
+      return;
+    }
+  
+    try {
+      const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
+      const data = await response.json();
+      if (data.erro) throw new Error('CEP não encontrado.');
+  
+      setFormData({
+        ...formData,
+        cidade: data.localidade || '',
+        uf: data.uf || '',
+        endereco: data.logradouro || '',
+        bairro: data.bairro || '',
+        complemento: data.complemento || '',
+      });
+    } catch (error) {
+      console.error('Erro ao buscar informações do CEP:', error);
+      setError('CEP inválido ou não encontrado.');
+    }
+  };
+  
+  const handleCEPChange = (e) => {
+    const cep = e.target.value.replace(/\D/g, '');
+    setFormData({ ...formData, cep });
+    setError(null); // Limpa o erro ao alterar o valor
+  };
   const reauthenticateUser = async (senhaAtual) => {
     const user = auth.currentUser;
     const credential = EmailAuthProvider.credential(user.email, senhaAtual);
@@ -103,54 +135,28 @@ const EditarUsuario = () => {
     try {
       const userDoc = doc(db, 'Pessoa', currentUser.uid);
 
-      // Verificação de senha e e-mail antes de qualquer atualização
-      if (formData.email !== originalData.email || formData.senha) {
+
+      // Verificação de senha igual à senha atual
+    if (formData.senha && formData.senha === originalData.senha) {
+      setError('A nova senha não pode ser igual à senha atual.');
+      return;
+    }
+
+      // Verificação e reautenticação para alteração de senha
+      if (formData.senha && formData.senha !== originalData.senha) {
         const senhaAtual = prompt('Confirme sua senha atual para continuar.');
         if (!senhaAtual) {
-          setError('Senha atual é obrigatória para alterar email ou senha.');
+          setError('Senha atual é obrigatória para alterar a senha.');
           return;
         }
         await reauthenticateUser(senhaAtual);
-      }
-
-      // Verificação do e-mail antes de atualizar
-      if (formData.email !== originalData.email) {
-        const emailQuery = query(
-          collection(db, 'Pessoa'),
-          where('email', '==', formData.email)
-        );
-        const emailSnapshot = await getDocs(emailQuery);
-
-        if (!emailSnapshot.empty) {
-          setError('Este email já está em uso por outro usuário.');
-          return;
-        }
-
-        try {
-          // Atualizar e-mail
-          await updateEmail(auth.currentUser, formData.email);
-          await sendEmailVerification(auth.currentUser);
-          alert('Um e-mail de verificação foi enviado para o novo endereço. Por favor, verifique sua caixa de entrada.');
-        } catch (error) {
-          if (error.code === 'auth/email-already-in-use') {
-            setError('Este e-mail já está em uso.');
-          } else if (error.code === 'auth/requires-recent-login') {
-            setError('Sessão expirada. Faça login novamente para alterar o e-mail.');
-          } else {
-            setError('Erro desconhecido ao tentar alterar o e-mail.');
-          }
-          return;
-        }
-      }
-
-      // Atualizar senha, caso fornecida
-      if (formData.senha) {
         await updatePassword(auth.currentUser, formData.senha);
+        await updateDoc(userDoc, { senha: formData.senha }); // Atualiza a senha no Firestore
       }
 
-      // Atualizar os dados no Firestore
+      // Atualizar os outros dados no Firestore
       const updatedData = { ...formData };
-      delete updatedData.senha;  // Remover a senha do objeto
+      delete updatedData.senha; // Remove a senha do objeto
       await updateDoc(userDoc, updatedData);
 
       alert('Informações atualizadas com sucesso!');
@@ -175,6 +181,7 @@ const EditarUsuario = () => {
 
       <div className={styles.container}>
         {error && <p className={styles.error}>{error}</p>}
+        
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.row}>
             <div className={styles.formGroup}>
@@ -221,8 +228,13 @@ const EditarUsuario = () => {
                 name="cep"
                 value={formData.cep}
                 onChange={handleCEPChange}
+                onBlur={handleCEPBlur}
                 className={styles.formControl}
+                placeholder="00000-000"
               />
+              {error ===`CEP Inválido ou não Encontrado.` && ( 
+                <p className={styles.error}>{error}</p>
+            )}
             </div>
           </div>
 
@@ -299,11 +311,12 @@ const EditarUsuario = () => {
             <div className={styles.formGroup}>
               <label>Telefone</label>
               <input
-                type="text"
-                name="telefone"
-                value={formData.telefone}
-                onChange={handleChange}
-                className={styles.formControl}
+              type="text"
+              name="telefone"
+              value={formData.telefone}
+              onChange={handleTelefoneChange}
+              className={styles.formControl}
+              placeholder="(xx) xxxxx-xxxx"
               />
             </div>
             <div className={styles.formGroup}>
@@ -312,8 +325,8 @@ const EditarUsuario = () => {
                 type="email"
                 name="email"
                 value={formData.email}
-                onChange={handleChange}
-                className={styles.formControl}
+                disabled
+                className={`${styles.formControl} ${styles.disabled}`}
               />
             </div>
           </div>
