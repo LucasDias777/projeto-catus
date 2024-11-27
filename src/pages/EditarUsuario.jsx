@@ -131,17 +131,41 @@ const EditarUsuario = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
-    try {
-      const userDoc = doc(db, 'Pessoa', currentUser.uid);
-
-
-      // Verificação de senha igual à senha atual
-    if (formData.senha && formData.senha === originalData.senha) {
-      setError('A nova senha não pode ser igual à senha atual.');
+  
+    // Validações dos campos obrigatórios
+    const camposObrigatorios = [
+      { campo: formData.nome_completo, nome: 'Nome Completo' },
+      { campo: formData.data_nascimento, nome: 'Data de Nascimento' },
+      { campo: formData.genero, nome: 'Gênero' },
+      { campo: formData.cidade, nome: 'Cidade' },
+      { campo: formData.uf, nome: 'UF' },
+      { campo: formData.endereco, nome: 'Endereço' },
+      { campo: formData.numero_casa, nome: 'Número da Residência' },
+      { campo: formData.bairro, nome: 'Bairro' },
+      { campo: formData.telefone, nome: 'Telefone' },
+    ];
+  
+    const camposVazios = camposObrigatorios.filter(item => !item.campo.trim());
+    if (camposVazios.length > 0) {
+      setError(`Os seguintes campos são obrigatórios: ${camposVazios.map(item => item.nome).join(', ')}.`);
       return;
     }
-
+  
+    // Verificação de senha (mínimo 6 caracteres)
+    if (formData.senha && formData.senha.length < 6) {
+      setError('A senha deve ter no mínimo 6 caracteres.');
+      return;
+    }
+  
+    try {
+      const userDoc = doc(db, 'Pessoa', currentUser.uid);
+  
+      // Verificação de senha igual à senha atual
+      if (formData.senha && formData.senha === originalData.senha) {
+        setError('A nova senha não pode ser igual à senha atual.');
+        return;
+      }
+  
       // Verificação e reautenticação para alteração de senha
       if (formData.senha && formData.senha !== originalData.senha) {
         const senhaAtual = prompt('Confirme sua senha atual para continuar.');
@@ -153,18 +177,19 @@ const EditarUsuario = () => {
         await updatePassword(auth.currentUser, formData.senha);
         await updateDoc(userDoc, { senha: formData.senha }); // Atualiza a senha no Firestore
       }
-
+  
       // Atualizar os outros dados no Firestore
       const updatedData = { ...formData };
       delete updatedData.senha; // Remove a senha do objeto
       await updateDoc(userDoc, updatedData);
-
+  
       alert('Informações atualizadas com sucesso!');
     } catch (error) {
       console.error('Erro ao atualizar informações:', error);
       setError(error.message || 'Erro ao atualizar informações.');
     }
   };
+  
 
   const handleBackToDashboard = () => {
     navigate(tipoPessoa === 'professor' ? '/dashboard-professor' : '/dashboard-aluno');
