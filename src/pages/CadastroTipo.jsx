@@ -2,16 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext'; // Importando o contexto de autenticação
 import { db } from '../config/firebaseConfig'; // Importa a configuração do Firebase
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  onSnapshot,
-  doc,
-} from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, doc, getDocs } from 'firebase/firestore';
 import { serverTimestamp } from 'firebase/firestore'; // Importando o serverTimestamp
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
@@ -78,6 +69,10 @@ const CadastroTipo = () => {
   };
 
   const handleEdit = async (id) => {
+    if (!editNome || editNome.trim().length < 2) {
+      alert('O nome do tipo de treino deve ter no mínimo 2 caracteres.');
+      return;
+    }
     try {
       const docRef = doc(db, 'Tipo', id);
       await updateDoc(docRef, { nome: editNome });
@@ -93,14 +88,60 @@ const CadastroTipo = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Você tem certeza que deseja excluir este tipo de treino?')) {
       try {
+        // Buscar todos os treinos do professor logado
+        const treinoQuery = query(
+          collection(db, 'Treino'),
+          where('id_professor', '==', currentUser.uid)
+        );
+        const treinoSnapshot = await getDocs(treinoQuery);
+  
+        // Log do número de documentos encontrados
+        console.log(`Treinos encontrados: ${treinoSnapshot.size}`);
+  
+        // Caso não existam treinos, permitir exclusão
+        if (treinoSnapshot.empty) {
+          console.log('Nenhum treino encontrado. Prosseguindo com a exclusão.');
+          await deleteDoc(doc(db, 'Tipo', id));
+          alert('Tipo de treino removido com sucesso!');
+          return;
+        }
+  
+        let isAssociated = false;
+  
+        // Verificar associação ao tipo de treino
+        treinoSnapshot.forEach((doc) => {
+          const treinoData = doc.data();
+          console.log(`Treino ${doc.id} possui os seguintes dados:`, treinoData);
+  
+          // Verificar associação por id_tipo ou id_aluno
+          if (treinoData.id_tipo === id || treinoData.id_aluno === id) {
+            console.log(`Tipo de treino ${id} ou Aluno ${id} está associado ao treino ${doc.id}.`);
+            isAssociated = true;
+          }
+  
+          // Verificar associação nos equipamentos, caso necessário
+          const equipamentos = Array.isArray(treinoData.equipamentos) ? treinoData.equipamentos : [];
+          if (equipamentos.some((equip) => equip.id_tipo === id)) {
+            console.log(`Tipo de treino ${id} está associado via equipamentos no treino ${doc.id}.`);
+            isAssociated = true;
+          }
+        });
+  
+        if (isAssociated) {
+          alert('Este tipo de treino não pode ser excluído porque já está associado a um treino.');
+          return;
+        }
+  
+        // Excluir o tipo de treino
         await deleteDoc(doc(db, 'Tipo', id));
         alert('Tipo de treino removido com sucesso!');
       } catch (error) {
         console.error('Erro ao remover tipo de treino:', error);
-        alert('Erro ao remover tipo de treino');
+        alert('Erro ao remover tipo de treino.');
       }
     }
   };
+  
 
   const handleFilter = (e) => {
     const searchTerm = e.target.value.toLowerCase();

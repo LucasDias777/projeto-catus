@@ -21,6 +21,17 @@ const RelatorioTreinoProfessor = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
+  // Navegar ao Dashboard com verificação de contexto
+  const voltarDashboard = () => {
+    if (currentUser) {
+      navigate('/dashboard-aluno');
+    } else {
+      alert('Usuário não autenticado. Redirecionando para login.');
+      navigate('/login');
+    }
+  };
+
+  // Buscar alunos vinculados
   const fetchAlunosVinculados = async () => {
     try {
       if (currentUser) {
@@ -35,11 +46,25 @@ const RelatorioTreinoProfessor = () => {
           nome_completo: doc.data().nome_completo,
         }));
         setAlunos(alunosData);
+
+        // Preencher o filtro com o aluno logado, caso único
+        if (alunosData.length === 1) {
+          setFiltroAluno(alunosData[0].id);
+        }
       }
     } catch (error) {
       console.error('Erro ao buscar alunos vinculados:', error);
     }
   };
+
+  useEffect(() => {
+    if (!currentUser) {
+      alert('Usuário não autenticado. Redirecionando para login.');
+      navigate('/login');
+      return;
+    }
+    fetchAlunosVinculados();
+  }, [currentUser]);
 
   const fetchRelatorio = async () => {
     try {
@@ -141,27 +166,19 @@ const RelatorioTreinoProfessor = () => {
     XLSX.writeFile(wb, 'Relatório de Treinos.xlsx');
   };
 
-  const voltarDashboard = () => {
-    navigate('/dashboard-professor');
-  };
-
-  useEffect(() => {
-    fetchAlunosVinculados();
-  }, [currentUser]);
-
   return (
     <div className={styles.container}>
       <div className={styles.topBar}>
         <h2>Relatório de Treinos</h2>
         <button className={styles.backButton} onClick={voltarDashboard}>
-        <i class="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
+          <i className="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
         </button>
       </div>
       <div className={styles.filters}>
         <label>
           Filtrar por Aluno:
           <select value={filtroAluno} onChange={(e) => setFiltroAluno(e.target.value)}>
-            <option value=""disabled>Selecione o seu Nome</option>
+            <option value="" disabled>Selecione o seu Nome</option>
             {alunos.map((aluno) => (
               <option key={aluno.id} value={aluno.id}>
                 {aluno.nome_completo}

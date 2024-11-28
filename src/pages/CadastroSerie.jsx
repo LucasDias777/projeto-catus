@@ -2,17 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext';
 import { db } from '../config/firebaseConfig';
-import {
-  collection,
-  addDoc,
-  updateDoc,
-  deleteDoc,
-  query,
-  where,
-  onSnapshot,
-  doc,
-  serverTimestamp,
-} from 'firebase/firestore';
+import { collection, addDoc, updateDoc, deleteDoc, query, where, onSnapshot, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import styles from '../styles/Serie.module.css';
@@ -76,6 +66,10 @@ const CadastroSerie = () => {
   };
 
   const handleEdit = async (id) => {
+    if (!editNumeroSeries || editNumeroSeries.trim().length < 1) {
+      alert('O número de séries deve ter no mínimo 1 número.');
+      return;
+    }
     try {
       const docRef = doc(db, 'Serie', id);
       await updateDoc(docRef, { nome: editNumeroSeries });
@@ -91,6 +85,44 @@ const CadastroSerie = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Você tem certeza que deseja excluir esta série?')) {
       try {
+        // Buscar todos os treinos do professor logado
+        const treinoQuery = query(
+          collection(db, 'Treino'),
+          where('id_professor', '==', currentUser.uid)
+        );
+        const treinoSnapshot = await getDocs(treinoQuery);
+  
+        // Log do número de documentos encontrados
+        console.log(`Treinos encontrados: ${treinoSnapshot.size}`);
+  
+        // Caso não existam treinos, permitir exclusão
+        if (treinoSnapshot.empty) {
+          console.log('Nenhum treino encontrado. Prosseguindo com a exclusão.');
+          await deleteDoc(doc(db, 'Serie', id));
+          alert('Série removida com sucesso!');
+          return;
+        }
+  
+        let isAssociated = false;
+  
+        // Verificar associação à série
+        treinoSnapshot.forEach((doc) => {
+          const treinoData = doc.data();
+          const equipamentos = Array.isArray(treinoData.equipamentos) ? treinoData.equipamentos : [];
+          console.log(`Treino ${doc.id} contém os equipamentos:`, equipamentos);
+  
+          if (equipamentos.some((equip) => equip.id_serie === id)) {
+            console.log(`Série ${id} está associada ao treino ${doc.id}.`);
+            isAssociated = true;
+          }
+        });
+  
+        if (isAssociated) {
+          alert('Esta série não pode ser excluída porque já está associada a um treino.');
+          return;
+        }
+  
+        // Excluir a série
         await deleteDoc(doc(db, 'Serie', id));
         alert('Série removida com sucesso!');
       } catch (error) {
@@ -99,6 +131,7 @@ const CadastroSerie = () => {
       }
     }
   };
+  
 
   const handleFilter = (e) => {
     const searchTerm = e.target.value.toLowerCase();

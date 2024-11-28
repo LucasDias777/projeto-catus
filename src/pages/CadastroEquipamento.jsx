@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../contexts/authContext';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
@@ -60,6 +60,10 @@ const CadastroEquipamento = () => {
   };
 
   const handleEdit = async (id) => {
+    if (!editNome || editNome.trim().length < 2) {
+      alert('O nome do equipamento deve ter no mínimo 2 caracteres.');
+      return;
+    }
     try {
       const docRef = doc(db, 'Equipamento', id);
       await updateDoc(docRef, { nome: editNome });
@@ -74,6 +78,44 @@ const CadastroEquipamento = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir este equipamento?')) {
       try {
+        // Buscar todos os treinos do professor logado
+        const treinoQuery = query(
+          collection(db, 'Treino'),
+          where('id_professor', '==', currentUser.uid)
+        );
+        const treinoSnapshot = await getDocs(treinoQuery);
+  
+        // Log do número de documentos encontrados
+        console.log(`Treinos encontrados: ${treinoSnapshot.size}`);
+  
+        // Caso não existam treinos, permitir exclusão
+        if (treinoSnapshot.empty) {
+          console.log('Nenhum treino encontrado. Prosseguindo com a exclusão.');
+          await deleteDoc(doc(db, 'Equipamento', id));
+          alert('Equipamento removido com sucesso!');
+          return;
+        }
+  
+        let isAssociated = false;
+  
+        // Verificar associação ao equipamento
+        treinoSnapshot.forEach((doc) => {
+          const treinoData = doc.data();
+          const equipamentos = Array.isArray(treinoData.equipamentos) ? treinoData.equipamentos : [];
+          console.log(`Treino ${doc.id} contém os equipamentos:`, equipamentos);
+  
+          if (equipamentos.some((equip) => equip.id_equipamento === id)) {
+            console.log(`Equipamento ${id} está associado ao treino ${doc.id}.`);
+            isAssociated = true;
+          }
+        });
+  
+        if (isAssociated) {
+          alert('Este equipamento não pode ser excluído porque já está associado a um treino.');
+          return;
+        }
+  
+        // Excluir o equipamento
         await deleteDoc(doc(db, 'Equipamento', id));
         alert('Equipamento removido com sucesso!');
       } catch (error) {

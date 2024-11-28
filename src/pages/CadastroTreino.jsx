@@ -3,7 +3,7 @@ import { useForm, Controller, useFieldArray } from 'react-hook-form';
 import { useNavigate } from 'react-router-dom';
 import { getAuth } from 'firebase/auth';
 import { db } from '../config/firebaseConfig';
-import { collection, addDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, doc, getDoc} from 'firebase/firestore';
+import { collection, addDoc, getDocs, query, where, serverTimestamp, updateDoc, deleteDoc, doc, getDoc } from 'firebase/firestore';
 import styles from '../styles/CadastroTreino.module.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
@@ -59,10 +59,11 @@ const CadastroTreino = () => {
 
   const onSubmit = async (data) => {
     if (!currentUser) return;
-
+  
     try {
       const userId = currentUser.uid;
-
+  
+      // Dados do treino
       const treinoData = {
         id_aluno: data.alunoId,
         id_professor: userId,
@@ -75,13 +76,30 @@ const CadastroTreino = () => {
         })),
         data_criacao: serverTimestamp(),
       };
-
+  
+      let treinoDocRef;
+  
+      // Atualizar ou criar treino
       if (modalType === 'edit' && selectedTraining) {
         await updateDoc(doc(db, 'Treino', selectedTraining.id), treinoData);
+        treinoDocRef = doc(db, 'Treino', selectedTraining.id);
       } else {
-        await addDoc(collection(db, 'Treino'), treinoData);
+        treinoDocRef = await addDoc(collection(db, 'Treino'), treinoData);
       }
-
+  
+      // Adiciona o documento em Treino_Tempo
+      const treinoTempoData = {
+        id_aluno: data.alunoId,
+        id_professor: userId,
+        id_treino: treinoDocRef.id, // Referência ao ID do treino criado
+        data_inicio: null,
+        data_termino: null,
+        status: 'Não Iniciado',
+      };
+  
+      await addDoc(collection(db, 'Treino_Tempo'), treinoTempoData);
+  
+      // Atualiza a lista de treinos e fecha o modal
       fetchData();
       reset();
       handleCloseModal();

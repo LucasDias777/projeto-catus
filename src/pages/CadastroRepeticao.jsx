@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, deleteDoc, doc, serverTimestamp, getDocs } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../contexts/authContext';
 import { Formik, Field, Form, ErrorMessage } from 'formik';
@@ -60,7 +60,12 @@ const CadastroRepeticao = () => {
   };
 
   const handleEdit = async (id) => {
+    
     try {
+      if (!editNumero || editNumero.trim().length < 1) {
+        alert('O número de repetições deve ter no mínimo 1 número.');
+        return;
+      }
       const docRef = doc(db, 'Repeticao', id);
       await updateDoc(docRef, { nome: editNumero }); // Alterado para 'nome' ao invés de 'numero'
       alert('Repetição atualizada com sucesso!');
@@ -74,6 +79,44 @@ const CadastroRepeticao = () => {
   const handleDelete = async (id) => {
     if (window.confirm('Tem certeza que deseja excluir esta repetição?')) {
       try {
+        // Buscar todos os treinos do professor logado
+        const treinoQuery = query(
+          collection(db, 'Treino'),
+          where('id_professor', '==', currentUser.uid)
+        );
+        const treinoSnapshot = await getDocs(treinoQuery);
+  
+        // Log do número de documentos encontrados
+        console.log(`Treinos encontrados: ${treinoSnapshot.size}`);
+  
+        // Caso não existam treinos, permitir exclusão
+        if (treinoSnapshot.empty) {
+          console.log('Nenhum treino encontrado. Prosseguindo com a exclusão.');
+          await deleteDoc(doc(db, 'Repeticao', id));
+          alert('Repetição removida com sucesso!');
+          return;
+        }
+  
+        let isAssociated = false;
+  
+        // Verificar associação à repetição
+        treinoSnapshot.forEach((doc) => {
+          const treinoData = doc.data();
+          const equipamentos = Array.isArray(treinoData.equipamentos) ? treinoData.equipamentos : [];
+          console.log(`Treino ${doc.id} contém os equipamentos:`, equipamentos);
+  
+          if (equipamentos.some((equip) => equip.id_repeticao === id)) {
+            console.log(`Repetição ${id} está associada ao treino ${doc.id}.`);
+            isAssociated = true;
+          }
+        });
+  
+        if (isAssociated) {
+          alert('Esta repetição não pode ser excluída porque já está associada a um treino.');
+          return;
+        }
+  
+        // Excluir a repetição
         await deleteDoc(doc(db, 'Repeticao', id));
         alert('Repetição removida com sucesso!');
       } catch (error) {

@@ -62,11 +62,13 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
+        console.log('Usuário autenticado:', user);
         const userQuery = query(collection(db, 'Pessoa'), where('email', '==', user.email));
         const querySnapshot = await getDocs(userQuery);
 
         if (!querySnapshot.empty) {
           const userData = querySnapshot.docs[0].data();
+          console.log('Dados do usuário no Firestore:', userData);
           setUserType(userData.tipo_pessoa);
           setCurrentUser({
             uid: user.uid,

@@ -63,32 +63,45 @@ const CadastroAluno = () => {
 
   const reauthenticateUser = async () => {
     try {
+      if (!auth.currentUser) {
+        console.warn('Usuário atual não encontrado. Redirecionando para login.');
+        navigate('/login');
+        return;
+      }
+  
       if (getStoredCredentials) {
         const storedCredentials = getStoredCredentials();
         if (storedCredentials) {
           const { email, password } = storedCredentials;
+  
           const credential = EmailAuthProvider.credential(email, password);
           await reauthenticateWithCredential(auth.currentUser, credential);
           console.log('Reautenticação bem-sucedida.');
         } else {
-          console.warn('Credenciais ausentes no armazenamento local.');
+          console.warn('Credenciais ausentes no armazenamento local. Redirecionando para login.');
+          navigate('/login');
         }
       } else {
-        console.warn('Função getStoredCredentials não encontrada.');
+        console.warn('Função getStoredCredentials não disponível. Verifique o contexto de autenticação.');
       }
     } catch (error) {
       console.error('Erro na reautenticação:', error.message);
-      throw error;
+      alert('Não foi possível reautenticar. Faça login novamente.');
+      navigate('/login');
     }
   };
+  
+  useEffect(() => {
+    console.log('Estado atual do currentUser:', currentUser); // Depuração para verificar o estado do currentUser
+  }, [currentUser]); // Este useEffect será executado sempre que o estado de currentUser mudar
 
   const onSubmit = async (values, { resetForm, setSubmitting }) => {
     setSubmitting(true);
-
+  
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.senha);
       const user = userCredential.user;
-
+  
       await setDoc(doc(db, 'Pessoa', user.uid), {
         ...values,
         id_aluno: user.uid,
@@ -96,11 +109,15 @@ const CadastroAluno = () => {
         tipo_pessoa: 'aluno',
         data_criacao: serverTimestamp(),
       });
-
+  
+      if (currentUser) {
+        await reauthenticateUser();
+      }
+  
       alert('Aluno cadastrado com sucesso!');
       resetForm();
-
-      navigate('/dashboard-professor');
+  
+      navigate('/dashboard-professor'); // Redireciona para o dashboard após o cadastro
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error.message);
       alert(`Erro ao cadastrar aluno: ${error.message}`);
@@ -129,12 +146,17 @@ const CadastroAluno = () => {
     }
   };
 
-  const voltarAoDashboard = async () => {
-    if (currentUser) {
+  const voltarAoDashboard = () => {
+    if (currentUser?.tipo_pessoa === 'professor') {
       navigate('/dashboard-professor');
     } else {
-      alert('Erro: Faça login novamente.');
-      navigate('/login');
+      alert('Erro: Sessão expirada, faça login novamente.');
+      auth.signOut().then(() => {
+        navigate('/login');
+      }).catch((error) => {
+        console.error('Erro ao deslogar:', error.message);
+        alert('Não foi possível deslogar. Tente novamente.');
+      });
     }
   };
 

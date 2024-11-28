@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs, doc, getDoc, addDoc, updateDoc, serverTimestamp} from 'firebase/firestore';
+import { collection, query, where, getDocs, doc, getDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import { useAuth } from '../contexts/authContext';
 import styles from '../styles/VisualizarTreino.module.css';
@@ -27,6 +27,20 @@ const VisualizarTreino = () => {
           querySnapshot.docs.map(async (docTreino) => {
             const treinoData = docTreino.data();
 
+            // Buscar informações do Treino_Tempo
+            const treinoTempoQuery = query(
+              collection(db, 'Treino_Tempo'),
+              where('id_treino', '==', docTreino.id)
+            );
+            const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
+
+            const treinoTempoData = treinoTempoSnapshot.empty
+              ? null
+              : treinoTempoSnapshot.docs[0].data();
+
+            const status = treinoTempoData?.status || 'Não Iniciado';
+
+            // Buscar detalhes dos equipamentos, séries e repetições
             const equipamentosDetalhados = await Promise.all(
               (treinoData.equipamentos || []).map(async (equipamento) => {
                 const equipDoc = await getDoc(doc(db, 'Equipamento', equipamento.id_equipamento));
@@ -55,6 +69,9 @@ const VisualizarTreino = () => {
             return {
               id: docTreino.id,
               ...treinoData,
+              status,
+              data_inicio: treinoTempoData?.data_inicio,
+              data_termino: treinoTempoData?.data_termino,
               equipamento: equipamentosDetalhados.join(', '),
               serie: seriesDetalhadas.join(', '),
               repeticao: repeticoesDetalhadas.join(', '),
@@ -73,22 +90,40 @@ const VisualizarTreino = () => {
   }, [currentUser]);
 
   const filteredTreinos = treinos.filter((treino) =>
-    treino.tipo.toLowerCase().includes(searchTerm.toLowerCase())
+    treino.tipo?.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const iniciarTreino = async (treinoId) => {
     if (!currentUser) return;
 
     try {
-      const novoTreinoTempo = {
-        id_treino: treinoId,
-        id_aluno: currentUser.uid,
-        id_professor: treinos.find((treino) => treino.id === treinoId)?.id_professor || '',
-        data_inicio: serverTimestamp(),
-        data_termino: null,
-      };
+      const treinoTempoQuery = query(
+        collection(db, 'Treino_Tempo'),
+        where('id_treino', '==', treinoId)
+      );
+      const querySnapshot = await getDocs(treinoTempoQuery);
 
-      await addDoc(collection(db, 'Treino_Tempo'), novoTreinoTempo);
+      if (querySnapshot.empty) {
+        console.error('Documento correspondente em Treino_Tempo não encontrado.');
+        return;
+      }
+
+      const treinoTempoDoc = querySnapshot.docs[0];
+      const treinoTempoRef = doc(db, 'Treino_Tempo', treinoTempoDoc.id);
+
+      await updateDoc(treinoTempoRef, {
+        data_inicio: serverTimestamp(),
+        status: 'Iniciado',
+      });
+
+      setTreinos((prevTreinos) =>
+        prevTreinos.map((treino) =>
+          treino.id === treinoId
+            ? { ...treino, status: 'Iniciado', data_inicio: serverTimestamp(), }
+            : treino
+        )
+      );
+
       setInProgress(treinoId);
     } catch (error) {
       console.error('Erro ao iniciar o treino:', error);
@@ -97,13 +132,45 @@ const VisualizarTreino = () => {
 
   const terminarTreino = async () => {
     if (!inProgress) return;
-
+  
     try {
-      const treinoTempoRef = doc(db, 'Treino_Tempo', inProgress);
+      const treinoTempoQuery = query(
+        collection(db, 'Treino_Tempo'),
+        where('id_treino', '==', inProgress)
+      );
+      const querySnapshot = await getDocs(treinoTempoQuery);
+  
+      if (querySnapshot.empty) {
+        console.error('Documento correspondente em Treino_Tempo não encontrado.');
+        return;
+      }
+  
+      const treinoTempoDoc = querySnapshot.docs[0];
+      const treinoTempoRef = doc(db, 'Treino_Tempo', treinoTempoDoc.id);
+  
+      // Atualizar no banco de dados
       await updateDoc(treinoTempoRef, {
         data_termino: serverTimestamp(),
+        status: 'Concluído',
       });
-
+  
+      // Obter os dados atualizados
+      const updatedTreinoDoc = await getDoc(treinoTempoRef);
+      const updatedTreinoData = updatedTreinoDoc.data();
+  
+      // Atualizar o estado local
+      setTreinos((prevTreinos) =>
+        prevTreinos.map((treino) =>
+          treino.id === inProgress
+            ? {
+                ...treino,
+                status: updatedTreinoData.status,
+                data_termino: new Date(updatedTreinoData.data_termino.seconds * 1000).toISOString(),
+              }
+            : treino
+        )
+      );
+  
       setInProgress(null);
     } catch (error) {
       console.error('Erro ao terminar o treino:', error);
@@ -115,7 +182,7 @@ const VisualizarTreino = () => {
       <div className={styles.header}>
         <h2>Seus Treinos</h2>
         <button className={styles.backButton} onClick={() => navigate('/dashboard-aluno')}>
-        <i class="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
+          <i className="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
         </button>
       </div>
       <div className={styles.pageContainer}>
@@ -150,25 +217,31 @@ const VisualizarTreino = () => {
                   <strong>Descrição Geral:</strong> {treino.descricao}
                 </div>
                 <div>
-                  <button
-                    onClick={() => iniciarTreino(treino.id)}
-                    disabled={inProgress === treino.id}
-                  >
-                  {inProgress === treino.id ? (
-                  <>
-                  <i className="fa-duotone fa-solid fa-spinner fa-spin"></i> Treino em Progresso
-                  </>
+                  {treino.status === 'Concluído' ? (
+                    <span>
+                      <i className="fa-solid fa-check"></i> Treino Concluído
+                    </span>
+                  ) : treino.status === 'Iniciado' ? (
+                    <>
+                      {treino.status === 'Iniciado' && (
+                      <button onClick={terminarTreino} className={styles.terminateButton}>
+                      <i className="fa-solid fa-medal"></i> Terminar Treino
+                      </button>
+                      )}
+                      <span>
+                        <i className="fa-solid fa-spinner fa-spin"></i> Em Progresso
+                      </span>
+                    </>
                   ) : (
-                  <>
-                  <i className="fa-solid fa-play"></i> Iniciar Treino
-                  </>
+                    <button
+                      onClick={() => iniciarTreino(treino.id)}
+                      disabled={inProgress !== null}
+                      className={styles.startButton}
+                    >
+                      <i className="fa-solid fa-play"></i> Iniciar Treino
+                    </button>
                   )}
-                </button>
                 </div>
-                {inProgress === treino.id && (
-                  <button onClick={terminarTreino}>
-                   <i class="fa-solid fa-medal"></i> Terminar Treino</button>
-                )}
               </div>
             ))
           )}
