@@ -88,7 +88,7 @@ const DashboardAdmin = () => {
           datasets: [
             {
               data: [total],
-              backgroundColor: ['#FF6384'],
+              backgroundColor: ['#00ffff'],
             },
           ],
         },
@@ -112,7 +112,7 @@ const DashboardAdmin = () => {
             {
               label: 'Registros Mensais',
               data: monthlyData,
-              backgroundColor: '#36A2EB',
+              backgroundColor: '#daa520',
             },
           ],
         },
