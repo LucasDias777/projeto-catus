@@ -166,6 +166,7 @@ const CadastroSerie = () => {
                 name="numeroSeries"
                 className={styles.inputField}
                 placeholder="Número de Séries"
+                min="1"
               />
               <ErrorMessage name="numeroSeries" component="div" className={styles.error} />
               <button type="submit" className={styles.addButton}>
@@ -195,6 +196,7 @@ const CadastroSerie = () => {
                   onChange={(e) => setEditNumeroSeries(e.target.value)}
                   className={styles.inputField}
                   placeholder="Número de Séries"
+                  min="1"
                 />
                 <button className={`${styles.saveButton}`} onClick={() => handleEdit(s.id)}>
                   <i className="fa-solid fa-check"></i> Salvar

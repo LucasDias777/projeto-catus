@@ -9,6 +9,7 @@ import { useAuth } from '../contexts/authContext';
 import styles from '../styles/RelatorioTreino.module.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+
 const RelatorioTreinoProfessor = () => {
   const [relatorio, setRelatorio] = useState([]);
   const [filtroAluno, setFiltroAluno] = useState('');
@@ -44,55 +45,62 @@ const RelatorioTreinoProfessor = () => {
   const fetchRelatorio = async () => {
     try {
       if (!currentUser) return;
-
-      const treinosQuery = query(
+  
+      let treinosQuery = query(
         collection(db, 'Treino'),
         where('id_professor', '==', currentUser.uid)
       );
-
-      const treinosSnapshot = await getDocs(treinosQuery);
-
-      const treinos = await Promise.all(
-        treinosSnapshot.docs.map(async (doc) => {
-          const treinoData = doc.data();
-
-          // Filtro por aluno
-          if (filtroAluno && treinoData.id_aluno !== filtroAluno) return null;
-
-          // Obter dados adicionais
-          const alunoDoc = await getDoc(doc(db, 'Pessoa', treinoData.id_aluno));
-          const tipoDoc = await getDoc(doc(db, 'Tipo', treinoData.id_tipo));
-          const treinoTempoQuery = query(
-            collection(db, 'Treino_Tempo'),
-            where('id_treino', '==', doc.id)
-          );
-          const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
-          const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => tempoDoc.data());
-
-          // Filtro de status
-          const statusConcluido = tempos.some((tempo) => tempo.data_termino);
-          if (statusTreino === 'concluido' && !statusConcluido) return null;
-          if (statusTreino === 'nao_concluido' && statusConcluido) return null;
-
-          // Filtro por período
-          const dataCriacao = treinoData.data_criacao.toDate();
-          const dentroPeriodo =
-            (!dataInicio || new Date(dataInicio) <= dataCriacao) &&
-            (!dataFim || new Date(dataFim) >= dataCriacao);
-          if (!dentroPeriodo) return null;
-
-          return {
-            aluno: alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado',
-            tipo: tipoDoc.exists() ? tipoDoc.data().nome : 'Não informado',
-            status: statusConcluido ? 'Concluído' : 'Não Concluído',
-            dataInicio: tempos[0]?.data_inicio?.toDate() || 'Não informado',
-            dataTermino: statusConcluido ? tempos[0]?.data_termino?.toDate() : 'Não informado',
-            dataCriacao,
-          };
-        })
-      );
-
-      setRelatorio(treinos.filter((treino) => treino !== null));
+  
+      if (filtroAluno) {
+        treinosQuery = query(treinosQuery, where('id_aluno', '==', filtroAluno));
+      }
+  
+      if (dataInicio || dataFim) {
+        const treinosSnapshot = await getDocs(treinosQuery);
+  
+        const treinos = await Promise.all(
+          treinosSnapshot.docs.map(async (treinoDoc) => {
+            const treinoData = treinoDoc.data();
+  
+            const dataCriacao = treinoData.data_criacao.toDate();
+            const dentroPeriodo =
+              (!dataInicio || new Date(dataInicio) <= dataCriacao) &&
+              (!dataFim || new Date(dataFim) >= dataCriacao);
+  
+            if (!dentroPeriodo) return null;
+  
+            const alunoDoc = await getDoc(doc(db, 'Pessoa', treinoData.id_aluno));
+            const tipoDoc = treinoData.id_tipo
+              ? await getDoc(doc(db, 'Tipo', treinoData.id_tipo))
+              : null;
+  
+            const alunoNome = alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado';
+            const tipoNome = tipoDoc?.exists() ? tipoDoc.data().nome : 'Não informado';
+  
+            const treinoTempoQuery = query(
+              collection(db, 'Treino_Tempo'),
+              where('id_treino', '==', treinoDoc.id),
+              ...(statusTreino && statusTreino !== 'Todos' ? [where('status', '==', statusTreino)] : [])
+            );
+  
+            const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
+            if (statusTreino && treinoTempoSnapshot.empty) return null;
+  
+            const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => tempoDoc.data());
+  
+            return {
+              aluno: alunoNome,
+              tipo: tipoNome,
+              status: tempos.length > 0 ? tempos[0].status : 'Não informado',
+              dataInicio: tempos[0]?.data_inicio?.toDate() || 'Não informado',
+              dataTermino: tempos[0]?.data_termino?.toDate() || 'Não informado',
+              dataCriacao,
+            };
+          })
+        );
+  
+        setRelatorio(treinos.filter((treino) => treino !== null));
+      }
     } catch (error) {
       console.error('Erro ao buscar relatórios:', error);
     }
@@ -172,21 +180,22 @@ const RelatorioTreinoProfessor = () => {
           </select>
         </label>
         <label>
-          Data de Início:
-          <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
-        </label>
-        <label>
-          Data de Fim:
-          <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
-        </label>
-        <label>
-          Status:
-          <select value={statusTreino} onChange={(e) => setStatusTreino(e.target.value)}>
-            <option value="">Todos</option>
-            <option value="concluido">Concluídos</option>
-            <option value="nao_concluido">Não Concluídos</option>
-          </select>
-        </label>
+  Data Inicial:
+  <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
+</label>
+<label>
+  Data Final:
+  <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
+</label>
+<label>
+  Status:
+  <select value={statusTreino} onChange={(e) => setStatusTreino(e.target.value)}>
+    <option value="">Todos</option>
+    <option value="não_iniciado">Não Iniciado</option>
+    <option value="iniciado">Iniciado</option>
+    <option value="concluído">Concluído</option>
+  </select>
+</label>
         <button onClick={fetchRelatorio}>
           <i className="fa-solid fa-magnifying-glass"></i> Filtrar
         </button>

@@ -32,11 +32,21 @@ export const AuthProvider = ({ children }) => {
 
       if (!querySnapshot.empty) {
         const userData = querySnapshot.docs[0].data();
+        if (userData.tipo_pessoa === 'admin' && userData.id_admin === user.uid) {
         setUserType(userData.tipo_pessoa);
         setCurrentUser({
           uid: user.uid,
           ...userData,
         });
+        saveCredentials(email, password);
+        return userData.tipo_pessoa; // Retorna 'admin'
+      }
+
+      setUserType(userData.tipo_pessoa);
+      setCurrentUser({
+        uid: user.uid,
+        ...userData,
+      });
 
         saveCredentials(email, password);
         return userData.tipo_pessoa;

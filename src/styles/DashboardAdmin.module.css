@@ -1,0 +1,306 @@
+@import url("https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;700&display=swap");
+
+/* Variáveis para cores */
+:root {
+    --c-gray-900: #000000;
+    --c-gray-800: #1f1f1f;
+    --c-gray-700: #2e2e2e;
+    --c-gray-600: #313131;
+    --c-gray-500: #969593;
+    --c-gray-400: #a6a6a6;
+    --c-gray-300: #bdbbb7;
+    --c-gray-200: #f1f1f1;
+    --c-gray-100: #ffffff;
+
+    --c-blue-500: #007BFF;
+    --c-green-500: #45ffbc;
+
+    --c-white: var(--c-gray-100);
+    --c-text-primary: #000000;
+    --c-text-secondary: var(--c-gray-500);
+}
+
+/* Página principal do dashboard */
+.dashboardPage {
+    font-family: 'Be Vietnam Pro', sans-serif;
+    color: var(--c-text-primary);
+    background-color: var(--c-gray-100);
+    min-height: 100vh;
+    display: flex;
+}
+
+/* Barra lateral */
+.sidebar {
+    background-color: var(--c-blue-500);
+    color: var(--c-white);
+    padding: 1.5rem;
+    width: 300px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.sidebarHeader {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.painelName {
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+/* Menu da barra lateral */
+.sidebarMenu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.menuItem {
+    margin-bottom: 1rem;
+    cursor: pointer;
+    font-size: 1rem;
+    color: var(--c-gray-100);
+}
+
+.menuItem.active,
+.menuItem:hover {
+    color: var(--c-white);
+}
+
+/* Conteúdo principal */
+.mainContent {
+    flex: 1;
+    margin-left: 300px;
+    padding: 2rem;
+    overflow-y: auto;
+}
+
+/* Barra superior */
+.topbar {
+    background-color: var(--c-gray-200);
+    padding: 1rem;
+    position: fixed;
+    top: 0;
+    left: 302px;
+    right: 0;
+    z-index: 1000;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid var(--c-gray-300);
+}
+.topbarContent {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+
+/* Botão de logout */
+.logoutButton {
+    background-color: #dc3545;
+    color: var(--c-white);
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-left: auto;
+}
+
+.logoutButton:hover {
+    background-color: var(--c-gray-700);
+}
+
+/* Área de conteúdo */
+.contentArea {
+    margin-top: 6rem;
+}
+
+/* Container de cards */
+.cardsContainer {
+    display: flex;
+    gap: 1rem;
+    margin-top: 5rem;
+    flex-wrap: wrap;
+}
+
+@keyframes gradientAnimation {
+    0% {
+      background: linear-gradient(145deg, rgb(255, 240, 200), rgb(255, 250, 220)); /* Laranja claro */
+    }
+    10% {
+      background: linear-gradient(145deg, rgb(255, 165, 0), rgb(255, 200, 100)); /* Laranja forte */
+    }
+    20% {
+      background: linear-gradient(145deg, rgb(255, 180, 120), rgb(255, 215, 160)); /* Laranja médio */
+    }
+    30% {
+      background: linear-gradient(145deg, rgb(200, 230, 255), rgb(220, 245, 255)); /* Azul claro */
+    }
+    40% {
+      background: linear-gradient(145deg, rgb(150, 200, 255), rgb(180, 220, 255)); /* Azul forte */
+    }
+    50% {
+      background: linear-gradient(145deg, rgb(100, 150, 200), rgb(140, 180, 220)); /* Azul mais forte */
+    }
+    60% {
+      background: linear-gradient(145deg, rgb(200, 255, 200), rgb(240, 255, 240)); /* Verde claro */
+    }
+    70% {
+      background: linear-gradient(145deg, rgb(50, 150, 50), rgb(100, 200, 100)); /* Verde forte */
+    }
+    80% {
+      background: linear-gradient(145deg, rgb(255, 200, 230), rgb(255, 220, 245)); /* Rosa claro */
+    }
+    90% {
+      background: linear-gradient(145deg, rgb(255, 100, 150), rgb(255, 150, 200)); /* Rosa forte */
+    }
+    100% {
+      background: linear-gradient(145deg, rgb(255, 240, 200), rgb(255, 250, 220)); /* Volta ao laranja claro */
+    }
+  }
+  
+  .card {
+    background: linear-gradient(145deg, rgb(245, 245, 245), rgb(230, 230, 230)); /* Cinza claro padrão */
+    padding: 1rem;
+    border-radius: 8px;
+    text-align: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex: 1 1 200px;
+    transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.5s ease; /* Transição suave de cor */
+  }
+  
+  .card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    animation: gradientAnimation 60s infinite; /* Animação muito mais lenta (60 segundos) */
+  }
+
+/* Container dos gráficos */
+.chartContainer {
+    display: flex;
+    gap: 1rem;
+    margin-top: 2rem;
+    justify-content: space-between;
+}
+
+.chartBlock {
+    flex: 1 1 50%;
+    background-color: var(--c-gray-200);
+    padding: 1rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    text-align: center;
+}
+
+.chartBlock canvas {
+    width: 100%;
+    max-height: 300px;
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 100%;
+        height: auto;
+    }
+
+    .mainContent {
+        margin-left: 0;
+    }
+
+    .chartContainer {
+        flex-direction: column;
+    }
+
+    .chartBlock {
+        flex: 1 1 100%;
+    }
+
+    .cardsContainer {
+        flex-direction: column;
+    }
+}
+.parentContainer {
+    display: flex;
+    justify-content: center; /* Centraliza horizontalmente */
+    align-items: center; /* Centraliza verticalmente */
+    position: fixed; /* Garante que cobre toda a tela */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 100; /* Aparece acima de outros elementos */
+    background: rgba(0, 0, 0, 0.5); /* Fundo semitransparente para destaque */
+}
+
+.backupContainer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 28%; /* Aumentado para ficar mais proporcional */
+    background: rgba(245, 245, 255, 0.9); /* Fundo claro */
+    padding: 2rem; /* Diminuído para reduzir o espaçamento interno */
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    text-align: center;
+    position: relative; /* Relativo ao parentContainer */
+    left: 32rem;
+    top: 18rem;
+}
+
+.backupTitle {
+    font-size: 1.8rem; /* Diminuído levemente */
+    font-weight: 700;
+    margin-bottom: 3rem; /* Reduzi o espaçamento para ajustar visualmente */
+    color: var(--c-text-primary);
+}
+
+.backupBlock {
+    margin-bottom: 1.5rem; /* Reduzi o espaçamento entre os botões */
+}
+
+.backupButton,
+.backButton {
+    display: inline-block;
+    font-size: 1rem; /* Diminuído para um tamanho mais compacto */
+    padding: 0.8rem 1.5rem; /* Botões menores */
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+}
+
+/* Botão de Fazer Backup */
+.backupButton {
+    background-color: var(--c-blue-500);
+    color: var(--c-white);
+    border: none;
+}
+
+.backupButton:hover {
+    background-color: #0056b3; /* Azul mais escuro no hover */
+    transform: scale(1.05); /* Leve aumento no tamanho */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra no hover */
+}
+
+/* Botão de Voltar */
+.backButton {
+    background-color: #dc3545;
+    color: var(--c-white);
+    border: none;
+    margin-top: 1rem; /* Reduzido para melhorar o espaçamento */
+}
+
+.backButton:hover {
+    background-color: #b52a36; /* Vermelho mais escuro no hover */
+    transform: scale(1.05); /* Leve aumento no tamanho */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra no hover */
+}

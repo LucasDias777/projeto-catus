@@ -162,6 +162,7 @@ const CadastroRepeticao = () => {
                 name="numeroRepeticoes"
                 className={styles.inputField}
                 placeholder="Número de Repetições"
+                min="1"
               />
               <ErrorMessage name="numeroRepeticoes" component="div" />
               <button type="submit" className={styles.addButton}>
@@ -190,6 +191,7 @@ const CadastroRepeticao = () => {
                   value={editNumero}
                   onChange={(e) => setEditNumero(e.target.value)}
                   className={styles.inputField}
+                  min="1"
                 />
                 <button
                   className={styles.saveButton}

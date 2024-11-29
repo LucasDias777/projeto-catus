@@ -20,7 +20,9 @@ const Login = () => {
     try {
       const userType = await login(email, senha);
 
-      if (userType === 'professor') {
+      if (userType === 'admin') {
+        navigate('/dashboard-admin');
+      } else if (userType === 'professor') {
         navigate('/dashboard-professor');
       } else if (userType === 'aluno') {
         navigate('/dashboard-aluno');
@@ -33,7 +35,7 @@ const Login = () => {
       } else if (error.message.includes('auth/user-not-found')) {
         setError('Usuário não encontrado.');
       } else {
-        setError('Erro ao fazer login.');
+        setError('Usuário não encontrado.');
       }
     } finally {
       setLoading(false);

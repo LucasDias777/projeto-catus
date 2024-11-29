@@ -4,7 +4,7 @@ import { Formik, Field, Form, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios';
 import { auth, db } from '../config/firebaseConfig';
-import { createUserWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
+import { createUserWithEmailAndPassword, reauthenticateWithCredential, EmailAuthProvider , signInWithEmailAndPassword } from 'firebase/auth';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '../contexts/authContext';
 import styles from '../styles/CadastroAluno.module.css';
@@ -99,9 +99,15 @@ const CadastroAluno = () => {
     setSubmitting(true);
   
     try {
+      // Armazena as credenciais do professor atual
+      const professorEmail = currentUser.email;
+      const professorPassword = getStoredCredentials()?.password;
+  
+      // Cria o novo usuário
       const userCredential = await createUserWithEmailAndPassword(auth, values.email, values.senha);
       const user = userCredential.user;
   
+      // Salva os dados do aluno no Firestore
       await setDoc(doc(db, 'Pessoa', user.uid), {
         ...values,
         id_aluno: user.uid,
@@ -110,8 +116,9 @@ const CadastroAluno = () => {
         data_criacao: serverTimestamp(),
       });
   
-      if (currentUser) {
-        await reauthenticateUser();
+      // Reautentica o professor
+      if (professorEmail && professorPassword) {
+        await signInWithEmailAndPassword(auth, professorEmail, professorPassword);
       }
   
       alert('Aluno cadastrado com sucesso!');

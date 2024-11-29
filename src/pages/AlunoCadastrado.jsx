@@ -149,7 +149,7 @@ const AlunoCadastrado = () => {
           className={styles.searchInput}
         />
         <select value={ufFiltro} onChange={handleUfFiltroChange} className={styles.searchInput}>
-          <option value="" disabled>
+          <option value="" >
             Filtrar por Estado
           </option>
           {ufs.map((uf) => (
@@ -179,8 +179,8 @@ const AlunoCadastrado = () => {
             <tr>
               <th>Nome</th>
               <th>Email</th>
-              <th>Celular</th>
               <th>Telefone</th>
+              <th>Cidade</th>
               <th>UF</th>
             </tr>
           </thead>

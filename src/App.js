@@ -5,6 +5,7 @@ import CadastroProfessor from './pages/CadastroProfessor';
 import Login from './pages/Login';
 import DashboardProfessor from './pages/DashboardProfessor';
 import DashboardAluno from './pages/DashboardAluno';
+import DashboardAdmin from './pages/DashboardAdmin';
 import CadastroEquipamento from './pages/CadastroEquipamento';
 import CadastroSerie from './pages/CadastroSerie';
 import CadastroRepeticao from './pages/CadastroRepeticao';
@@ -31,6 +32,7 @@ function App() {
           <Route element={<RotasPrivadas />}>
             <Route path="/dashboard-professor" element={<DashboardProfessor />} />
             <Route path="/dashboard-aluno" element={<DashboardAluno />} />
+            <Route path="/dashboard-admin/*" element={<DashboardAdmin />} />
             <Route path="/cadastro-equipamento" element={<CadastroEquipamento />} />
             <Route path="/cadastro-serie" element={<CadastroSerie />} />
             <Route path="/cadastro-repeticao" element={<CadastroRepeticao />} />
