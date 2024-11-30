@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext';
 import styles from '../styles/Login.module.css';
 import logo from '../styles/images/logo.png';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -81,9 +82,15 @@ const Login = () => {
           ></i>
           </div>
         </div>
-          <button type="submit" disabled={loading} className={styles.button}>
-            {loading ? 'Carregando...' : 'Login'}
-          </button>
+        <button type="submit" disabled={loading} className={styles.button}>
+  {loading ? (
+    'Carregando...'
+  ) : (
+    <>
+      <i className="fa-solid fa-right-to-bracket"></i> Login
+    </>
+  )}
+</button>
           {error && <p className={styles.errorMessage}>{error}</p>}
           <div className={styles.registerLink}>
             <p>

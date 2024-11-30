@@ -10,11 +10,6 @@ import { useAuth } from '../contexts/authContext';
 import styles from '../styles/CadastroAluno.module.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-
-
-  
-
-
 const CadastroAluno = () => {
   const navigate = useNavigate();
   const { currentUser, getStoredCredentials } = useAuth();

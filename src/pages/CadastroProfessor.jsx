@@ -7,6 +7,7 @@ import { Formik, Form, Field, ErrorMessage } from 'formik';
 import * as Yup from 'yup';
 import axios from 'axios'; // Para realizar a requisição à API ViaCEP
 import styles from '../styles/CadastroProfessor.module.css';
+import '@fortawesome/fontawesome-free/css/all.min.css';
 
 const CadastroProfessor = () => {
   const navigate = useNavigate();
@@ -318,16 +319,22 @@ const CadastroProfessor = () => {
   </div>
 </div>
   
-              <div className={styles.formGroup}>
-                <button type="submit" disabled={isSubmitting} className={styles.submitButton}>
-                  {isSubmitting ? 'Cadastrando...' : 'Cadastrar'}
-                </button>
-              </div>
+<div className={styles.formGroup}>
+  <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
+    {isSubmitting ? (
+      <span>Cadastrando...</span>
+    ) : (
+      <>
+        <i className="fa-solid fa-plus"></i> Cadastrar
+      </>
+    )}
+  </button>
+</div>
             </Form>
           )}
         </Formik>
         <button onClick={() => navigate('/login')} className={styles.backButton}>
-          Voltar
+        <i class="fa-solid fa-rotate-left"></i> Voltar
         </button>
       </div>
     </div>
