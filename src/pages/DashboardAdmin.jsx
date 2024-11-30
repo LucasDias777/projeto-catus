@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/authContext';
-import { getDocs, collection } from 'firebase/firestore';
+import { getDocs, collection, writeBatch, doc } from 'firebase/firestore';
 import { db } from '../config/firebaseConfig';
 import styles from '../styles/DashboardAdmin.module.css';
 import { Chart, registerables } from 'chart.js';
@@ -48,23 +48,33 @@ const DashboardAdmin = () => {
 
   const fetchMonthlyData = async () => {
     try {
-      const currentYear = new Date().getFullYear();
-      const monthCounts = Array(12).fill(0);
+        const currentYear = new Date().getFullYear();
+        const monthCounts = Array(12).fill(0);
 
-      for (const col of collections) {
-        const snapshot = await getDocs(collection(db, col));
-        snapshot.forEach((doc) => {
-          const dataCriacao = doc.data().data_criacao?.toDate?.();
-          if (dataCriacao && dataCriacao instanceof Date && dataCriacao.getFullYear() === currentYear) {
-            monthCounts[dataCriacao.getMonth()]++;
-          }
-        });
-      }
-      setMonthlyData(monthCounts);
+        for (const col of collections) {
+            const snapshot = await getDocs(collection(db, col));
+            snapshot.forEach((doc) => {
+                const dataCriacao = doc.data().data_criacao;
+
+                let dateObj;
+                if (dataCriacao?.toDate) {
+                    // Trata Timestamp do Firestore
+                    dateObj = dataCriacao.toDate();
+                } else if (typeof dataCriacao === 'string') {
+                    // Trata datas no formato ISO
+                    dateObj = new Date(dataCriacao);
+                }
+
+                if (dateObj && dateObj instanceof Date && dateObj.getFullYear() === currentYear) {
+                    monthCounts[dateObj.getMonth()]++;
+                }
+            });
+        }
+        setMonthlyData(monthCounts);
     } catch (error) {
-      console.error('Erro ao buscar dados mensais:', error);
+        console.error('Erro ao buscar dados mensais:', error);
     }
-  };
+};
 
   useEffect(() => {
     if (!loading) {
@@ -84,7 +94,7 @@ const DashboardAdmin = () => {
       donutChartInstance.current = new Chart(ctx, {
         type: 'doughnut',
         data: {
-          labels: ['Total de Registros'],
+          labels: ['Total de Cadastros'],
           datasets: [
             {
               data: [total],
@@ -110,7 +120,7 @@ const DashboardAdmin = () => {
           labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
           datasets: [
             {
-              label: 'Registros Mensais',
+              label: 'Total de Cadastros',
               data: monthlyData,
               backgroundColor: '#daa520',
             },
@@ -123,23 +133,102 @@ const DashboardAdmin = () => {
 
   const handleBackup = async () => {
     try {
-      const backupData = {};
-      for (const col of collections) {
-        const snapshot = await getDocs(collection(db, col));
-        backupData[col] = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-      }
-      const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
-      const url = URL.createObjectURL(blob);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `backup_${new Date().toISOString()}.json`;
-      link.click();
-      alert('Backup realizado com sucesso!');
+        const backupData = {};
+        for (const col of collections) {
+            const snapshot = await getDocs(collection(db, col));
+            backupData[col] = snapshot.docs.map((doc) => {
+                const data = doc.data();
+                
+                // Verifica e converte campos de data para formato ISO
+                if (data.data_criacao && data.data_criacao.toDate) {
+                    data.data_criacao = data.data_criacao.toDate().toISOString();
+                }
+                if (data.data_inicio && data.data_inicio.toDate) {
+                    data.data_inicio = data.data_inicio.toDate().toISOString();
+                }
+                if (data.data_termino && data.data_termino.toDate) {
+                    data.data_termino = data.data_termino.toDate().toISOString();
+                }
+                
+                return { id: doc.id, ...data };
+            });
+        }
+
+        const blob = new Blob([JSON.stringify(backupData, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `backup_${new Date().toISOString()}.json`;
+        link.click();
+        alert('Backup realizado com sucesso!');
     } catch (error) {
-      console.error('Erro ao realizar backup:', error);
-      alert('Erro ao realizar backup!');
+        console.error('Erro ao realizar backup:', error);
+        alert('Erro ao realizar backup!');
+    }
+};
+
+  const handleRestoreBackup = async () => {
+    try {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'application/json';
+      input.onchange = async (event) => {
+        const file = event.target.files[0];
+        if (!file) return;
+  
+        const fileContent = await file.text();
+        let backupData;
+        try {
+          backupData = JSON.parse(fileContent);
+        } catch {
+          alert('Arquivo inválido! O formato JSON está incorreto.');
+          return;
+        }
+  
+        // Validar estrutura do backup
+        const backupCollections = Object.keys(backupData);
+        const isValidStructure = collections.every((col) => backupCollections.includes(col));
+        if (!isValidStructure) {
+          alert('Arquivo inválido! Estrutura de backup não é compatível.');
+          return;
+        }
+  
+        if (!window.confirm('Tem certeza que deseja restaurar o backup? Isso apagará todos os dados atuais.')) {
+          return;
+        }
+  
+        // Excluir coleções existentes e restaurar backup
+        for (const col of collections) {
+          const colRef = collection(db, col);
+          const snapshot = await getDocs(colRef);
+          const deleteBatch = writeBatch(db); // Substituindo db.batch() por writeBatch(db)
+          
+          snapshot.forEach((docSnap) => {
+            deleteBatch.delete(doc(colRef, docSnap.id));
+          });
+          await deleteBatch.commit();
+  
+          // Inserir novos dados
+          const insertBatch = writeBatch(db); // Novo batch para inserções
+          for (const docData of backupData[col]) {
+            const newDocRef = doc(colRef, docData.id); // Referência ao documento
+            insertBatch.set(newDocRef, docData);
+          }
+          await insertBatch.commit();
+        }
+  
+        alert('Restauração do backup concluída com sucesso, você precirá logar novamente!');
+        await logout();
+        navigate('/login');
+      };
+  
+      input.click();
+    } catch (error) {
+      console.error('Erro ao restaurar backup:', error);
+      alert('Erro ao restaurar o backup!');
     }
   };
+  
 
   const toggleSubmenu = (menu) => {
     setActiveMenu((prevMenu) => (prevMenu === menu ? null : menu));
@@ -192,43 +281,52 @@ const DashboardAdmin = () => {
 
         {/* Condicional para exibir backup ou dashboard */}
         {activeMenu === 'backup' ? (
-          <div className={styles.backupContainer}>
-            <h2 className={styles.backupTitle}>Backup de Dados</h2>
-            <div className={styles.backupBlock}>
-              <button className={styles.backupButton} onClick={handleBackup}>
-              <i class="fa-solid fa-floppy-disk"></i> Fazer Backup
-              </button>
-            </div>
-            <button
-              className={styles.backButton}
-              onClick={() => {
-                toggleSubmenu(null);
-                navigate('/dashboard-admin');
-              }}
-            >
-             <i class="fa-solid fa-rotate-left"></i> Voltar 
-            </button>
-          </div>
+  <div className={styles.backupContainer}>
+    <h2 className={styles.backupTitle}>Backup de Dados</h2>
+    <div className={styles.backupBlock}>
+      <button className={styles.backupButton} onClick={handleBackup}>
+        <i className="fa-solid fa-floppy-disk"></i> Fazer Backup
+      </button>
+      <button
+        className={`${styles.restoreButton} ${styles.greenButton}`}
+        onClick={handleRestoreBackup}
+      >
+        <i className="fa-solid fa-upload"></i> Restaurar Backup
+      </button>
+    </div>
+    <button
+      className={styles.backButton}
+      onClick={() => {
+        toggleSubmenu(null);
+        navigate('/dashboard-admin');
+      }}
+    >
+      <i className="fa-solid fa-rotate-left"></i> Voltar
+    </button>
+  </div>
         ) : (
           <>
             {/* Cards */}
-            <div className={styles.cardsContainer}>
-              {Object.entries(collectionCounts).map(([col, count]) => (
-                <div key={col} className={styles.card}>
-                  <h3>{col}</h3>
-                  <p>{count} registros</p>
-                </div>
-              ))}
+            <div className={styles.cardsSection}>
+              <h2 className={styles.cardsTitle}>Total de Cadastros no Banco de Dados por Tabela</h2>
+              <div className={styles.cardsContainer}>
+                {Object.entries(collectionCounts).map(([col, count]) => (
+                  <div key={col} className={styles.card}>
+                    <h3>{col}</h3>
+                    <p>{count} Cadastros</p>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Gráficos */}
             <div className={styles.chartContainer}>
               <div className={styles.chartBlock}>
-                <h3>Total de Registros</h3>
+                <h3>Total de Cadastros no Banco de Dados</h3>
                 <canvas ref={donutChartRef}></canvas>
               </div>
               <div className={styles.chartBlock}>
-                <h3>Total de Registros por Mês</h3>
+                <h3>Total de Cadastros no Banco de Dados Por Mês</h3>
                 <canvas ref={barChartRef}></canvas>
               </div>
             </div>

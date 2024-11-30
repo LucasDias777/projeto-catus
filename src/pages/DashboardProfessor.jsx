@@ -73,7 +73,17 @@ const DashboardProfessor = () => {
 
         const meses = Array(12).fill(0);
         treinosSnapshot.forEach((doc) => {
-          const dataCriacao = doc.data().data_criacao.toDate();
+          const treinoData = doc.data();
+          let dataCriacao;
+        
+          // Verifica se é um timestamp do Firebase ou uma string ISO
+          if (treinoData.data_criacao?.toDate) {
+            dataCriacao = treinoData.data_criacao.toDate(); // Convertendo timestamp
+          } else {
+            dataCriacao = new Date(treinoData.data_criacao); // Convertendo string ISO
+          }
+        
+          // Incrementa o mês correspondente, se o ano for o atual
           if (dataCriacao.getFullYear() === new Date().getFullYear()) {
             meses[dataCriacao.getMonth()]++;
           }
@@ -119,7 +129,7 @@ const DashboardProfessor = () => {
         labels: ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'],
         datasets: [
           {
-            label: 'Treinos Criados',
+            label: 'Total de Treinos Criados',
             data,
             backgroundColor,
           },
@@ -262,21 +272,21 @@ const DashboardProfessor = () => {
         <div className={styles.contentArea}>
           <div className={styles.row}>
             <div className={styles.chartContainer}>
-              <h3>Alunos Cadastrados</h3>
+              <h3>Total de Alunos Cadastrados</h3>
               <canvas id="alunosCadastradosChart"></canvas>
             </div>
             <div className={styles.chartContainer}>
-              <h3>Treinos Criados</h3>
+              <h3>Total de Treinos Criados por Mês</h3>
               <canvas id="treinosCriadosChart"></canvas>
             </div>
           </div>
           <div className={styles.row}>
             <div className={styles.chartContainer}>
-              <h3>Quantidade de Cadastros</h3>
+              <h3>Quantidade de Cadastros por Categoria</h3>
               <canvas id="quantidadeCadastroChart"></canvas>
             </div>
             <div className={styles.chartContainer}>
-              <h3>Total de Cadastros</h3>
+              <h3>Total de Cadastros das Categorias</h3>
               <canvas id="totalCadastroChart"></canvas>
             </div>
           </div>

@@ -55,8 +55,6 @@ const CadastroTreino = () => {
     }
   };
 
-  
-
   const onSubmit = async (data) => {
     if (!currentUser) return;
   
@@ -74,30 +72,33 @@ const CadastroTreino = () => {
           id_serie: equip.serieId,
           id_repeticao: equip.repeticaoId,
         })),
-        data_criacao: serverTimestamp(),
+        data_criacao: serverTimestamp(), // Garantir que este campo é atualizado sempre
       };
   
       let treinoDocRef;
   
       // Atualizar ou criar treino
       if (modalType === 'edit' && selectedTraining) {
+        // Atualiza o treino existente
         await updateDoc(doc(db, 'Treino', selectedTraining.id), treinoData);
         treinoDocRef = doc(db, 'Treino', selectedTraining.id);
       } else {
+        // Cria um novo treino
         treinoDocRef = await addDoc(collection(db, 'Treino'), treinoData);
+  
+        // Criação de documento na coleção Treino_Tempo (apenas para novos treinos)
+        const treinoTempoData = {
+          id_aluno: data.alunoId,
+          id_professor: userId,
+          id_treino: treinoDocRef.id, // Referência ao ID do treino criado
+          data_inicio: null,
+          data_termino: null,
+          status: 'Não Iniciado',
+          data_criacao: serverTimestamp(), // Adicionar data de criação aqui
+        };
+  
+        await addDoc(collection(db, 'Treino_Tempo'), treinoTempoData);
       }
-  
-      // Adiciona o documento em Treino_Tempo
-      const treinoTempoData = {
-        id_aluno: data.alunoId,
-        id_professor: userId,
-        id_treino: treinoDocRef.id, // Referência ao ID do treino criado
-        data_inicio: null,
-        data_termino: null,
-        status: 'Não Iniciado',
-      };
-  
-      await addDoc(collection(db, 'Treino_Tempo'), treinoTempoData);
   
       // Atualiza a lista de treinos e fecha o modal
       fetchData();

@@ -127,7 +127,7 @@
 .cardsContainer {
     display: flex;
     gap: 1rem;
-    margin-top: 5rem;
+    margin-top: 1rem;
     flex-wrap: wrap;
 }
 
@@ -239,6 +239,7 @@
     bottom: 0;
     z-index: 100; /* Aparece acima de outros elementos */
     background: rgba(0, 0, 0, 0.5); /* Fundo semitransparente para destaque */
+    
 }
 
 .backupContainer {
@@ -265,17 +266,20 @@
 }
 
 .backupBlock {
-    margin-bottom: 1.5rem; /* Reduzi o espaçamento entre os botões */
-}
+    display: flex;
+    flex-direction: column; /* Alinha os botões verticalmente */
+    gap: 15px; /* Espaçamento entre os botões */
+    align-items: center; /* Centraliza os botões horizontalmente */
+  }
 
 .backupButton,
-.backButton {
-    display: inline-block;
-    font-size: 1rem; /* Diminuído para um tamanho mais compacto */
-    padding: 0.8rem 1.5rem; /* Botões menores */
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.3s ease-in-out;
+.restoreButton {
+  display: inline-block;
+  font-size: 1rem;
+  padding: 0.8rem 1.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 /* Botão de Fazer Backup */
@@ -283,24 +287,56 @@
     background-color: var(--c-blue-500);
     color: var(--c-white);
     border: none;
-}
+  }
 
-.backupButton:hover {
-    background-color: #0056b3; /* Azul mais escuro no hover */
-    transform: scale(1.05); /* Leve aumento no tamanho */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra no hover */
-}
+  .backupButton:hover {
+    background-color: #0056b3;
+    transform: translateY(-3px); /* Animação de leve elevação */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  /* Botão de Restaurar Backup */
+.restoreButton {
+    background-color: #28a745;
+    color: white;
+    border: none;
+  }
+  
+  .restoreButton:hover {
+    background-color: #218838;
+    transform: translateY(-3px); /* Animação de leve elevação */
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  
 
 /* Botão de Voltar */
 .backButton {
+    margin-top: 1rem;
     background-color: #dc3545;
     color: var(--c-white);
     border: none;
-    margin-top: 1rem; /* Reduzido para melhorar o espaçamento */
+    padding: 0.8rem 1.5rem;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+  
+  .backButton:hover {
+    background-color: #b52a36;
+    transform: scale(1.05);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  }
+  .cardsSection {
+    display: flex;
+    flex-direction: column; /* Empilha o título e os cards verticalmente */
+    align-items: center; /* Centraliza o conteúdo horizontalmente */
+    margin: 2rem 0; /* Espaçamento acima e abaixo */
 }
-
-.backButton:hover {
-    background-color: #b52a36; /* Vermelho mais escuro no hover */
-    transform: scale(1.05); /* Leve aumento no tamanho */
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2); /* Adiciona sombra no hover */
+  
+.cardsTitle {
+  font-size: 2rem;
+  font-weight: 600;
+  margin-top: 2rem; /* Desce o título */
+  margin-bottom: 1.5rem; /* Espaçamento com os cards */
+  text-align: center;
 }
+  

@@ -14,7 +14,20 @@ const CadastroProfessor = () => {
   // Schema de validação com Yup
   const validationSchema = Yup.object({
     nome_completo: Yup.string().required('Nome completo é obrigatório'),
-    data_nascimento: Yup.date().required('Data de nascimento é obrigatória'),
+    data_nascimento: Yup.date()
+      .required('Data de nascimento é obrigatória')
+      .test(
+        'idade-minima',
+        'É necessário ter pelo menos 14 anos para se cadastrar',
+        function (value) {
+          const hoje = new Date();
+          const nascimento = new Date(value);
+          const idade = hoje.getFullYear() - nascimento.getFullYear();
+          const diferencaMeses = hoje.getMonth() - nascimento.getMonth();
+          const diferencaDias = hoje.getDate() - nascimento.getDate();
+          return idade > 14 || (idade === 14 && diferencaMeses > 0) || (idade === 14 && diferencaMeses === 0 && diferencaDias >= 0);
+        }
+      ),
     genero: Yup.string().required('Gênero é obrigatório'),
     cep: Yup.string()
       .matches(/^\d{5}-?\d{3}$/, 'CEP inválido')
@@ -31,6 +44,9 @@ const CadastroProfessor = () => {
     senha: Yup.string()
       .min(6, 'Senha deve ter pelo menos 6 caracteres')
       .required('Senha é obrigatória'),
+      confirmar_senha: Yup.string()
+      .oneOf([Yup.ref('senha'), null], 'As senhas devem ser iguais')
+      .required('Confirmação de senha é obrigatória'),
   });
 
   // Submissão do formulário
@@ -144,6 +160,7 @@ const CadastroProfessor = () => {
             telefone: '',
             email: '',
             senha: '',
+            confirmar_senha: '',
           }}
           validationSchema={validationSchema}
           onSubmit={handleSubmit}
@@ -152,13 +169,13 @@ const CadastroProfessor = () => {
             <Form>
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Nome Completo</label>
+                  <label>Nome Completo <span className={styles.required}>*</span></label>
                   <Field name="nome_completo" type="text" className={styles.formControl} />
                   <ErrorMessage name="nome_completo" component="div" className={styles.error} />
                 </div>
   
                 <div className={styles.formGroup}>
-                  <label>Data de Nascimento</label>
+                  <label>Data de Nascimento <span className={styles.required}>*</span></label>
                   <Field name="data_nascimento" type="date" className={styles.formControl} />
                   <ErrorMessage name="data_nascimento" component="div" className={styles.error} />
                 </div>
@@ -166,7 +183,7 @@ const CadastroProfessor = () => {
   
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Gênero</label>
+                  <label>Gênero <span className={styles.required}>*</span></label>
                   <Field name="genero" as="select" className={styles.formControl}>
                     <option value="">Selecione</option>
                     <option value="Masculino">Masculino</option>
@@ -191,13 +208,13 @@ const CadastroProfessor = () => {
   
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Cidade</label>
+                  <label>Cidade <span className={styles.required}>*</span></label>
                   <Field name="cidade" type="text" className={styles.formControl} />
                   <ErrorMessage name="cidade" component="div" className={styles.error} />
                 </div>
   
                 <div className={styles.formGroup}>
-                  <label>UF</label>
+                  <label>UF <span className={styles.required}>*</span></label>
                   <Field name="uf" type="text" className={styles.formControl} />
                   <ErrorMessage name="uf" component="div" className={styles.error} />
                 </div>
@@ -205,13 +222,13 @@ const CadastroProfessor = () => {
   
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Endereço</label>
+                  <label>Endereço <span className={styles.required}>*</span></label>
                   <Field name="endereco" type="text" className={styles.formControl} />
                   <ErrorMessage name="endereco" component="div" className={styles.error} />
                 </div>
   
                 <div className={styles.formGroup}>
-                  <label>Número da Residência</label>
+                  <label>Número da Residência <span className={styles.required}>*</span></label>
                   <Field name="numero_casa" type="text" className={styles.formControl} />
                   <ErrorMessage name="numero_casa" component="div" className={styles.error} />
                 </div>
@@ -219,7 +236,7 @@ const CadastroProfessor = () => {
   
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Bairro</label>
+                  <label>Bairro <span className={styles.required}>*</span></label>
                   <Field name="bairro" type="text" className={styles.formControl} />
                   <ErrorMessage name="bairro" component="div" className={styles.error} />
                 </div>
@@ -232,7 +249,7 @@ const CadastroProfessor = () => {
   
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Telefone</label>
+                  <label>Telefone <span className={styles.required}>*</span></label>
                   <Field
                     name="telefone"
                     type="text"
@@ -245,20 +262,26 @@ const CadastroProfessor = () => {
                 </div>
   
                 <div className={styles.formGroup}>
-                  <label>E-mail</label>
+                  <label>E-mail <span className={styles.required}>*</span></label>
                   <Field name="email" type="email" className={styles.formControl} 
                   placeholder="exemplo@exemplo.com"
                   />
                   <ErrorMessage name="email" component="div" className={styles.error} />
                 </div>
               </div>
-  
+              
               <div className={styles.formRow}>
                 <div className={styles.formGroup}>
-                  <label>Senha</label>
+                  <label>Senha <span className={styles.required}>*</span></label>
                   <Field name="senha" type="password" className={styles.formControl} />
                   <ErrorMessage name="senha" component="div" className={styles.error} />
                 </div>
+              
+              <div className={styles.formGroup}>
+                <label>Confirmar Senha <span className={styles.required}>*</span></label>
+                <Field name="confirmar_senha" type="password" className={styles.formControl} />
+                <ErrorMessage name="confirmar_senha" component="div" className={styles.error} />
+              </div>
               </div>
   
               <div className={styles.formGroup}>

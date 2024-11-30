@@ -106,3 +106,8 @@ button[type="submit"]:hover {
 .error {
   color: #e74c3c; /* Cor vermelha para mensagens de erro */
 }
+.required {
+  color: red;
+  margin-left: 5px;
+  font-size: 1.5em; /* Tamanho maior para destacar o asterisco */
+}
