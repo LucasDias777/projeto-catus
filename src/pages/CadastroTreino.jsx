@@ -7,6 +7,7 @@ import { collection, addDoc, getDocs, query, where, serverTimestamp, updateDoc, 
 import styles from '../styles/CadastroTreino.module.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+
 const CadastroTreino = () => {
   const { control, handleSubmit, reset, setValue, register } = useForm();
   const { fields, append, remove } = useFieldArray({ control, name: 'equipamentos' });
