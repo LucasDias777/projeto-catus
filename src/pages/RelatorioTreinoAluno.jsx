@@ -9,7 +9,7 @@ import { useAuth } from '../contexts/authContext';
 import styles from '../styles/RelatorioTreino.module.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
-const RelatorioTreinoProfessor = () => {
+const RelatorioTreinoAluno = () => {
   const [relatorio, setRelatorio] = useState([]);
   const [filtroAluno, setFiltroAluno] = useState('');
   const [dataInicio, setDataInicio] = useState('');
@@ -21,98 +21,135 @@ const RelatorioTreinoProfessor = () => {
   const navigate = useNavigate();
   const { currentUser } = useAuth();
 
-  // Navegar ao Dashboard com verificação de contexto
-  const voltarDashboard = () => {
-    if (currentUser) {
-      navigate('/dashboard-aluno');
-    } else {
-      alert('Usuário não autenticado. Redirecionando para login.');
-      navigate('/login');
-    }
-  };
-
-  // Buscar alunos vinculados
   const fetchAlunosVinculados = async () => {
     try {
       if (currentUser) {
+        const treinosSnapshot = await getDocs(
+          query(collection(db, 'Treino'), where('id_aluno', '==', currentUser.uid))
+        );
+        const alunosIds = new Set(treinosSnapshot.docs.map((doc) => doc.data().id_aluno));
         const alunosQuery = query(
           collection(db, 'Pessoa'),
           where('id_aluno', '==', currentUser.uid),
           where('tipo_pessoa', '==', 'aluno')
         );
         const alunosSnapshot = await getDocs(alunosQuery);
-        const alunosData = alunosSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          nome_completo: doc.data().nome_completo,
-        }));
+        const alunosData = alunosSnapshot.docs
+          .filter((doc) => alunosIds.has(doc.id))
+          .map((doc) => ({
+            id: doc.id,
+            nome_completo: doc.data().nome_completo,
+          }));
         setAlunos(alunosData);
-
-        // Preencher o filtro com o aluno logado, caso único
-        if (alunosData.length === 1) {
-          setFiltroAluno(alunosData[0].id);
-        }
       }
     } catch (error) {
       console.error('Erro ao buscar alunos vinculados:', error);
     }
   };
 
-  useEffect(() => {
-    if (!currentUser) {
-      alert('Usuário não autenticado. Redirecionando para login.');
-      navigate('/login');
-      return;
-    }
-    fetchAlunosVinculados();
-  }, [currentUser]);
+  const formatarData = (data) => {
+    return data
+      ? `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR')}`
+      : 'Não informado';
+  };
 
   const fetchRelatorio = async () => {
     try {
       if (!currentUser) return;
 
-      const treinosQuery = query(
+      let treinosQuery = query(
         collection(db, 'Treino'),
-        where('id_professor', '==', currentUser.uid)
+        where('id_aluno', '==', currentUser.uid)
       );
+
+      if (filtroAluno) {
+        treinosQuery = query(treinosQuery, where('id_aluno', '==', filtroAluno));
+      }
 
       const treinosSnapshot = await getDocs(treinosQuery);
 
       const treinos = await Promise.all(
-        treinosSnapshot.docs.map(async (doc) => {
-          const treinoData = doc.data();
+        treinosSnapshot.docs.map(async (treinoDoc) => {
+          const treinoData = treinoDoc.data();
 
-          // Filtro por aluno
-          if (filtroAluno && treinoData.id_aluno !== filtroAluno) return null;
+          const dataCriacao = treinoData.data_criacao
+            ? treinoData.data_criacao.toDate
+              ? treinoData.data_criacao.toDate()
+              : new Date(treinoData.data_criacao)
+            : null;
 
-          // Obter dados adicionais
+          const dataInicioFilter = dataInicio
+            ? new Date(`${dataInicio}T00:00:00`)
+            : null;
+          const dataFimFilter = dataFim
+            ? new Date(`${dataFim}T23:59:59`)
+            : null;
+
+          if (
+            dataCriacao &&
+            ((dataInicioFilter && dataCriacao < dataInicioFilter) ||
+              (dataFimFilter && dataCriacao > dataFimFilter))
+          ) {
+            return null;
+          }
+
           const alunoDoc = await getDoc(doc(db, 'Pessoa', treinoData.id_aluno));
-          const tipoDoc = await getDoc(doc(db, 'Tipo', treinoData.id_tipo));
+          const tipoDoc = treinoData.id_tipo
+            ? await getDoc(doc(db, 'Tipo', treinoData.id_tipo))
+            : null;
+
+          const alunoNome = alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado';
+          const tipoNome = tipoDoc?.exists() ? tipoDoc.data().nome : 'Não informado';
+
           const treinoTempoQuery = query(
             collection(db, 'Treino_Tempo'),
-            where('id_treino', '==', doc.id)
+            where('id_treino', '==', treinoDoc.id),
+            ...(statusTreino && statusTreino !== 'Todos' ? [where('status', '==', statusTreino)] : [])
           );
+
           const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
-          const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => tempoDoc.data());
+          if (statusTreino && treinoTempoSnapshot.empty) return null;
 
-          // Filtro de status
-          const statusConcluido = tempos.some((tempo) => tempo.data_termino);
-          if (statusTreino === 'concluido' && !statusConcluido) return null;
-          if (statusTreino === 'nao_concluido' && statusConcluido) return null;
+          const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => {
+            const tempoData = tempoDoc.data();
+            const dataInicio = tempoData.data_inicio
+              ? tempoData.data_inicio.toDate
+                ? tempoData.data_inicio.toDate()
+                : new Date(tempoData.data_inicio)
+              : null;
+            const dataTermino = tempoData.data_termino
+              ? tempoData.data_termino.toDate
+                ? tempoData.data_termino.toDate()
+                : new Date(tempoData.data_termino)
+              : null;
 
-          // Filtro por período
-          const dataCriacao = treinoData.data_criacao.toDate();
-          const dentroPeriodo =
-            (!dataInicio || new Date(dataInicio) <= dataCriacao) &&
-            (!dataFim || new Date(dataFim) >= dataCriacao);
-          if (!dentroPeriodo) return null;
+            let duracao = 'Não informado';
+            if (dataInicio && dataTermino) {
+              const diff = dataTermino.getTime() - dataInicio.getTime();
+              const segundosTotais = Math.floor(diff / 1000);
+              const horas = Math.floor(segundosTotais / 3600);
+              const minutos = Math.floor((segundosTotais % 3600) / 60);
+              const segundos = segundosTotais % 60;
+
+              duracao = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+            }
+
+            return {
+              status: tempoData.status || 'Não informado',
+              dataInicio: formatarData(dataInicio),
+              dataTermino: formatarData(dataTermino),
+              duracao,
+            };
+          });
 
           return {
-            aluno: alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado',
-            tipo: tipoDoc.exists() ? tipoDoc.data().nome : 'Não informado',
-            status: statusConcluido ? 'Concluído' : 'Não Concluído',
-            dataInicio: tempos[0]?.data_inicio?.toDate() || 'Não informado',
-            dataTermino: statusConcluido ? tempos[0]?.data_termino?.toDate() : 'Não informado',
-            dataCriacao,
+            aluno: alunoNome,
+            tipo: tipoNome,
+            status: tempos[0]?.status || 'Não informado',
+            dataInicio: tempos[0]?.dataInicio || 'Não informado',
+            dataTermino: tempos[0]?.dataTermino || 'Não informado',
+            duracao: tempos[0]?.duracao || 'Não informado',
+            dataCriacao: formatarData(dataCriacao),
           };
         })
       );
@@ -130,20 +167,31 @@ const RelatorioTreinoProfessor = () => {
     const titleWidth = doc.getTextWidth(title);
     const titleX = (pageWidth - titleWidth) / 2;
 
-    // Adiciona o título
     doc.text(title, titleX, 10);
+
     const tableData = relatorio.map((treino) => [
       treino.aluno,
       treino.tipo,
       treino.status,
       treino.dataInicio,
       treino.dataTermino,
+      treino.duracao,
       treino.dataCriacao,
     ]);
 
     doc.autoTable({
-        startY: 20,
-      head: [['Tipo do Treino', 'Status', 'Data de Início', 'Data de Término', 'Data de Criação']],
+      startY: 20,
+      head: [
+        [
+          'Aluno',
+          'Tipo do Treino',
+          'Status',
+          'Data de Início',
+          'Data de Término',
+          'Duração',
+          'Data de Criação',
+        ],
+      ],
       body: tableData,
     });
 
@@ -158,6 +206,7 @@ const RelatorioTreinoProfessor = () => {
         Status: treino.status,
         'Data de Início': treino.dataInicio,
         'Data de Término': treino.dataTermino,
+        Duração: treino.duracao,
         'Data de Criação': treino.dataCriacao,
       }))
     );
@@ -165,6 +214,18 @@ const RelatorioTreinoProfessor = () => {
     XLSX.utils.book_append_sheet(wb, ws, 'Relatório');
     XLSX.writeFile(wb, 'Relatório de Treinos.xlsx');
   };
+
+  const voltarDashboard = () => {
+    navigate('/dashboard-aluno');
+  };
+
+  useEffect(() => {
+    fetchAlunosVinculados();
+  }, [currentUser]);
+
+  useEffect(() => {
+    fetchRelatorio();
+  }, [filtroAluno, dataInicio, dataFim, statusTreino]);
 
   return (
     <div className={styles.container}>
@@ -178,7 +239,7 @@ const RelatorioTreinoProfessor = () => {
         <label>
           Filtrar por Aluno:
           <select value={filtroAluno} onChange={(e) => setFiltroAluno(e.target.value)}>
-            <option value="" disabled>Selecione o seu Nome</option>
+            <option value="">Todos</option>
             {alunos.map((aluno) => (
               <option key={aluno.id} value={aluno.id}>
                 {aluno.nome_completo}
@@ -187,39 +248,39 @@ const RelatorioTreinoProfessor = () => {
           </select>
         </label>
         <label>
-          Data de Início:
+          Data Inicial:
           <input type="date" value={dataInicio} onChange={(e) => setDataInicio(e.target.value)} />
         </label>
         <label>
-          Data de Fim:
+          Data Final:
           <input type="date" value={dataFim} onChange={(e) => setDataFim(e.target.value)} />
         </label>
         <label>
           Status:
           <select value={statusTreino} onChange={(e) => setStatusTreino(e.target.value)}>
             <option value="">Todos</option>
-            <option value="concluido">Concluídos</option>
-            <option value="nao_concluido">Não Concluídos</option>
+            <option value="Não Iniciado">Não Iniciado</option>
+            <option value="Iniciado">Iniciado</option>
+            <option value="Concluído">Concluído</option>
           </select>
         </label>
-        <button onClick={fetchRelatorio}><i class="fa-solid fa-magnifying-glass"></i> Filtrar</button>
         <button className={styles.pdfButton} onClick={gerarPDF}>
-        <i class="fa-solid fa-file-pdf"></i> Gerar PDF
+          <i className="fa-solid fa-file-pdf"></i> Gerar PDF
         </button>
         <button className={styles.excelButton} onClick={gerarExcel}>
-        <i class="fa-solid fa-file-excel"></i> Gerar Excel
+          <i className="fa-solid fa-file-excel"></i> Gerar Excel
         </button>
       </div>
-
       {relatorio.length > 0 ? (
         <table className={styles.table}>
           <thead>
             <tr>
-              <th>Aluno</th>
+              
               <th>Tipo do Treino</th>
               <th>Status</th>
               <th>Data de Início</th>
               <th>Data de Término</th>
+              <th>Duração</th>
               <th>Data de Criação</th>
             </tr>
           </thead>
@@ -231,16 +292,17 @@ const RelatorioTreinoProfessor = () => {
                 <td>{treino.status}</td>
                 <td>{treino.dataInicio}</td>
                 <td>{treino.dataTermino}</td>
+                <td>{treino.duracao}</td>
                 <td>{treino.dataCriacao}</td>
               </tr>
             ))}
           </tbody>
         </table>
       ) : (
-        <p>Nenhum treino encontrado.</p>
+        <p className={styles.noData}>Nenhum dado encontrado.</p>
       )}
     </div>
   );
 };
 
-export default RelatorioTreinoProfessor;
+export default RelatorioTreinoAluno;

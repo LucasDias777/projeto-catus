@@ -63,9 +63,9 @@ const CadastroAluno = () => {
       .matches(/^\d{5}-?\d{3}$/, 'CEP inválido')
       .nullable(), // CEP não obrigatório
     cidade: Yup.string().required('Cidade é obrigatória'),
-    uf: Yup.string().length(2, 'UF deve ter 2 caracteres').required('UF é obrigatório'),
+    uf: Yup.string().length(2, 'UF deve ter 2 caracteres').required('UF é obrigatório. Use o formato Ex: SP'),
     endereco: Yup.string().required('Endereço é obrigatório'),
-    numero_casa: Yup.string().required('Número da residência é obrigatório'),
+    numero_casa: Yup.string().required('Número da residência é obrigatório. Use o formato S/N caso não possuir'),
     bairro: Yup.string().required('Bairro é obrigatório'),
     telefone: Yup.string()
       .matches(/^\(\d{2}\) \d{5}-\d{4}$/, 'Telefone inválido. Use o formato (xx) xxxxx-xxxx')
@@ -154,6 +154,21 @@ const CadastroAluno = () => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const estadosBrasileiros = [
+    'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'
+  ];
+  
+  const handleUFChange = (e, setFieldValue) => {
+    const input = e.target.value.toUpperCase(); // Converte para maiúsculas
+    const uf = input.replace(/[^A-Z]/g, '').slice(0, 2); // Remove caracteres não-alfabéticos e limita a 2 caracteres
+  
+    if (uf.length === 2 && !estadosBrasileiros.includes(uf)) {
+      return; // Se a sigla for inválida, não faz nada
+    }
+  
+    setFieldValue('uf', uf); // Usa setFieldValue corretamente
   };
 
   const fetchAddressByCep = async (cep, setFieldValue) => {
@@ -281,6 +296,10 @@ const CadastroAluno = () => {
                     name="cep"
                     type="text"
                     className={styles.formControl}
+                    onChange={(e) => {
+                      const rawValue = e.target.value.replace(/\D/g, ''); // Remove tudo que não é número
+                      setFieldValue('cep', rawValue.slice(0, 8)); // Limita o valor a 8 caracteres
+                    }}
                     onBlur={() => fetchAddressByCep(values.cep, setFieldValue)}
                     placeholder="00000-000"
                   />
@@ -296,7 +315,7 @@ const CadastroAluno = () => {
 
                 <div className={styles.formGroup}>
                   <label>UF <span className={styles.required}>*</span></label>
-                  <Field name="uf" type="text" className={styles.formControl} />
+                  <Field name="uf" type="text" className={styles.formControl} placeholder="Ex: SP"/>
                   <ErrorMessage name="uf" component="div" className={styles.error} />
                 </div>
               </div>

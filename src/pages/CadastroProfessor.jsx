@@ -36,9 +36,9 @@ const CadastroProfessor = () => {
       .matches(/^\d{5}-?\d{3}$/, 'CEP inválido')
       .nullable(), // CEP não obrigatório
     cidade: Yup.string().required('Cidade é obrigatória'),
-    uf: Yup.string().length(2, 'UF deve ter 2 caracteres').required('UF é obrigatório'),
+    uf: Yup.string().length(2, 'UF deve ter 2 caracteres').required('UF é obrigatório. Use o formato Ex: SP'),
     endereco: Yup.string().required('Endereço é obrigatório'),
-    numero_casa: Yup.string().required('Número da residência é obrigatório'),
+    numero_casa: Yup.string().required('Número da residência é obrigatório. Use o formato S/N caso não possuir'),
     bairro: Yup.string().required('Bairro é obrigatório'),
     telefone: Yup.string()
       .matches(/^\(\d{2}\) \d{5}-\d{4}$/, 'Telefone inválido. Use o formato (xx) xxxxx-xxxx')
@@ -90,7 +90,21 @@ const CadastroProfessor = () => {
       setSubmitting(false);
     }
   };
-
+  const estadosBrasileiros = [
+    'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'
+  ];
+  
+  const handleUFChange = (e, setFieldValue) => {
+    const input = e.target.value.toUpperCase(); // Converte para maiúsculas
+    const uf = input.replace(/[^A-Z]/g, '').slice(0, 2); // Remove caracteres não-alfabéticos e limita a 2 caracteres
+  
+    if (uf.length === 2 && !estadosBrasileiros.includes(uf)) {
+      return; // Se a sigla for inválida, não faz nada
+    }
+  
+    setFieldValue('uf', uf); // Usa setFieldValue corretamente
+  };
+  
   const handleTelefoneChange = (e, setFieldValue) => {
     const input = e.target;
     const rawValue = input.value.replace(/\D/g, ''); // Remove todos os caracteres não numéricos
@@ -123,6 +137,7 @@ const CadastroProfessor = () => {
 
   // Função para buscar informações do CEP
   const buscarEnderecoPorCep = async (cep, setFieldValue) => {
+    
     if (!cep) return;
 
     try {
@@ -203,6 +218,12 @@ const CadastroProfessor = () => {
                     type="text"
                     className={styles.formControl}
                     onBlur={() => buscarEnderecoPorCep(values.cep, setFieldValue)}
+                    onChange={(e) => {
+                    const cep = e.target.value.replace(/\D/g, ''); // Remove tudo que não for número
+                    if (cep.length <= 8) {
+                    setFieldValue('cep', cep); // Atualiza o valor no Formik apenas se tiver no máximo 8 dígitos
+                    }
+                    }}
                     placeholder="00000-000"
                   />
                   <ErrorMessage name="cep" component="div" className={styles.error} />
@@ -217,10 +238,23 @@ const CadastroProfessor = () => {
                 </div>
   
                 <div className={styles.formGroup}>
-                  <label>UF <span className={styles.required}>*</span></label>
-                  <Field name="uf" type="text" className={styles.formControl} />
-                  <ErrorMessage name="uf" component="div" className={styles.error} />
-                </div>
+  <label>UF <span className={styles.required}>*</span></label>
+  <Field
+    name="uf"
+    type="text"
+    className={styles.formControl}
+    list="ufOptions"
+    maxLength={2}
+    onChange={(e) => handleUFChange(e, setFieldValue)}
+    placeholder="Ex: SP"
+  />
+  <datalist id="ufOptions">
+    {estadosBrasileiros.map((estado) => (
+      <option key={estado} value={estado} />
+    ))}
+  </datalist>
+  <ErrorMessage name="uf" component="div" className={styles.error} />
+</div>
               </div>
   
               <div className={styles.formRow}>

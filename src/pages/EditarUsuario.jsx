@@ -123,9 +123,27 @@ const EditarUsuario = () => {
   };
 
   const handleCEPChange = (e) => {
-    const cep = e.target.value.replace(/\D/g, '');
+    const cep = e.target.value.replace(/\D/g, '').slice(0, 8); // Remove caracteres não numéricos e limita a 8 números
     setFormData({ ...formData, cep });
     setError(null); // Limpa o erro ao alterar o valor
+  };
+
+  const estadosBrasileiros = [
+    'AC', 'AL', 'AM', 'AP', 'BA', 'CE', 'DF', 'ES', 'GO', 'MA', 'MG', 'MS', 'MT', 'PA', 'PB', 'PE', 'PI', 'PR', 'RJ', 'RN', 'RO', 'RR', 'RS', 'SC', 'SE', 'SP', 'TO'
+  ];
+  
+  const handleUFChange = (e) => {
+    const input = e.target.value.toUpperCase(); // Converte para maiúsculas
+    const uf = input.replace(/[^A-Z]/g, '').slice(0, 2); // Remove caracteres não-alfabéticos e limita a 2 caracteres
+  
+    // Verifica se a sigla é válida
+    if (uf.length === 2 && !estadosBrasileiros.includes(uf)) {
+      // Se for uma sigla inválida e tiver 2 caracteres, não faz nada
+      return;
+    }
+  
+    // Atualiza o estado com o valor da sigla
+    setFormData({ ...formData, uf });
   };
 
   const reauthenticateUser = async (senhaAtual) => {
@@ -334,8 +352,9 @@ const EditarUsuario = () => {
                 type="text"
                 name="uf"
                 value={formData.uf}
-                onChange={handleChange}
+                onChange={handleUFChange}
                 className={styles.formControl}
+                placeholder="Ex: SP"
               />
             </div>
           </div>

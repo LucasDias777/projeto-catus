@@ -47,115 +47,178 @@ const RelatorioTreinoProfessor = () => {
     }
   };
 
+  const formatarData = (data) => {
+    return data
+      ? `${data.toLocaleDateString('pt-BR')} às ${data.toLocaleTimeString('pt-BR')}`
+      : 'Não informado';
+  };
+
   const fetchRelatorio = async () => {
     try {
       if (!currentUser) return;
-  
+
       let treinosQuery = query(
         collection(db, 'Treino'),
         where('id_professor', '==', currentUser.uid)
       );
-  
+
       if (filtroAluno) {
         treinosQuery = query(treinosQuery, where('id_aluno', '==', filtroAluno));
       }
-  
+
       const treinosSnapshot = await getDocs(treinosQuery);
+
       const treinos = await Promise.all(
         treinosSnapshot.docs.map(async (treinoDoc) => {
           const treinoData = treinoDoc.data();
-          const dataCriacao =
-            treinoData.data_criacao instanceof Date
-              ? treinoData.data_criacao
-              : new Date(treinoData.data_criacao);
-  
+
+          const dataCriacao = treinoData.data_criacao
+            ? treinoData.data_criacao.toDate
+              ? treinoData.data_criacao.toDate()
+              : new Date(treinoData.data_criacao)
+            : null;
+
+          const dataInicioFilter = dataInicio
+            ? new Date(`${dataInicio}T00:00:00`)
+            : null;
+          const dataFimFilter = dataFim
+            ? new Date(`${dataFim}T23:59:59`)
+            : null;
+
           if (
-            (dataInicio && new Date(dataInicio) > dataCriacao) ||
-            (dataFim && new Date(dataFim) < dataCriacao)
+            dataCriacao &&
+            ((dataInicioFilter && dataCriacao < dataInicioFilter) ||
+              (dataFimFilter && dataCriacao > dataFimFilter))
           ) {
             return null;
           }
-  
+
           const alunoDoc = await getDoc(doc(db, 'Pessoa', treinoData.id_aluno));
           const tipoDoc = treinoData.id_tipo
             ? await getDoc(doc(db, 'Tipo', treinoData.id_tipo))
             : null;
-  
+
           const alunoNome = alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado';
           const tipoNome = tipoDoc?.exists() ? tipoDoc.data().nome : 'Não informado';
-  
+
           const treinoTempoQuery = query(
             collection(db, 'Treino_Tempo'),
             where('id_treino', '==', treinoDoc.id),
             ...(statusTreino && statusTreino !== 'Todos' ? [where('status', '==', statusTreino)] : [])
           );
-  
+
           const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
           if (statusTreino && treinoTempoSnapshot.empty) return null;
-  
-          const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => tempoDoc.data());
-  
+
+          const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => {
+            const tempoData = tempoDoc.data();
+            const dataInicio = tempoData.data_inicio
+              ? tempoData.data_inicio.toDate
+                ? tempoData.data_inicio.toDate()
+                : new Date(tempoData.data_inicio)
+              : null;
+            const dataTermino = tempoData.data_termino
+              ? tempoData.data_termino.toDate
+                ? tempoData.data_termino.toDate()
+                : new Date(tempoData.data_termino)
+              : null;
+          
+              let duracao = 'Não informado';
+              if (dataInicio && dataTermino) {
+                const diff = dataTermino.getTime() - dataInicio.getTime(); // Diferença em milissegundos
+                if (diff === 0) {
+                  // Caso as datas e horários sejam exatamente iguais
+                  duracao = '00:00:00';
+                } else {
+                  const segundosTotais = Math.floor(diff / 1000);
+                  const horas = Math.floor(segundosTotais / 3600);
+                  const minutos = Math.floor((segundosTotais % 3600) / 60);
+                  const segundos = segundosTotais % 60;
+              
+                  duracao = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+                }
+              }
+            
+              return {
+                status: tempoData.status || 'Não informado',
+                dataInicio: formatarData(dataInicio),
+                dataTermino: formatarData(dataTermino),
+                duracao,
+              };
+            });
+
           return {
             aluno: alunoNome,
             tipo: tipoNome,
-            status: tempos.length > 0 ? tempos[0].status : 'Não informado',
-            dataInicio: tempos[0]?.data_inicio?.toDate() || 'Não informado',
-            dataTermino: tempos[0]?.data_termino?.toDate() || 'Não informado',
-            dataCriacao,
+            status: tempos[0]?.status || 'Não informado',
+            dataInicio: tempos[0]?.dataInicio || 'Não informado',
+            dataTermino: tempos[0]?.dataTermino || 'Não informado',
+            duracao: tempos[0]?.duracao || 'Não informado',
+            dataCriacao: formatarData(dataCriacao),
           };
         })
       );
-  
-      setRelatorio(treinos.filter((treino) => treino !== null));
-    } catch (error) {
-      console.error('Erro ao buscar relatórios:', error);
-    }
-  };
 
-  const gerarPDF = () => {
-    const doc = new jsPDF();
-    const title = 'Relatório de Treinos';
-    const pageWidth = doc.internal.pageSize.getWidth();
-    const titleWidth = doc.getTextWidth(title);
-    const titleX = (pageWidth - titleWidth) / 2;
+       setRelatorio(treinos.filter((treino) => treino !== null));
+  } catch (error) {
+    console.error('Erro ao buscar relatórios:', error);
+  }
+};
 
-    doc.text(title, titleX, 10);
+const gerarPDF = () => {
+  const doc = new jsPDF();
+  const title = 'Relatório de Treinos';
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const titleWidth = doc.getTextWidth(title);
+  const titleX = (pageWidth - titleWidth) / 2;
 
-    const tableData = relatorio.map((treino) => [
-      treino.aluno,
-      treino.tipo,
-      treino.status,
-      treino.dataInicio instanceof Date ? treino.dataInicio.toLocaleDateString() : treino.dataInicio,
-      treino.dataTermino instanceof Date ? treino.dataTermino.toLocaleDateString() : treino.dataTermino,
-      treino.dataCriacao.toLocaleDateString(),
-    ]);
+  doc.text(title, titleX, 10);
 
-    doc.autoTable({
-      startY: 20,
-      head: [['Aluno', 'Tipo do Treino', 'Status', 'Data de Início', 'Data de Término', 'Data de Criação']],
-      body: tableData,
-    });
+  const tableData = relatorio.map((treino) => [
+    treino.aluno,
+    treino.tipo,
+    treino.status,
+    treino.dataInicio,
+    treino.dataTermino,
+    treino.duracao,
+    treino.dataCriacao,
+  ]);
 
-    doc.save('Relatório de Treinos.pdf');
-  };
+  doc.autoTable({
+    startY: 20,
+    head: [
+      [
+        'Aluno',
+        'Tipo do Treino',
+        'Status',
+        'Data de Início',
+        'Data de Término',
+        'Duração',
+        'Data de Criação',
+      ],
+    ],
+    body: tableData,
+  });
 
-  const gerarExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      relatorio.map((treino) => ({
-        Aluno: treino.aluno,
-        Tipo: treino.tipo,
-        Status: treino.status,
-        'Data de Início':
-          treino.dataInicio instanceof Date ? treino.dataInicio.toLocaleDateString() : treino.dataInicio,
-        'Data de Término':
-          treino.dataTermino instanceof Date ? treino.dataTermino.toLocaleDateString() : treino.dataTermino,
-        'Data de Criação': treino.dataCriacao.toLocaleDateString(),
-      }))
-    );
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Relatório');
-    XLSX.writeFile(wb, 'Relatório de Treinos.xlsx');
-  };
+  doc.save('Relatório de Treinos.pdf');
+};
+
+const gerarExcel = () => {
+  const ws = XLSX.utils.json_to_sheet(
+    relatorio.map((treino) => ({
+      Aluno: treino.aluno,
+      Tipo: treino.tipo,
+      Status: treino.status,
+      'Data de Início': treino.dataInicio,
+      'Data de Término': treino.dataTermino,
+      Duração: treino.duracao,
+      'Data de Criação': treino.dataCriacao,
+    }))
+  );
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Relatório');
+  XLSX.writeFile(wb, 'Relatório de Treinos.xlsx');
+};
 
   const voltarDashboard = () => {
     navigate('/dashboard-professor');
@@ -216,36 +279,31 @@ const RelatorioTreinoProfessor = () => {
       {relatorio.length > 0 ? (
         <table className={styles.table}>
           <thead>
-            <tr>
-              <th>Aluno</th>
-              <th>Tipo do Treino</th>
-              <th>Status</th>
-              <th>Data de Início</th>
-              <th>Data de Término</th>
-              <th>Data de Criação</th>
-            </tr>
-          </thead>
-          <tbody>
-            {relatorio.map((treino, index) => (
-              <tr key={index}>
-                <td>{treino.aluno}</td>
-                <td>{treino.tipo}</td>
-                <td>{treino.status}</td>
-                <td>
-                  {treino.dataInicio instanceof Date
-                    ? treino.dataInicio.toLocaleDateString()
-                    : treino.dataInicio}
-                </td>
-                <td>
-                  {treino.dataTermino instanceof Date
-                    ? treino.dataTermino.toLocaleDateString()
-                    : treino.dataTermino}
-                </td>
-                <td>{treino.dataCriacao.toLocaleDateString()}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+    <tr>
+      <th>Aluno</th>
+      <th>Tipo do Treino</th>
+      <th>Status</th>
+      <th>Data de Início</th>
+      <th>Data de Término</th>
+      <th>Duração</th>
+      <th>Data de Criação</th>
+    </tr>
+  </thead>
+  <tbody>
+    {relatorio.map((treino, index) => (
+      <tr key={index}>
+        <td>{treino.aluno}</td>
+        <td>{treino.tipo}</td>
+        <td>{treino.status}</td>
+        <td>{treino.dataInicio}</td>
+        <td>{treino.dataTermino}</td>
+        <td>{treino.duracao}</td>
+        <td>{treino.dataCriacao}</td>
+
+      </tr>
+    ))}
+  </tbody>
+</table>
       ) : (
         <p className={styles.noData}>Nenhum dado encontrado.</p>
       )}
