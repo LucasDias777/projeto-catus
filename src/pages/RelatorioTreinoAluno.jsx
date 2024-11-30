@@ -299,7 +299,7 @@ const RelatorioTreinoAluno = () => {
           </tbody>
         </table>
       ) : (
-        <p className={styles.noData}>Nenhum dado encontrado.</p>
+        <p className={styles.noData}>Nenhum Treino encontrado.</p>
       )}
     </div>
   );

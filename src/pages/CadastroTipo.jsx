@@ -55,6 +55,18 @@ const CadastroTipo = () => {
     }
 
     try {
+    // Verifica se o tipo de treino já existe
+    const existingQuery = query(
+      collection(db, 'Tipo'),
+      where('id_professor', '==', currentUser.uid),
+      where('nome', '==', values.nome.trim().toLowerCase())
+    );
+    const existingSnapshot = await getDocs(existingQuery);
+
+    if (!existingSnapshot.empty) {
+      alert('Esse tipo de treino já está cadastrado.');
+      return;
+    }
       await addDoc(collection(db, 'Tipo'), {
         nome: values.nome,
         id_professor: currentUser.uid, // Associando o tipo de treino ao professor que o criou

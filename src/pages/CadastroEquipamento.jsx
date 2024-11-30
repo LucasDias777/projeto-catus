@@ -47,6 +47,19 @@ const CadastroEquipamento = () => {
     if (!currentUser) return;
 
     try {
+    // Verificar se o equipamento já existe no Firestore
+    const equipamentoQuery = query(
+      collection(db, 'Equipamento'),
+      where('id_professor', '==', currentUser.uid),
+      where('nome', '==', values.nome) // Comparar pelo nome do equipamento
+    );
+
+    const querySnapshot = await getDocs(equipamentoQuery);
+
+    if (!querySnapshot.empty) {
+      alert('Já existe um equipamento com este nome cadastrado.');
+      return;
+    }
       await addDoc(collection(db, 'Equipamento'), {
         nome: values.nome,
         id_professor: currentUser.uid,

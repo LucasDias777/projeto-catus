@@ -52,6 +52,20 @@ const CadastroSerie = () => {
     }
 
     try {
+
+      // Verificar se a série já existe
+    const existingSeriesQuery = query(
+      collection(db, 'Serie'),
+      where('id_professor', '==', currentUser.uid),
+      where('nome', '==', values.numeroSeries)
+    );
+    const existingSeriesSnapshot = await getDocs(existingSeriesQuery);
+
+    if (!existingSeriesSnapshot.empty) {
+      alert('Uma série com este número já existe.');
+      return;
+    }
+
       await addDoc(collection(db, 'Serie'), {
         nome: values.numeroSeries,
         id_professor: currentUser.uid,

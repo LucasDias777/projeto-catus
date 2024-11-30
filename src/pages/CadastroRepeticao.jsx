@@ -47,6 +47,19 @@ const CadastroRepeticao = () => {
     if (!currentUser) return;
 
     try {
+    // Verificar se a repetição já existe no Firestore
+    const repeticaoQuery = query(
+      collection(db, 'Repeticao'),
+      where('id_professor', '==', currentUser.uid),
+      where('nome', '==', values.numeroRepeticoes) // Comparando pelo nome da repetição
+    );
+
+    const querySnapshot = await getDocs(repeticaoQuery);
+
+    if (!querySnapshot.empty) {
+      alert('Já existe uma repetição com este número cadastrada.');
+      return;
+    }
       await addDoc(collection(db, 'Repeticao'), {
         nome: values.numeroRepeticoes,  // Alterado para 'nome' ao invés de 'numero'
         id_professor: currentUser.uid,
