@@ -111,3 +111,29 @@ button[type="submit"]:hover {
   margin-left: 5px;
   font-size: 1.5em; /* Tamanho maior para destacar o asterisco */
 }
+/* Contêiner para input com ícone */
+.inputWithIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Estilo para o input */
+.inputWithIcon input {
+  width: 100%;
+  padding-right: 40px; /* Espaço para o ícone */
+}
+
+/* Ícone dentro do input */
+.icon {
+  position: absolute;
+  right: 10px;
+  cursor: pointer;
+  color: #666666;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
+.icon:hover {
+  color: #1e90ff; /* Azul no hover */
+}

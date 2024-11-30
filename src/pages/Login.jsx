@@ -9,6 +9,7 @@ const Login = () => {
   const [senha, setSenha] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
 
@@ -64,14 +65,22 @@ const Login = () => {
             />
           </div>
           <div className={styles.formGroup}>
+            <div className={styles.inputWithIcon}>
             <input
-              type="password"
-              placeholder="Informe sua Senha"
-              value={senha}
-              onChange={(e) => setSenha(e.target.value)}
-              required
+            type={showPassword ? "text" : "password"}
+            placeholder="Informe sua Senha"
+            value={senha}
+            onChange={(e) => setSenha(e.target.value)}
+            required
             />
+            <i
+            className={`fa-solid ${showPassword ? "fa-lock-open" : "fa-lock"} ${
+            styles.icon
+          }`}
+          onClick={() => setShowPassword(!showPassword)}
+          ></i>
           </div>
+        </div>
           <button type="submit" disabled={loading} className={styles.button}>
             {loading ? 'Carregando...' : 'Login'}
           </button>

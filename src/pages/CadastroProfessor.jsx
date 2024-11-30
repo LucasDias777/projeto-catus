@@ -10,6 +10,8 @@ import styles from '../styles/CadastroProfessor.module.css';
 
 const CadastroProfessor = () => {
   const navigate = useNavigate();
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
 
   // Schema de validação com Yup
   const validationSchema = Yup.object({
@@ -271,18 +273,50 @@ const CadastroProfessor = () => {
               </div>
               
               <div className={styles.formRow}>
-                <div className={styles.formGroup}>
-                  <label>Senha <span className={styles.required}>*</span></label>
-                  <Field name="senha" type="password" className={styles.formControl} />
-                  <ErrorMessage name="senha" component="div" className={styles.error} />
-                </div>
-              
-              <div className={styles.formGroup}>
-                <label>Confirmar Senha <span className={styles.required}>*</span></label>
-                <Field name="confirmar_senha" type="password" className={styles.formControl} />
-                <ErrorMessage name="confirmar_senha" component="div" className={styles.error} />
-              </div>
-              </div>
+  <div className={styles.formGroup}>
+    <label>
+      Senha <span className={styles.required}>*</span>
+    </label>
+    <div className={styles.inputWithIcon}>
+      <Field
+        name="senha"
+        type={showPassword ? "text" : "password"}
+        className={styles.formControl}
+      />
+      <i
+        className={`fa-solid ${showPassword ? "fa-lock-open" : "fa-lock"} ${
+          styles.icon
+        }`}
+        onClick={() => setShowPassword(!showPassword)}
+      ></i>
+    </div>
+    <ErrorMessage name="senha" component="div" className={styles.error} />
+  </div>
+
+  <div className={styles.formGroup}>
+    <label>
+      Confirmar Senha <span className={styles.required}>*</span>
+    </label>
+    <div className={styles.inputWithIcon}>
+      <Field
+        name="confirmar_senha"
+        type={showConfirmPassword ? "text" : "password"}
+        className={styles.formControl}
+      />
+      <i
+        className={`fa-solid ${
+          showConfirmPassword ? "fa-lock-open" : "fa-lock"
+        } ${styles.icon}`}
+        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+      ></i>
+    </div>
+    <ErrorMessage
+      name="confirmar_senha"
+      component="div"
+      className={styles.error}
+    />
+  </div>
+</div>
   
               <div className={styles.formGroup}>
                 <button type="submit" disabled={isSubmitting} className={styles.submitButton}>

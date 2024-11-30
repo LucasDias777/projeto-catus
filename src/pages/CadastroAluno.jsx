@@ -10,9 +10,16 @@ import { useAuth } from '../contexts/authContext';
 import styles from '../styles/CadastroAluno.module.css';
 import '@fortawesome/fontawesome-free/css/all.min.css';
 
+
+
+  
+
+
 const CadastroAluno = () => {
   const navigate = useNavigate();
   const { currentUser, getStoredCredentials } = useAuth();
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
   const [formData, setFormData] = useState({
     nome_completo: '',
@@ -140,10 +147,15 @@ const CadastroAluno = () => {
       alert('Aluno cadastrado com sucesso!');
       resetForm();
   
-      navigate('/dashboard-professor'); // Redireciona para o dashboard após o cadastro
+      
     } catch (error) {
       console.error('Erro ao cadastrar aluno:', error.message);
-      alert(`Erro ao cadastrar aluno: ${error.message}`);
+    
+      if (error.code === 'auth/email-already-in-use') {
+        alert('O E-mail informado já está em uso por outro usuário.');
+      } else {
+        alert(`Erro ao cadastrar aluno: ${error.message}`);
+      }
     } finally {
       setSubmitting(false);
     }
@@ -344,18 +356,40 @@ const CadastroAluno = () => {
                   <ErrorMessage name="email" component="div" className={styles.error} />
                 </div>
               </div>
+
             <div className={styles.formRow}>
-              <div className={styles.formGroup}>
-                <label>Senha <span className={styles.required}>*</span></label>
-                <Field name="senha" type="password" className={styles.formControl} />
-                <ErrorMessage name="senha" component="div" className={styles.error} />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Confirmar Senha <span className={styles.required}>*</span></label>
-                <Field name="confirmar_senha" type="password" className={styles.formControl} />
-                <ErrorMessage name="confirmar_senha" component="div" className={styles.error} />
-              </div>
-              </div>
+  <div className={styles.formGroup}>
+    <label>Senha <span className={styles.required}>*</span></label>
+    <div className={styles.passwordWrapper}>
+      <Field
+        name="senha"
+        type={showPassword ? "text" : "password"}
+        className={styles.formControl}
+      />
+      <i
+        className={`fa-solid ${showPassword ? "fa-lock-open" : "fa-lock"} ${styles.icon}`}
+        onClick={() => setShowPassword(!showPassword)}
+      ></i>
+    </div>
+    <ErrorMessage name="senha" component="div" className={styles.error} />
+  </div>
+  <div className={styles.formGroup}>
+    <label>Confirmar Senha <span className={styles.required}>*</span></label>
+    <div className={styles.passwordWrapper}>
+      <Field
+        name="confirmar_senha"
+        type={showConfirmPassword ? "text" : "password"}
+        className={styles.formControl}
+      />
+      <i
+        className={`fa-solid ${showConfirmPassword ? "fa-lock-open" : "fa-lock"} ${styles.icon}`}
+        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+      ></i>
+    </div>
+    <ErrorMessage name="confirmar_senha" component="div" className={styles.error} />
+  </div>
+</div>
+
               <div className={styles.formGroup}>
                 <button type="submit" className={styles.submitButton} disabled={isSubmitting}>
                   {isSubmitting ? (

@@ -123,3 +123,22 @@ button[type="submit"]:hover {
     margin-left: 5px;
     font-size: 1.5em; /* Tamanho maior para destacar o asterisco */
   }
+  /* Estilo do container do campo de senha */
+.passwordWrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  /* Estilo para os ícones */
+  .passwordWrapper .icon {
+    position: absolute;
+    right: 10px; /* Ajusta a posição do ícone */
+    cursor: pointer;
+    color: #666666; /* Cor padrão do ícone */
+    transition: color 0.3s ease;
+  }
+  
+  .passwordWrapper .icon:hover {
+    color: #1e90ff; /* Cor ao passar o mouse */
+  }

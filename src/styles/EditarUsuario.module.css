@@ -82,6 +82,7 @@ label {
   padding: 10px;
   border: 1px solid #ccc;
   border-radius: 8px; /* Bordas arredondadas ajustadas */
+  width: 100%; /* Garante que o input ocupe toda a largura disponível */
 }
 
 button[type="submit"] {
@@ -109,5 +110,35 @@ button[type="submit"]:hover {
   background-color: #e0e0e0;
   color: #6c757d;
   cursor: not-allowed;
+}
+.required {
+  color: red;
+  margin-left: 5px;
+  font-size: 1.5em; /* Tamanho maior para destacar o asterisco */
+}
+.inputWrapper {
+  position: relative;
+}
+/* Estilo do ícone de cadeado */
+.lockIcon {
+  position: absolute;
+  right: 10px; /* Alinha à direita dentro do campo */
+  top: 50%;
+  transform: translateY(-50%); /* Centraliza o ícone verticalmente */
+  cursor: pointer;
+  font-size: 1.2em; /* Ajusta o tamanho do ícone */
+}
+.submitButton {
+  padding: 10px 20px;
+  background-color: #1e90ff;
+  color: white;
+  border: none;
+  border-radius: 8px; /* Bordas arredondadas ajustadas */
+  cursor: pointer;
+  align-self: center;
+  transition: background-color 0.3s ease;
+}
+.submitButton:hover {
+  background-color: #4682b4;
 }
 

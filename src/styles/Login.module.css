@@ -95,3 +95,35 @@ input:focus {
 .registerLink a:hover {
   text-decoration: underline;
 }
+/* Contêiner para o input com o ícone */
+.inputWithIcon {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* Estilo para o input */
+.inputWithIcon input {
+  width: 100%;
+  padding-right: 40px; /* Espaço para o ícone */
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  background: #f9f9f9;
+  padding: 10px 15px;
+}
+
+/* Ícone dentro do campo */
+.icon {
+  position: absolute;
+  right: 15px;
+  cursor: pointer;
+  color: #666666;
+  font-size: 18px;
+  transition: color 0.3s ease;
+}
+
+.icon:hover {
+  color: #007bff; /* Cor azul no hover */
+}

@@ -21,6 +21,7 @@ const EditarUsuario = () => {
     complemento: '',
     telefone: '',
     senha: '',
+    confirmar_senha: '', // Alterado para "confirmar_senha"
   });
 
   const [originalData, setOriginalData] = useState({});
@@ -39,7 +40,7 @@ const EditarUsuario = () => {
 
         if (userSnap.exists()) {
           const data = userSnap.data();
-          setFormData({ ...data, senha: '' }); // Limpa o campo de senha no formulário
+          setFormData({ ...data, senha: '', confirmar_senha: '' }); // Limpa os campos de senha
           setOriginalData(data);
           setTipoPessoa(data.tipo_pessoa || '');
         } else {
@@ -58,11 +59,20 @@ const EditarUsuario = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleTelefoneChange = (e) => {
-    const input = e.target;
-    const rawValue = input.value.replace(/\D/g, ''); // Remove caracteres não numéricos
-    let formatted = '';
+  const isValidAge = (date) => {
+    const birthDate = new Date(date);
+    const today = new Date();
+    const age = today.getFullYear() - birthDate.getFullYear();
+    const isBirthdayPassed =
+      today.getMonth() > birthDate.getMonth() ||
+      (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
+    return age > 14 || (age === 14 && isBirthdayPassed);
+  };
 
+  const handleTelefoneChange = (e) => {
+    const rawValue = e.target.value.replace(/\D/g, '');
+    let formatted = '';
+  
     if (rawValue.length > 0) {
       formatted = `(${rawValue.slice(0, 2)}`;
       if (rawValue.length > 2) {
@@ -72,32 +82,32 @@ const EditarUsuario = () => {
         formatted += `-${rawValue.slice(7, 11)}`;
       }
     }
-
+  
     setFormData({ ...formData, telefone: formatted });
-
-    const cursorPosition = input.selectionStart;
-    const diff = formatted.length - input.value.length;
-
+  
+    const cursorPosition = e.target.selectionStart;
+    const diff = formatted.length - e.target.value.length;
+  
     requestAnimationFrame(() => {
       const adjustedPosition = Math.max(0, cursorPosition + diff);
-      input.setSelectionRange(adjustedPosition, adjustedPosition);
+      e.target.setSelectionRange(adjustedPosition, adjustedPosition);
     });
   };
 
   const handleCEPBlur = async () => {
     const cep = formData.cep.replace(/\D/g, '');
-    setError(null); // Limpa o erro anterior
-  
+    setError(null);
+
     if (cep.length !== 8) {
       setError('CEP inválido. Deve conter exatamente 8 dígitos.');
       return;
     }
-  
+
     try {
       const response = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
       const data = await response.json();
       if (data.erro) throw new Error('CEP não encontrado.');
-  
+
       setFormData({
         ...formData,
         cidade: data.localidade || '',
@@ -111,22 +121,36 @@ const EditarUsuario = () => {
       setError('CEP inválido ou não encontrado.');
     }
   };
-  
+
   const handleCEPChange = (e) => {
     const cep = e.target.value.replace(/\D/g, '');
     setFormData({ ...formData, cep });
     setError(null); // Limpa o erro ao alterar o valor
   };
+
   const reauthenticateUser = async (senhaAtual) => {
     const user = auth.currentUser;
     const credential = EmailAuthProvider.credential(user.email, senhaAtual);
 
     try {
       await reauthenticateWithCredential(user, credential);
-    } catch (error) {
+    } catch {
       throw new Error('Senha atual incorreta.');
     }
   };
+
+  const [showPassword, setShowPassword] = useState({
+    senha: false,
+    confirmar_senha: false,
+  });
+  
+  const togglePasswordVisibility = (field) => {
+    setShowPassword((prevState) => ({
+      ...prevState,
+      [field]: !prevState[field],
+    }));
+  };
+  
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -134,62 +158,92 @@ const EditarUsuario = () => {
   
     // Validações dos campos obrigatórios
     const camposObrigatorios = [
-      { campo: formData.nome_completo, nome: 'Nome Completo' },
-      { campo: formData.data_nascimento, nome: 'Data de Nascimento' },
-      { campo: formData.genero, nome: 'Gênero' },
-      { campo: formData.cidade, nome: 'Cidade' },
-      { campo: formData.uf, nome: 'UF' },
-      { campo: formData.endereco, nome: 'Endereço' },
-      { campo: formData.numero_casa, nome: 'Número da Residência' },
-      { campo: formData.bairro, nome: 'Bairro' },
-      { campo: formData.telefone, nome: 'Telefone' },
+      { campo: formData.nome_completo, nome: "Nome Completo" },
+      { campo: formData.data_nascimento, nome: "Data de Nascimento" },
+      { campo: formData.genero, nome: "Gênero" },
+      { campo: formData.cidade, nome: "Cidade" },
+      { campo: formData.uf, nome: "UF" },
+      { campo: formData.endereco, nome: "Endereço" },
+      { campo: formData.numero_casa, nome: "Número da Residência" },
+      { campo: formData.bairro, nome: "Bairro" },
+      { campo: formData.telefone, nome: "Telefone" },
     ];
   
-    const camposVazios = camposObrigatorios.filter(item => !item.campo.trim());
+    const camposVazios = camposObrigatorios.filter((item) => !item.campo.trim());
     if (camposVazios.length > 0) {
-      setError(`Os seguintes campos são obrigatórios: ${camposVazios.map(item => item.nome).join(', ')}.`);
+      setError(
+        `Os seguintes campos são obrigatórios: ${camposVazios
+          .map((item) => item.nome)
+          .join(", ")}.`
+      );
       return;
     }
   
-    // Verificação de senha (mínimo 6 caracteres)
-    if (formData.senha && formData.senha.length < 6) {
-      setError('A senha deve ter no mínimo 6 caracteres.');
+    // Validação de data de nascimento
+    if (!isValidAge(formData.data_nascimento)) {
+      setError("O usuário precisa ter no mínimo 14 anos.");
       return;
     }
   
-    try {
-      const userDoc = doc(db, 'Pessoa', currentUser.uid);
-  
-      // Verificação de senha igual à senha atual
-      if (formData.senha && formData.senha === originalData.senha) {
-        setError('A nova senha não pode ser igual à senha atual.');
+    // Verificação e atualização da senha
+    if (formData.senha || formData.confirmar_senha) {
+      if (formData.senha === originalData.senha) {
+        setError("A nova senha não pode ser igual à senha atual.");
         return;
       }
   
-      // Verificação e reautenticação para alteração de senha
-      if (formData.senha && formData.senha !== originalData.senha) {
-        const senhaAtual = prompt('Confirme sua senha atual para continuar.');
-        if (!senhaAtual) {
-          setError('Senha atual é obrigatória para alterar a senha.');
-          return;
-        }
-        await reauthenticateUser(senhaAtual);
-        await updatePassword(auth.currentUser, formData.senha);
-        await updateDoc(userDoc, { senha: formData.senha }); // Atualiza a senha no Firestore
+      if (formData.senha !== formData.confirmar_senha) {
+        setError("No Campo de Confirmar Senha as senhas não coincidem.");
+        return;
       }
   
-      // Atualizar os outros dados no Firestore
+      if (formData.senha.length < 6) {
+        setError("A senha deve ter no mínimo 6 caracteres.");
+        return;
+      }
+  
+      try {
+        const senhaAtual = prompt("Confirme sua senha atual para continuar.");
+        if (!senhaAtual) {
+          setError("É necessário confirmar a senha atual.");
+          return;
+        }
+  
+        await reauthenticateUser(senhaAtual); // Função para reautenticar o usuário
+  
+        // Atualiza a senha no Firebase Authentication
+        await updatePassword(auth.currentUser, formData.senha);
+  
+        // Atualiza os campos de senha no Firestore
+        const userDoc = doc(db, "Pessoa", currentUser.uid);
+        await updateDoc(userDoc, {
+          senha: formData.senha,
+          confirmar_senha: formData.senha,
+        });
+  
+        alert("Senha atualizada com sucesso!");
+      } catch (error) {
+        console.error("Erro ao atualizar senha:", error);
+        setError("Senha atual incorreta. Tente novamente.");
+        return;
+      }
+    }
+  
+    // Atualização dos outros campos
+    try {
       const updatedData = { ...formData };
-      delete updatedData.senha; // Remove a senha do objeto
+      delete updatedData.senha;
+      delete updatedData.confirmar_senha;
+  
+      const userDoc = doc(db, "Pessoa", currentUser.uid);
       await updateDoc(userDoc, updatedData);
   
-      alert('Informações atualizadas com sucesso!');
+      alert("Informações atualizadas com sucesso!");
     } catch (error) {
-      console.error('Erro ao atualizar informações:', error);
-      setError(error.message || 'Erro ao atualizar informações.');
+      console.error("Erro ao atualizar informações:", error);
+      setError("Erro ao atualizar informações.");
     }
   };
-  
 
   const handleBackToDashboard = () => {
     navigate(tipoPessoa === 'professor' ? '/dashboard-professor' : '/dashboard-aluno');
@@ -210,7 +264,7 @@ const EditarUsuario = () => {
         <form onSubmit={handleSubmit} className={styles.form}>
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label>Nome Completo</label>
+              <label>Nome Completo <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 name="nome_completo"
@@ -220,7 +274,7 @@ const EditarUsuario = () => {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Data de Nascimento</label>
+              <label>Data de Nascimento <span className={styles.required}>*</span></label>
               <input
                 type="date"
                 name="data_nascimento"
@@ -233,7 +287,7 @@ const EditarUsuario = () => {
 
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label>Gênero</label>
+              <label>Gênero <span className={styles.required}>*</span></label>
               <select
                 name="genero"
                 value={formData.genero}
@@ -265,7 +319,7 @@ const EditarUsuario = () => {
 
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label>Cidade</label>
+              <label>Cidade <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 name="cidade"
@@ -275,7 +329,7 @@ const EditarUsuario = () => {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>UF</label>
+              <label>UF <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 name="uf"
@@ -288,7 +342,7 @@ const EditarUsuario = () => {
 
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label>Endereço</label>
+              <label>Endereço <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 name="endereco"
@@ -298,7 +352,7 @@ const EditarUsuario = () => {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Número da Residência</label>
+              <label>Número da Residência <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 name="numero_casa"
@@ -311,7 +365,7 @@ const EditarUsuario = () => {
 
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label>Bairro</label>
+              <label>Bairro <span className={styles.required}>*</span></label>
               <input
                 type="text"
                 name="bairro"
@@ -321,7 +375,7 @@ const EditarUsuario = () => {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>Complemento</label>
+              <label>Complemento </label>
               <input
                 type="text"
                 name="complemento"
@@ -334,7 +388,7 @@ const EditarUsuario = () => {
 
           <div className={styles.row}>
             <div className={styles.formGroup}>
-              <label>Telefone</label>
+              <label>Telefone <span className={styles.required}>*</span></label>
               <input
               type="text"
               name="telefone"
@@ -345,7 +399,7 @@ const EditarUsuario = () => {
               />
             </div>
             <div className={styles.formGroup}>
-              <label>E-mail</label>
+              <label>E-mail <span className={styles.required}>*</span></label>
               <input
                 type="email"
                 name="email"
@@ -356,21 +410,63 @@ const EditarUsuario = () => {
             </div>
           </div>
 
-          <div className={styles.row}>
-            <div className={styles.formGroup}>
-              <label>Nova Senha</label>
-              <input
-                type="password"
-                name="senha"
-                value={formData.senha}
-                onChange={handleChange}
-                className={styles.formControl}
-              />
-            </div>
-          </div>
-          
+     <div className={styles.row}>
+      {/* Campo de Nova Senha */}
+      <div className={styles.formGroup}>
+        <label>
+          Nova Senha <span className={styles.required}>*</span>
+        </label>
+        <div className={styles.inputWrapper}>
+          <input
+            type={showPassword.senha ? "text" : "password"}
+            name="senha"
+            value={formData.senha}
+            onChange={(e) => setFormData({ ...formData, senha: e.target.value })}
+            className={styles.formControl}
+          />
+          <span
+            className={styles.lockIcon}
+            onClick={() => togglePasswordVisibility("senha")}
+          >
+            {showPassword.senha ? (
+              <i className="fa-solid fa-lock-open"></i> // Cadeado aberto
+            ) : (
+              <i className="fa-solid fa-lock"></i> // Cadeado fechado
+            )}
+          </span>
+        </div>
+      </div>
+
+      {/* Campo de Confirmar Nova Senha */}
+      <div className={styles.formGroup}>
+        <label>
+          Confirmar Nova Senha <span className={styles.required}>*</span>
+        </label>
+        <div className={styles.inputWrapper}>
+          <input
+            type={showPassword.confirmar_senha ? "text" : "password"}
+            name="confirmarSenha"
+            value={formData.confirmar_senha}
+            onChange={(e) =>
+              setFormData({ ...formData, confirmar_senha: e.target.value })
+            }
+            className={styles.formControl}
+          />
+          <span
+            className={styles.lockIcon}
+            onClick={() => togglePasswordVisibility("confirmar_senha")}
+          >
+            {showPassword.confirmar_senha ? (
+              <i className="fa-solid fa-lock-open"></i> // Cadeado aberto
+            ) : (
+              <i className="fa-solid fa-lock"></i> // Cadeado fechado
+            )}
+          </span>
+        </div>
+      </div>
+    </div>
           <div className={styles.formGroup}>
-            <button type="submit">
+            <button type="submit" className={styles.submitButton}>
             <i class="fa-solid fa-pen-to-square"></i> Atualizar</button>
           </div>
         </form>
