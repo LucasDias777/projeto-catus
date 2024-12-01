@@ -142,11 +142,31 @@
   max-height: 80vh;
   text-align: center; /* Centraliza os conteúdos */
 }
+.formGroup label {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+.formGroup {
+  width: 100%;
+  text-align: left;
+}
+textarea.descricaoGeral {
+  width: 100%;
+  min-height: 100px;
+}
+.equipmentRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
 
 .modalFooter {
   display: flex;
   justify-content: space-between; /* Botões lado a lado */
   gap: 10px;
+  width: 100%;
 }
 
 .modalFooter button {
@@ -208,4 +228,17 @@
 
 .removeEquipmentButton:hover {
   background-color: #b22222;
+}
+.noTrainingsMessage {
+  text-align: center;
+  font-size: 1.2rem;
+  color: #555;
+  margin-top: 20px;
+}
+/* Disposição horizontal dos filtros */
+.filtersContainer {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 20px;
 }
