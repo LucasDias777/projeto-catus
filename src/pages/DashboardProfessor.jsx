@@ -244,6 +244,7 @@ const DashboardProfessor = () => {
           >
             Relatórios
             <ul className={`${styles.submenu} ${activeMenu === 'relatorio' ? styles.show : ''}`}>
+              <li><button onClick={() => navigate('/relatorio-treino-geral')}>Relatório de Treinos Geral </button></li>
               <li><button onClick={() => navigate('/relatorio-treino-professor')}>Relatório de Treinos</button></li>
               <li>
                 <button onClick={() => navigate('/aluno-cadastrado')}>Alunos Cadastrados</button>

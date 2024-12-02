@@ -287,7 +287,7 @@ const RelatorioTreinoAluno = () => {
           <tbody>
             {relatorio.map((treino, index) => (
               <tr key={index}>
-                <td>{treino.aluno}</td>
+                
                 <td>{treino.tipo}</td>
                 <td>{treino.status}</td>
                 <td>{treino.dataInicio}</td>

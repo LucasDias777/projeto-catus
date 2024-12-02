@@ -24,6 +24,7 @@ const CadastroTreino = () => {
   const [alunoFilter, setAlunoFilter] = useState('');
   const [tipoTreinoFilter, setTipoTreinoFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [studentsWithTrainings, setStudentsWithTrainings] = useState([]);
 
   const navigate = useNavigate();
   const auth = getAuth();
@@ -35,99 +36,107 @@ const CadastroTreino = () => {
 
   const fetchData = async () => {
     if (!currentUser) return;
-  
+
     try {
       const userId = currentUser.uid;
-  
+
+      // Função genérica para buscar documentos
       const fetchCollection = async (collectionName, conditions = []) => {
         const baseQuery = query(collection(db, collectionName), ...conditions);
         const snapshot = await getDocs(baseQuery);
         return snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
       };
-  
-      // Coletando dados iniciais
+
+      // Coletar os dados iniciais
       setEquipments(await fetchCollection('Equipamento', [where('id_professor', '==', userId)]));
       setSeries(await fetchCollection('Serie', [where('id_professor', '==', userId)]));
       setRepetitions(await fetchCollection('Repeticao', [where('id_professor', '==', userId)]));
       setTrainingTypes(await fetchCollection('Tipo', [where('id_professor', '==', userId)]));
-      setStudents(
-        await fetchCollection('Pessoa', [
-          where('id_professor', '==', userId),
-          where('tipo_pessoa', '==', 'aluno'),
-        ]).then(async (alunos) => {
-          const alunosComTreinos = [];
-          for (const aluno of alunos) {
-            const treinos = await getDocs(
-              query(collection(db, 'Treino'), where('id_aluno', '==', aluno.id))
-            );
-            if (!treinos.empty) alunosComTreinos.push(aluno);
-          }
-          return alunosComTreinos;
-        })
-      );
-  
-      // Adicionando filtros para `Treino`
+
+      // Buscar todos os alunos do professor
+      const alunos = await fetchCollection('Pessoa', [
+        where('id_professor', '==', userId),
+        where('tipo_pessoa', '==', 'aluno'),
+      ]);
+      setStudents(alunos);
+
+      // Filtrar alunos que possuem treinos cadastrados
+      const alunosComTreinos = await fetchAlunosComTreinos(alunos);
+      setStudentsWithTrainings(alunosComTreinos);
+
+      // Aplicar filtros para `Treino`
       const baseConditions = [where('id_professor', '==', userId)];
       if (alunoFilter) baseConditions.push(where('id_aluno', '==', alunoFilter));
       if (tipoTreinoFilter) baseConditions.push(where('id_tipo', '==', tipoTreinoFilter));
-  
+
       const treinosSnapshot = await getDocs(query(collection(db, 'Treino'), ...baseConditions));
-  
-      const treinosFiltrados = await Promise.all(
-        treinosSnapshot.docs.map(async (treinoDoc) => {
-          const treinoData = treinoDoc.data();
-          const dataCriacao = treinoData.data_criacao?.toDate
-            ? treinoData.data_criacao.toDate()
-            : treinoData.data_criacao
-            ? new Date(treinoData.data_criacao)
-            : null;
-  
-          // Filtro por data
-          const dataInicioFilter = dataInicio ? new Date(`${dataInicio}T00:00:00`) : null;
-          const dataFimFilter = dataFim ? new Date(`${dataFim}T23:59:59`) : null;
-  
-          if (
-            dataCriacao &&
-            ((dataInicioFilter && dataCriacao < dataInicioFilter) ||
-              (dataFimFilter && dataCriacao > dataFimFilter))
-          ) {
-            return null;
-          }
-  
-          // Obter o status do treino
-          const treinoTempoSnapshot = await getDocs(
-            query(collection(db, 'Treino_Tempo'), where('id_treino', '==', treinoDoc.id))
-          );
-  
-          const status = !treinoTempoSnapshot.empty
-            ? treinoTempoSnapshot.docs[0].data().status
-            : 'Não informado';
-  
-          return { id: treinoDoc.id, ...treinoData, status };
-        })
-      );
-  
-      // Aplicar filtros adicionais (status, aluno, tipo de treino)
-      const filteredTrainings = treinosFiltrados
-        .filter((treino) => treino !== null)
-        .filter((training) => {
-          // Filtro por status
-          if (statusFilter && training.status !== statusFilter) return false;
-  
-          // Filtro por aluno
-          if (alunoFilter && training.id_aluno !== alunoFilter) return false;
-  
-          // Filtro por tipo de treino
-          if (tipoTreinoFilter && training.id_tipo !== tipoTreinoFilter) return false;
-  
-          return true;
-        });
-  
-      setTrainings(filteredTrainings);
+      const treinosFiltrados = await processTrainings(treinosSnapshot);
+
+      setTrainings(treinosFiltrados);
     } catch (error) {
       console.error('Erro ao buscar dados:', error);
     }
   };
+
+  // Função para filtrar alunos com treinos
+  const fetchAlunosComTreinos = async (alunos) => {
+    const alunosComTreinos = [];
+    for (const aluno of alunos) {
+      const treinos = await getDocs(
+        query(collection(db, 'Treino'), where('id_aluno', '==', aluno.id))
+      );
+      if (!treinos.empty) alunosComTreinos.push(aluno);
+    }
+    return alunosComTreinos;
+  };
+
+  // Função para processar os treinos
+  const processTrainings = async (snapshot) => {
+    const trainings = await Promise.all(
+      snapshot.docs.map(async (doc) => {
+        const treinoData = doc.data();
+        const dataCriacao = treinoData.data_criacao?.toDate
+          ? treinoData.data_criacao.toDate()
+          : treinoData.data_criacao
+          ? new Date(treinoData.data_criacao)
+          : null;
+
+        // Filtro por data
+        const dataInicioFilter = dataInicio ? new Date(`${dataInicio}T00:00:00`) : null;
+        const dataFimFilter = dataFim ? new Date(`${dataFim}T23:59:59`) : null;
+
+        if (
+          dataCriacao &&
+          ((dataInicioFilter && dataCriacao < dataInicioFilter) ||
+            (dataFimFilter && dataCriacao > dataFimFilter))
+        ) {
+          return null;
+        }
+
+        // Obter status do treino
+        const treinoTempoSnapshot = await getDocs(
+          query(collection(db, 'Treino_Tempo'), where('id_treino', '==', doc.id))
+        );
+
+        const status = !treinoTempoSnapshot.empty
+          ? treinoTempoSnapshot.docs[0].data().status
+          : 'Não informado';
+
+        return { id: doc.id, ...treinoData, status };
+      })
+    );
+
+    // Filtros adicionais
+    return trainings
+      .filter((treino) => treino !== null)
+      .filter((training) => {
+        if (statusFilter && training.status !== statusFilter) return false;
+        if (alunoFilter && training.id_aluno !== alunoFilter) return false;
+        if (tipoTreinoFilter && training.id_tipo !== tipoTreinoFilter) return false;
+        return true;
+      });
+  };
+  
     
 
   const onSubmit = async (data) => {
@@ -136,9 +145,9 @@ const CadastroTreino = () => {
     try {
       const userId = currentUser.uid;
   
-      // Obtém a data do treino ou usa o momento atual
-      const dataTreino = data.dataTreino
-        ? new Date(data.dataTreino)
+      // Ajustar a data fornecida ou usar a data atual
+      const dataTreino = data.dataTreino 
+        ? new Date(`${data.dataTreino}T00:00:00`) // Adiciona horário para evitar alterações de fuso horário
         : new Date();
   
       const treinoData = {
@@ -151,7 +160,7 @@ const CadastroTreino = () => {
           id_serie: equip.serieId,
           id_repeticao: equip.repeticaoId,
         })),
-        data_criacao: data.dataTreino ? new Date(data.dataTreino) : serverTimestamp(),
+        data_criacao: dataTreino,
       };
   
       let treinoDocRef;
@@ -187,6 +196,7 @@ const CadastroTreino = () => {
   const handleEdit = async (training) => {
     setSelectedTraining(training);
     setModalType('edit');
+    
   
     try {
       const alunoDoc = await getDoc(doc(db, 'Pessoa', training.id_aluno));
@@ -256,6 +266,7 @@ const CadastroTreino = () => {
   const handleView = (training) => {
     setSelectedTraining(training);
     setModalType('view');
+    
   
     const equipamentosFormatados = training.equipamentos.map((equip) => ({
       equipamentoId: equip.id_equipamento || '',
@@ -326,7 +337,7 @@ const CadastroTreino = () => {
           onChange={(e) => setAlunoFilter(e.target.value)}
         >
           <option value="">Todos</option>
-          {students.map((student) => (
+          {studentsWithTrainings.map((student) => (
             <option key={student.id} value={student.id}>
               {student.nome_completo}
             </option>
@@ -385,7 +396,7 @@ const CadastroTreino = () => {
             <div className={styles.treinoButtons}>
               {training.status === 'Iniciado' || training.status === 'Concluído' ? (
                 <button
-                  onClick={() => handleView(training)}
+                  onClick={() => handleEdit(training)}
                   className={styles.viewButton}
                 >
                   <i className="fa-solid fa-eye"></i> Ver Treino
@@ -419,15 +430,15 @@ const CadastroTreino = () => {
       {modalType !== 'view' && (
         <form onSubmit={handleSubmit(onSubmit)}>
           {/* Selecione uma Data */}
-          <div className={styles.formGroup}>
-            <label>Selecione uma Data:</label>
-            <Controller
-              name="dataTreino"
-              control={control}
-              defaultValue={selectedTraining?.data_criacao ? formatDate(selectedTraining.data_criacao) : ''}
-              render={({ field }) => <input type="date" {...field} required />}
-            />
-          </div>
+<div className={styles.formGroup}>
+  <label>Selecione uma Data:</label>
+  <Controller
+    name="dataTreino"
+    control={control}
+    defaultValue={selectedTraining?.data_criacao ? formatDate(selectedTraining.data_criacao) : ''}
+    render={({ field }) => <input type="date" {...field} />}
+  />
+</div>
 
           {/* Selecione um Aluno */}
           <div className={styles.formGroup}>

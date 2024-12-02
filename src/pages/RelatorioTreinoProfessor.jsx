@@ -56,60 +56,47 @@ const RelatorioTreinoProfessor = () => {
   const fetchRelatorio = async () => {
     try {
       if (!currentUser) return;
-
-      let treinosQuery = query(
-        collection(db, 'Treino'),
-        where('id_professor', '==', currentUser.uid)
-      );
-
+  
+      let treinosQuery = collection(db, 'Treino');
+  
       if (filtroAluno) {
         treinosQuery = query(treinosQuery, where('id_aluno', '==', filtroAluno));
+      } else {
+        treinosQuery = query(treinosQuery); // Busca todos os alunos.
       }
-
+  
       const treinosSnapshot = await getDocs(treinosQuery);
-
+  
+      let tempoTotalEmSegundos = 0;
+      let numeroDeTreinosComTempo = 0;
+  
       const treinos = await Promise.all(
         treinosSnapshot.docs.map(async (treinoDoc) => {
           const treinoData = treinoDoc.data();
-
+  
           const dataCriacao = treinoData.data_criacao
             ? treinoData.data_criacao.toDate
               ? treinoData.data_criacao.toDate()
               : new Date(treinoData.data_criacao)
             : null;
-
-          const dataInicioFilter = dataInicio
-            ? new Date(`${dataInicio}T00:00:00`)
-            : null;
-          const dataFimFilter = dataFim
-            ? new Date(`${dataFim}T23:59:59`)
-            : null;
-
-          if (
-            dataCriacao &&
-            ((dataInicioFilter && dataCriacao < dataInicioFilter) ||
-              (dataFimFilter && dataCriacao > dataFimFilter))
-          ) {
-            return null;
-          }
-
+  
           const alunoDoc = await getDoc(doc(db, 'Pessoa', treinoData.id_aluno));
           const tipoDoc = treinoData.id_tipo
             ? await getDoc(doc(db, 'Tipo', treinoData.id_tipo))
             : null;
-
+  
           const alunoNome = alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado';
           const tipoNome = tipoDoc?.exists() ? tipoDoc.data().nome : 'Não informado';
-
+  
           const treinoTempoQuery = query(
             collection(db, 'Treino_Tempo'),
             where('id_treino', '==', treinoDoc.id),
             ...(statusTreino && statusTreino !== 'Todos' ? [where('status', '==', statusTreino)] : [])
           );
-
+  
           const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
           if (statusTreino && treinoTempoSnapshot.empty) return null;
-
+  
           const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => {
             const tempoData = tempoDoc.data();
             const dataInicio = tempoData.data_inicio
@@ -122,31 +109,30 @@ const RelatorioTreinoProfessor = () => {
                 ? tempoData.data_termino.toDate()
                 : new Date(tempoData.data_termino)
               : null;
-          
-              let duracao = 'Não informado';
-              if (dataInicio && dataTermino) {
-                const diff = dataTermino.getTime() - dataInicio.getTime(); // Diferença em milissegundos
-                if (diff === 0) {
-                  // Caso as datas e horários sejam exatamente iguais
-                  duracao = '00:00:00';
-                } else {
-                  const segundosTotais = Math.floor(diff / 1000);
-                  const horas = Math.floor(segundosTotais / 3600);
-                  const minutos = Math.floor((segundosTotais % 3600) / 60);
-                  const segundos = segundosTotais % 60;
-              
-                  duracao = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
-                }
-              }
-            
-              return {
-                status: tempoData.status || 'Não informado',
-                dataInicio: formatarData(dataInicio),
-                dataTermino: formatarData(dataTermino),
-                duracao,
-              };
-            });
-
+  
+            let duracaoSegundos = 0;
+            let duracao = 'Não informado';
+            if (dataInicio && dataTermino) {
+              const diff = dataTermino.getTime() - dataInicio.getTime();
+              duracaoSegundos = Math.floor(diff / 1000);
+              const horas = Math.floor(duracaoSegundos / 3600);
+              const minutos = Math.floor((duracaoSegundos % 3600) / 60);
+              const segundos = duracaoSegundos % 60;
+  
+              duracao = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+            }
+  
+            tempoTotalEmSegundos += duracaoSegundos;
+            if (duracaoSegundos > 0) numeroDeTreinosComTempo += 1;
+  
+            return {
+              status: tempoData.status || 'Não informado',
+              dataInicio: formatarData(dataInicio),
+              dataTermino: formatarData(dataTermino),
+              duracao,
+            };
+          });
+  
           return {
             aluno: alunoNome,
             tipo: tipoNome,
@@ -158,12 +144,19 @@ const RelatorioTreinoProfessor = () => {
           };
         })
       );
-
-       setRelatorio(treinos.filter((treino) => treino !== null));
-  } catch (error) {
-    console.error('Erro ao buscar relatórios:', error);
-  }
-};
+  
+      const tempoMedioEmSegundos = numeroDeTreinosComTempo > 0 ? Math.floor(tempoTotalEmSegundos / numeroDeTreinosComTempo) : 0;
+      const horas = Math.floor(tempoMedioEmSegundos / 3600);
+      const minutos = Math.floor((tempoMedioEmSegundos % 3600) / 60);
+      const segundos = tempoMedioEmSegundos % 60;
+      const tempoMedio = `${String(horas).padStart(2, '0')}:${String(minutos).padStart(2, '0')}:${String(segundos).padStart(2, '0')}`;
+  
+      setRelatorio(treinos.filter((treino) => treino !== null));
+      console.log(`Tempo médio dos treinos: ${tempoMedio}`);
+    } catch (error) {
+      console.error('Erro ao buscar relatórios:', error);
+    }
+  };
 
 const gerarPDF = () => {
   const doc = new jsPDF();

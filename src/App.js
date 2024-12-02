@@ -18,6 +18,7 @@ import AlunoCadastrado from './pages/AlunoCadastrado';
 import RotasPrivadas from './pages/RotasPrivadas';
 import EditarUsuario from './pages/EditarUsuario';
 import RelatorioTreinoAluno from './pages/RelatorioTreinoAluno';
+import RelatorioTreinoGeral from './pages/RelatorioTreinoGeral';
 
 function App() {
   return (
@@ -38,6 +39,7 @@ function App() {
             <Route path="/cadastro-repeticao" element={<CadastroRepeticao />} />
             <Route path="/cadastro-tipo" element={<CadastroTipo />} />
             <Route path="/visualizar-treino" element={<VisualizarTreino />} />
+            <Route path="/relatorio-treino-geral" element={<RelatorioTreinoGeral />} />
             <Route path="/relatorio-treino-professor" element={<RelatorioTreinoProfessor />} />
             <Route path="/relatorio-treino-aluno" element={<RelatorioTreinoAluno />} />
             <Route path="/cadastro-treino" element={<CadastroTreino />} />
