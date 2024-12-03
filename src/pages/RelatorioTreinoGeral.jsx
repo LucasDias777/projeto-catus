@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { getFirestore, collection, query, where, getDocs } from 'firebase/firestore';
+import { getFirestore, collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { app } from '../config/firebaseConfig';
 import jsPDF from 'jspdf';
 import 'jspdf-autotable';
@@ -74,7 +74,6 @@ const RelatorioTreinoGeral = () => {
     try {
       if (!currentUser) return;
   
-    
       // Inicializar a consulta com filtro pelo professor
       let treinosQuery = query(
         collection(db, "Treino"),
@@ -98,13 +97,6 @@ const RelatorioTreinoGeral = () => {
         return true;
       });
   
-      // Mapear IDs de alunos para nomes
-      const alunosIds = Array.from(new Set(treinosData.map((doc) => doc.data().id_aluno)));
-      const alunoIdToNome = alunos.reduce((map, aluno) => {
-        map[aluno.id] = aluno.nome_completo;
-        return map;
-      }, {});
-  
       // Inicializar estatísticas dos alunos
       const alunoStats = {};
   
@@ -114,8 +106,12 @@ const RelatorioTreinoGeral = () => {
         const alunoId = treino.id_aluno;
   
         if (!alunoStats[alunoId]) {
+          // Buscar o nome do aluno
+          const alunoDoc = await getDoc(doc(db, 'Pessoa', alunoId));
+          const alunoNome = alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado';
+  
           alunoStats[alunoId] = {
-            nome: alunoIdToNome[alunoId] || "Aluno não identificado",
+            nome: alunoNome,
             naoIniciado: 0,
             iniciado: 0,
             concluido: 0,
@@ -176,6 +172,7 @@ const RelatorioTreinoGeral = () => {
       console.error("Erro ao buscar relatórios:", error);
     }
   };
+  
   
 
 const gerarPDF = () => {
