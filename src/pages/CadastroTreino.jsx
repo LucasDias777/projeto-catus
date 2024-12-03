@@ -194,9 +194,15 @@ const CadastroTreino = () => {
   
 
   const handleEdit = async (training) => {
+    // Pergunta de confirmação antes de abrir o modal
+    const confirmEdit = window.confirm('Você realmente deseja editar este treino?');
+    
+    if (!confirmEdit) {
+      return; // Se o usuário não confirmar, não faz nada
+    }
+    
     setSelectedTraining(training);
     setModalType('edit');
-    
   
     try {
       const alunoDoc = await getDoc(doc(db, 'Pessoa', training.id_aluno));
@@ -230,20 +236,26 @@ const CadastroTreino = () => {
   };
 
   const handleDelete = async (id) => {
+    const confirmDelete = window.confirm('Você realmente deseja excluir este treino?');
+    if (!confirmDelete) {
+      return; // Se o usuário cancelar, a exclusão não será realizada.
+    }
+  
     try {
       await deleteDoc(doc(db, 'Treino', id));
       fetchData();
+      alert('Treino excluído com sucesso!');
     } catch (error) {
       console.error('Erro ao excluir treino:', error);
+      alert('Ocorreu um erro ao tentar excluir o treino. Tente novamente.');
     }
   };
-
+  
   const handleCloseModal = () => {
-    reset();
     setModalType(null);
     setSelectedTraining(null);
+    reset(); // Limpa o formulário
   };
-
   useEffect(() => {
     const unsubscribe = onSnapshot(
       query(collection(db, 'Treino_Tempo'), where('id_professor', '==', currentUser?.uid)),
@@ -264,22 +276,22 @@ const CadastroTreino = () => {
   }, [currentUser]);
 
   const handleView = (training) => {
+    console.log('Abrindo modal de visualização', training);
     setSelectedTraining(training);
     setModalType('view');
-    
-  
-    const equipamentosFormatados = training.equipamentos.map((equip) => ({
-      equipamentoId: equip.id_equipamento || '',
-      serieId: equip.id_serie || '',
-      repeticaoId: equip.id_repeticao || '',
-    }));
   
     reset({
-      alunoId: training.id_aluno,
-      tipoTreinoId: training.id_tipo,
+      alunoId: training.id_aluno || '',
+      tipoTreinoId: training.id_tipo || '',
       descricao: training.descricao || '',
-      equipamentos: equipamentosFormatados,
-      dataTreino: training.data_criacao ? formatDate(training.data_criacao.toDate(), true) : '',
+      equipamentos: training.equipamentos.map((equip) => ({
+        equipamentoId: equip.id_equipamento || '',
+        serieId: equip.id_serie || '',
+        repeticaoId: equip.id_repeticao || '',
+      })),
+      dataTreino: training.data_criacao
+        ? formatDate(training.data_criacao.toDate(), true)
+        : '',
     });
   };
 
@@ -300,78 +312,79 @@ const CadastroTreino = () => {
 
   return (
   <div className={styles.pageContainer}>
-    <div className={styles.topBar}>
-      <h2>Cadastro de Treino</h2>
-      <button onClick={handleCreate} className={styles.addButton}>
-        <i className="fa-solid fa-plus"></i> Adicionar Treino
-      </button>
-      <button
-        onClick={() => navigate('/dashboard-professor')}
-        className={styles.backToDashboardButton}
-      >
-        <i className="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
-      </button>
-    </div>
+  <div className={styles.topBar}>
+    <h2>Cadastro de Treino</h2>
+    <button onClick={handleCreate} className={styles.addButton}>
+      <i className="fa-solid fa-plus"></i> Adicionar Treino
+    </button>
+    <button
+      onClick={() => navigate('/dashboard-professor')}
+      className={styles.backToDashboardButton}
+    >
+      <i className="fa-solid fa-rotate-left"></i> Voltar ao Dashboard
+    </button>
+  </div>
 
-    <div className={styles.filterContainer}>
-      <label>
-        Data Inicial:
-        <input
-          type="date"
-          value={dataInicio}
-          onChange={(e) => setDataInicio(e.target.value)}
-        />
-      </label>
-      <label>
-        Data Final:
-        <input
-          type="date"
-          value={dataFim}
-          onChange={(e) => setDataFim(e.target.value)}
-        />
-      </label>
-      <label>
-        Aluno:
-        <select
-          value={alunoFilter}
-          onChange={(e) => setAlunoFilter(e.target.value)}
-        >
-          <option value="">Todos</option>
-          {studentsWithTrainings.map((student) => (
-            <option key={student.id} value={student.id}>
-              {student.nome_completo}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Tipo de Treino:
-        <select
-          value={tipoTreinoFilter}
-          onChange={(e) => setTipoTreinoFilter(e.target.value)}
-        >
-          <option value="">Todos</option>
-          {trainingTypes.map((type) => (
-            <option key={type.id} value={type.id}>
-              {type.nome}
-            </option>
-          ))}
-        </select>
-      </label>
-      <label>
-        Status:
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-        >
-          <option value="">Todos</option>
-          <option value="Não Iniciado">Não Iniciado</option>
-          <option value="Iniciado">Iniciado</option>
-          <option value="Concluído">Concluído</option>
-        </select>
-      </label>
-      <button onClick={fetchData}>Aplicar Filtros</button>
-    </div>
+  <div className={styles.filtersContainer}>
+  <label>
+      Aluno: 
+      <select
+        value={alunoFilter}
+        onChange={(e) => setAlunoFilter(e.target.value)}
+      >
+        <option value="">Todos</option>
+        {studentsWithTrainings.map((student) => (
+          <option key={student.id} value={student.id}>
+            {student.nome_completo}
+          </option>
+        ))}
+      </select>
+    </label>
+    <label>
+      Data Inicial:
+      <input
+        type="date"
+        value={dataInicio}
+        onChange={(e) => setDataInicio(e.target.value)}
+      />
+    </label>
+    <label>
+      Data Final:
+      <input
+        type="date"
+        value={dataFim}
+        onChange={(e) => setDataFim(e.target.value)}
+      />
+    </label>
+    
+    <label>
+      Tipo de Treino:
+      <select
+        value={tipoTreinoFilter}
+        onChange={(e) => setTipoTreinoFilter(e.target.value)}
+      >
+        <option value="">Todos</option>
+        {trainingTypes.map((type) => (
+          <option key={type.id} value={type.id}>
+            {type.nome}
+          </option>
+        ))}
+      </select>
+    </label>
+    <label>
+      Status:
+      <select
+        value={statusFilter}
+        onChange={(e) => setStatusFilter(e.target.value)}
+      >
+        <option value="">Todos</option>
+        <option value="Não Iniciado">Não Iniciado</option>
+        <option value="Iniciado">Iniciado</option>
+        <option value="Concluído">Concluído</option>
+      </select>
+    </label>
+    <button onClick={fetchData}> <i class="fa-solid fa-magnifying-glass"></i> Aplicar Filtros</button>
+  </div>
 
     <div className={styles.treinosContainer}>
       {trainings.length === 0 ? (
@@ -396,8 +409,9 @@ const CadastroTreino = () => {
             <div className={styles.treinoButtons}>
               {training.status === 'Iniciado' || training.status === 'Concluído' ? (
                 <button
-                  onClick={() => handleEdit(training)}
-                  className={styles.viewButton}
+                type="button"
+                className={styles.viewButton}
+                onClick={() => handleView(training)}
                 >
                   <i className="fa-solid fa-eye"></i> Ver Treino
                 </button>
@@ -423,32 +437,36 @@ const CadastroTreino = () => {
       )}
     </div>
 
-    {modalType && (
+  {modalType !== 'view' && modalType && (
   <div className={`${styles.modal} ${styles.visible}`}>
     <div className={styles.modalContent}>
-      <h3>{modalType === 'create' ? 'Adicionar Treino' : modalType === 'edit' ? 'Editar Treino' : 'Visualizar Treino'}</h3>
-      {modalType !== 'view' && (
-        <form onSubmit={handleSubmit(onSubmit)}>
-          {/* Selecione uma Data */}
-<div className={styles.formGroup}>
-  <label>Selecione uma Data:</label>
-  <Controller
-    name="dataTreino"
-    control={control}
-    defaultValue={selectedTraining?.data_criacao ? formatDate(selectedTraining.data_criacao) : ''}
-    render={({ field }) => <input type="date" {...field} />}
-  />
-</div>
+      <h3>
+        {modalType === 'create' ? 'Adicionar Treino' : 'Editar Treino'}
+      </h3>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        {/* Selecione uma Data */}
+        <div className={styles.formGroup}>
+          <label>Selecione uma Data:</label>
+          <Controller
+            name="dataTreino"
+            control={control}
+            defaultValue={selectedTraining?.data_criacao ? formatDate(selectedTraining.data_criacao) : ''}
+            render={({ field }) => <input type="date" {...field}  />}
+          />
+        </div>
 
-          {/* Selecione um Aluno */}
+        {/* Selecione um Aluno */}
+        <div className={styles.formGroupContainer}>
           <div className={styles.formGroup}>
-            <label>Aluno:</label>
+            <label>
+              Aluno: <span className={styles.required}>*</span>
+            </label>
             <Controller
               name="alunoId"
               control={control}
               defaultValue=""
               render={({ field }) => (
-                <select {...field} required>
+                <select {...field} required >
                   <option value="" disabled>
                     Selecione um aluno
                   </option>
@@ -461,16 +479,16 @@ const CadastroTreino = () => {
               )}
             />
           </div>
-
-          {/* Selecione um Tipo de Treino */}
           <div className={styles.formGroup}>
-            <label>Tipo de Treino:</label>
+            <label>
+              Tipo de Treino: <span className={styles.required}>*</span>
+            </label>
             <Controller
               name="tipoTreinoId"
               control={control}
               defaultValue=""
               render={({ field }) => (
-                <select {...field} required>
+                <select {...field} required >
                   <option value="" disabled>
                     Selecione um tipo de treino
                   </option>
@@ -483,70 +501,72 @@ const CadastroTreino = () => {
               )}
             />
           </div>
+        </div>
 
-          {/* Equipamentos, Séries e Repetições */}
-          {fields.map((item, index) => (
-            <div key={item.id} className={styles.equipmentRow}>
-              <div className={styles.formGroup}>
-                <label>Equipamento:</label>
-                <Controller
-                  name={`equipamentos[${index}].equipamentoId`}
-                  control={control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <select {...field} required>
-                      <option value="" disabled>
-                        Selecione um equipamento
+        {/* Equipamentos, Séries e Repetições */}
+        {fields.map((item, index) => (
+          <div key={item.id} className={styles.equipmentRow}>
+            <div className={styles.formGroup}>
+              <label>Equipamento:</label>
+              <Controller
+                name={`equipamentos[${index}].equipamentoId`}
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <select {...field} required >
+                    <option value="" disabled>
+                      Selecione um equipamento
+                    </option>
+                    {equipments.map((equip) => (
+                      <option key={equip.id} value={equip.id}>
+                        {equip.nome}
                       </option>
-                      {equipments.map((equip) => (
-                        <option key={equip.id} value={equip.id}>
-                          {equip.nome}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Série:</label>
-                <Controller
-                  name={`equipamentos[${index}].serieId`}
-                  control={control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <select {...field} required>
-                      <option value="" disabled>
-                        Selecione uma série
+                    ))}
+                  </select>
+                )}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Série:</label>
+              <Controller
+                name={`equipamentos[${index}].serieId`}
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <select {...field} required >
+                    <option value="" disabled>
+                      Selecione uma série
+                    </option>
+                    {series.map((serie) => (
+                      <option key={serie.id} value={serie.id}>
+                        {serie.nome}
                       </option>
-                      {series.map((serie) => (
-                        <option key={serie.id} value={serie.id}>
-                          {serie.nome}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                />
-              </div>
-              <div className={styles.formGroup}>
-                <label>Repetições:</label>
-                <Controller
-                  name={`equipamentos[${index}].repeticaoId`}
-                  control={control}
-                  defaultValue=""
-                  render={({ field }) => (
-                    <select {...field} required>
-                      <option value="" disabled>
-                        Selecione uma repetição
+                    ))}
+                  </select>
+                )}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Repetições:</label>
+              <Controller
+                name={`equipamentos[${index}].repeticaoId`}
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <select {...field} required >
+                    <option value="" disabled>
+                      Selecione uma repetição
+                    </option>
+                    {repetitions.map((rep) => (
+                      <option key={rep.id} value={rep.id}>
+                        {rep.nome}
                       </option>
-                      {repetitions.map((rep) => (
-                        <option key={rep.id} value={rep.id}>
-                          {rep.nome}
-                        </option>
-                      ))}
-                    </select>
-                  )}
-                />
-              </div>
+                    ))}
+                  </select>
+                )}
+              />
+            </div>
+            {modalType !== 'view' && (
               <button
                 type="button"
                 className={styles.removeEquipmentButton}
@@ -554,8 +574,10 @@ const CadastroTreino = () => {
               >
                 <i className="fa-solid fa-trash-can"></i>
               </button>
-            </div>
-          ))}
+            )}
+          </div>
+        ))}
+        {modalType !== 'view' && (
           <button
             type="button"
             className={styles.addEquipmentButton}
@@ -563,31 +585,190 @@ const CadastroTreino = () => {
           >
             <i className="fa-solid fa-plus"></i> Adicionar Equipamento
           </button>
+        )}
 
-          {/* Descrição Geral */}
-          <div className={styles.formGroup}>
-            <label>Descrição Geral:</label>
-            <textarea
-              {...register('descricao', { required: true })}
-              className={styles.descricaoGeral}
-            ></textarea>
-          </div>
+        {/* Descrição Geral */}
+        <div className={styles.formGroup}>
+          <label>
+            Descrição Geral: <span className={styles.required}>*</span>
+          </label>
+          <textarea
+            {...register('descricao', { required: true })}
+            className={styles.descricaoGeral}
+            
+          ></textarea>
+        </div>
 
-          {/* Botões de Ação */}
-          <div className={styles.modalFooter}>
-            <button type="submit" className={styles.saveButton}>
-              <i className="fa-solid fa-save"></i> Salvar
-            </button>
-            <button type="button" onClick={handleCloseModal} className={styles.cancelButton}>
-              <i className="fa-solid fa-xmark"></i> Fechar
-            </button>
-          </div>
-        </form>
-      )}
+        {/* Botões de Ação */}
+        <div className={styles.modalFooter}>
+          <button
+            type="submit"
+            className={styles.saveButton}
+            
+          >
+            <i className="fa-solid fa-save"></i> Salvar
+          </button>
+          <button type="button" onClick={handleCloseModal} className={styles.cancelButton}>
+            <i className="fa-solid fa-xmark"></i> Fechar
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 )}
+
+
+{modalType == 'view' && (
+  <div className={`${styles.modal} ${styles.visible}`}>
+    <div className={styles.modalContent}>
+      <h3>Visualizar Treino</h3>
+      <form>
+        {/* Selecione uma Data */}
+        <div className={styles.formGroup}>
+          <label>Data:</label>
+          <Controller
+            name="dataTreino"
+            control={control}
+            defaultValue={selectedTraining?.data_criacao ? formatDate(selectedTraining.data_criacao) : ''}
+            render={({ field }) => (
+              <input type="date" {...field} readOnly />
+            )}
+          />
+        </div>
+
+        {/* Selecione um Aluno */}
+        <div className={styles.formGroupContainer}>
+          <div className={styles.formGroup}>
+            <label>Aluno:</label>
+            <Controller
+              name="alunoId"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <select {...field} disabled>
+                  <option value="" disabled>
+                    Selecione um aluno
+                  </option>
+                  {students.map((student) => (
+                    <option key={student.id} value={student.id}>
+                      {student.nome_completo}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+          </div>
+          <div className={styles.formGroup}>
+            <label>Tipo de Treino:</label>
+            <Controller
+              name="tipoTreinoId"
+              control={control}
+              defaultValue=""
+              render={({ field }) => (
+                <select {...field} disabled>
+                  <option value="" disabled>
+                    Selecione um tipo de treino
+                  </option>
+                  {trainingTypes.map((type) => (
+                    <option key={type.id} value={type.id}>
+                      {type.nome}
+                    </option>
+                  ))}
+                </select>
+              )}
+            />
+          </div>
+        </div>
+
+        {/* Equipamentos, Séries e Repetições */}
+        {fields.map((item, index) => (
+          <div key={item.id} className={styles.equipmentRow}>
+            <div className={styles.formGroup}>
+              <label>Equipamento:</label>
+              <Controller
+                name={`equipamentos[${index}].equipamentoId`}
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <select {...field} disabled>
+                    <option value="" disabled>
+                      Selecione um equipamento
+                    </option>
+                    {equipments.map((equip) => (
+                      <option key={equip.id} value={equip.id}>
+                        {equip.nome}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Série:</label>
+              <Controller
+                name={`equipamentos[${index}].serieId`}
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <select {...field} disabled>
+                    <option value="" disabled>
+                      Selecione uma série
+                    </option>
+                    {series.map((serie) => (
+                      <option key={serie.id} value={serie.id}>
+                        {serie.nome}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+            </div>
+            <div className={styles.formGroup}>
+              <label>Repetições:</label>
+              <Controller
+                name={`equipamentos[${index}].repeticaoId`}
+                control={control}
+                defaultValue=""
+                render={({ field }) => (
+                  <select {...field} disabled>
+                    <option value="" disabled>
+                      Selecione uma repetição
+                    </option>
+                    {repetitions.map((rep) => (
+                      <option key={rep.id} value={rep.id}>
+                        {rep.nome}
+                      </option>
+                    ))}
+                  </select>
+                )}
+              />
+            </div>
+          </div>
+        ))}
+
+        {/* Descrição Geral */}
+        <div className={styles.formGroup}>
+          <label>Descrição Geral:</label>
+          <textarea
+            {...register('descricao')}
+            className={styles.descricaoGeral}
+            readOnly
+          ></textarea>
+        </div>
+
+        {/* Botão de Fechar */}
+        <div className={styles.modalFooter}>
+          <button type="button" onClick={handleCloseModal} className={styles.viewcancelButton}>
+            <i className="fa-solid fa-xmark"></i> Fechar
+          </button>
+        </div>
+      </form>
     </div>
+  </div>
+)}
+</div>
+
+    
   );
 };
 

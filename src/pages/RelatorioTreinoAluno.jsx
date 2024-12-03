@@ -239,7 +239,7 @@ const RelatorioTreinoAluno = () => {
         <label>
           Filtrar por Aluno:
           <select value={filtroAluno} onChange={(e) => setFiltroAluno(e.target.value)}>
-            <option value="">Todos</option>
+            
             {alunos.map((aluno) => (
               <option key={aluno.id} value={aluno.id}>
                 {aluno.nome_completo}

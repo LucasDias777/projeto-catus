@@ -53,26 +53,31 @@ const RelatorioTreinoGeral = () => {
     try {
       if (!currentUser) return;
   
+      // Inicializar a consulta com filtro pelo professor
       let treinosQuery = query(
-        collection(db, 'Treino_Tempo'),
+        collection(db, 'Treino'),
         where('id_professor', '==', currentUser.uid)
       );
   
-      // Aplicar filtros
+      // Filtro por aluno específico
       if (filtroAluno) {
         treinosQuery = query(treinosQuery, where('id_aluno', '==', filtroAluno));
       }
-      if (dataInicio) {
-        treinosQuery = query(treinosQuery, where('data_inicio', '>=', new Date(dataInicio)));
-      }
-      if (dataFim) {
-        treinosQuery = query(treinosQuery, where('data_termino', '<=', new Date(dataFim)));
-      }
-      if (statusTreino && statusTreino !== 'Todos') {
-        treinosQuery = query(treinosQuery, where('status', '==', statusTreino));
-      }
+  
+      // Filtros de data
+      const dataInicioFilter = dataInicio ? new Date(`${dataInicio}T00:00:00`) : null;
+      const dataFimFilter = dataFim ? new Date(`${dataFim}T23:59:59`) : null;
   
       const treinosSnapshot = await getDocs(treinosQuery);
+      const treinosData = treinosSnapshot.docs.filter((doc) => {
+        const dataCriacao = doc.data().data_criacao?.toDate();
+        if (dataInicioFilter && dataCriacao < dataInicioFilter) return false;
+        if (dataFimFilter && dataCriacao > dataFimFilter) return false;
+        return true;
+      });
+  
+      // Mapear IDs de alunos para nomes
+      const alunosIds = new Set(treinosData.map((doc) => doc.data().id_aluno));
       const alunoIdToNome = alunos.reduce((map, aluno) => {
         map[aluno.id] = aluno.nome_completo;
         return map;
@@ -80,12 +85,11 @@ const RelatorioTreinoGeral = () => {
   
       const alunoStats = {};
   
-      treinosSnapshot.docs.forEach((doc) => {
-        const data = doc.data();
-        const alunoId = data.id_aluno;
-        const status = data.status;
+      // Processar cada treino
+      for (const treinoDoc of treinosData) {
+        const treino = treinoDoc.data();
+        const alunoId = treino.id_aluno;
   
-        // Inicializar estatísticas do aluno
         if (!alunoStats[alunoId]) {
           alunoStats[alunoId] = {
             nome: alunoIdToNome[alunoId] || 'Aluno não identificado',
@@ -97,20 +101,31 @@ const RelatorioTreinoGeral = () => {
           };
         }
   
-        // Atualizar estatísticas com base no status
-        if (status === 'Não Iniciado') alunoStats[alunoId].naoIniciado++;
-        else if (status === 'Iniciado') alunoStats[alunoId].iniciado++;
-        else if (status === 'Concluído') {
-          alunoStats[alunoId].concluido++;
-          const inicio = data.data_inicio?.toDate();
-          const termino = data.data_termino?.toDate();
-          if (inicio && termino) {
-            const duracao = (termino - inicio) / 1000; // duração em segundos
-            alunoStats[alunoId].tempoTotal += duracao;
-            alunoStats[alunoId].treinosConcluidos++;
+        const treinoTempoQuery = query(
+          collection(db, 'Treino_Tempo'),
+          where('id_treino', '==', treinoDoc.id),
+          ...(statusTreino && statusTreino !== 'Todos' ? [where('status', '==', statusTreino)] : [])
+        );
+  
+        const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
+        treinoTempoSnapshot.docs.forEach((tempoDoc) => {
+          const tempoData = tempoDoc.data();
+          const status = tempoData.status;
+  
+          if (status === 'Não Iniciado') alunoStats[alunoId].naoIniciado++;
+          if (status === 'Iniciado') alunoStats[alunoId].iniciado++;
+          if (status === 'Concluído') {
+            alunoStats[alunoId].concluido++;
+            const inicio = tempoData.data_inicio?.toDate();
+            const termino = tempoData.data_termino?.toDate();
+            if (inicio && termino) {
+              const duracao = (termino - inicio) / 1000;
+              alunoStats[alunoId].tempoTotal += duracao;
+              alunoStats[alunoId].treinosConcluidos++;
+            }
           }
-        }
-      });
+        });
+      }
   
       const relatorioData = Object.keys(alunoStats).map((alunoId) => {
         const stats = alunoStats[alunoId];
@@ -128,11 +143,17 @@ const RelatorioTreinoGeral = () => {
         };
       });
   
-      setRelatorio(relatorioData);
+      // Filtrar para exibir apenas alunos com treinos
+      setRelatorio(
+        relatorioData.filter(
+          (relatorio) => relatorio.naoIniciado > 0 || relatorio.iniciado > 0 || relatorio.concluido > 0
+        )
+      );
     } catch (error) {
       console.error('Erro ao buscar relatórios:', error);
     }
   };
+  
   
   
 
@@ -235,7 +256,8 @@ const gerarPDF = () => {
         <button className={styles.excelButton} onClick={gerarExcel}>
           <i className="fa-solid fa-file-excel"></i> Gerar Excel
         </button>
-      </div>
+</div>
+
       {relatorio.length > 0 ? (
         <table className={styles.table}>
         <thead>

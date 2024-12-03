@@ -59,12 +59,15 @@ const RelatorioTreinoProfessor = () => {
   
       let treinosQuery = collection(db, 'Treino');
   
+      // Filtro pelo aluno
       if (filtroAluno) {
         treinosQuery = query(treinosQuery, where('id_aluno', '==', filtroAluno));
-      } else {
-        treinosQuery = query(treinosQuery); // Busca todos os alunos.
       }
   
+      const dataInicioFilter = dataInicio ? new Date(`${dataInicio}T00:00:00`) : null;
+      const dataFimFilter = dataFim ? new Date(`${dataFim}T23:59:59`) : null;
+  
+      // Obtenção de documentos
       const treinosSnapshot = await getDocs(treinosQuery);
   
       let tempoTotalEmSegundos = 0;
@@ -80,6 +83,15 @@ const RelatorioTreinoProfessor = () => {
               : new Date(treinoData.data_criacao)
             : null;
   
+          // Aplicar filtro de data de criação
+          if (
+            dataCriacao &&
+            ((dataInicioFilter && dataCriacao < dataInicioFilter) ||
+              (dataFimFilter && dataCriacao > dataFimFilter))
+          ) {
+            return null;
+          }
+  
           const alunoDoc = await getDoc(doc(db, 'Pessoa', treinoData.id_aluno));
           const tipoDoc = treinoData.id_tipo
             ? await getDoc(doc(db, 'Tipo', treinoData.id_tipo))
@@ -88,6 +100,7 @@ const RelatorioTreinoProfessor = () => {
           const alunoNome = alunoDoc.exists() ? alunoDoc.data().nome_completo : 'Não informado';
           const tipoNome = tipoDoc?.exists() ? tipoDoc.data().nome : 'Não informado';
   
+          // Filtrar tempos do treino
           const treinoTempoQuery = query(
             collection(db, 'Treino_Tempo'),
             where('id_treino', '==', treinoDoc.id),
@@ -145,7 +158,9 @@ const RelatorioTreinoProfessor = () => {
         })
       );
   
-      const tempoMedioEmSegundos = numeroDeTreinosComTempo > 0 ? Math.floor(tempoTotalEmSegundos / numeroDeTreinosComTempo) : 0;
+      const tempoMedioEmSegundos = numeroDeTreinosComTempo > 0
+        ? Math.floor(tempoTotalEmSegundos / numeroDeTreinosComTempo)
+        : 0;
       const horas = Math.floor(tempoMedioEmSegundos / 3600);
       const minutos = Math.floor((tempoMedioEmSegundos % 3600) / 60);
       const segundos = tempoMedioEmSegundos % 60;

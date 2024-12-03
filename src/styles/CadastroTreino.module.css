@@ -81,7 +81,7 @@
   display: flex;
   justify-content: space-between;
   gap: 5px;
-  margin-top: 10px;
+  margin-top: 15px;
 }
 
 .editButton {
@@ -89,8 +89,10 @@
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 5px 10px;
+  padding: 10px 32px;
   cursor: pointer;
+  
+  
 }
 
 .editButton:hover {
@@ -102,7 +104,7 @@
   color: #fff;
   border: none;
   border-radius: 8px;
-  padding: 5px 10px;
+  padding: 5px 25px;
   cursor: pointer;
 }
 
@@ -130,6 +132,18 @@
   opacity: 1;
   visibility: visible;
 }
+.modalFooter button:hover {
+  opacity: 0.9;
+}
+.modalFooter .saveButton {
+  flex: 0.7; /* 70% do espaço */
+  background-color: #007bff;
+}
+.modalFooter .cancelButton {
+  flex: 0.3; /* 30% do espaço */
+  background-color: #dc3545;
+}
+
 
 .modalContent {
   background-color: #fff;
@@ -139,6 +153,7 @@
   max-width: 90%;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
   overflow-y: auto;
+  overflow-x: auto;
   max-height: 80vh;
   text-align: center; /* Centraliza os conteúdos */
 }
@@ -150,6 +165,8 @@
 .formGroup {
   width: 100%;
   text-align: left;
+  margin-bottom: 25px;
+ 
 }
 textarea.descricaoGeral {
   width: 100%;
@@ -157,9 +174,39 @@ textarea.descricaoGeral {
 }
 .equipmentRow {
   display: flex;
-  gap: 10px;
   align-items: center;
+  justify-content: space-between; /* Alinha os elementos lado a lado */
+  gap: 10px; /* Espaçamento entre os campos */
 }
+
+
+.equipmentRow .formGroup {
+  flex: 1; /* Cada campo ocupa espaço proporcional */
+  max-width: 30%; /* Ajusta para 30% cada campo */
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%; /* Ocupa toda a largura disponível do pai */
+  height: 40px; /* Altura dos campos */
+  padding: 8px; /* Espaçamento interno */
+  font-size: 14px; /* Tamanho da fonte */
+  border: 1px solid #ccc; /* Borda padrão */
+  border-radius: 5px; /* Bordas arredondadas */
+  box-sizing: border-box; /* Inclui padding e borda no tamanho total */
+}
+.formGroupContainer .formGroup {
+  flex: 1; /* Cada campo ocupa 50% */
+  max-width: 50%; /* Limita a largura para 50% */
+  
+}
+.formGroupContainer {
+  display: flex; /* Coloca os campos lado a lado */
+  justify-content: space-between; /* Espaçamento entre os campos */
+  gap: 15px; /* Espaçamento horizontal entre os campos */
+  flex-wrap: wrap; /* Permite quebra de linha em telas menores */
+}
+
 
 
 .modalFooter {
@@ -170,9 +217,11 @@ textarea.descricaoGeral {
 }
 
 .modalFooter button {
-  padding: 10px 20px;
+  height: 40px;
+  padding: 10px;
   border-radius: 5px;
   font-size: 16px;
+  flex: 1;
 }
 
 .modalFooter button[type="button"] {
@@ -217,16 +266,17 @@ textarea.descricaoGeral {
   background-color: #218838;
 }
 
-.removeEquipmentButton {
-  background-color: #dc3545; /* Cor vermelha */
-  color: #fff;
-  border: none;
-  border-radius: 5px;
-  padding: 5px 10px;
-  cursor: pointer;
+.equipmentRow .removeEquipmentButton {
+  background-color: #dc3545; /* Vermelho */
+  flex-shrink: 0; /* Mantém o tamanho fixo */
+  width: 10%; /* Mesmo tamanho dos outros campos */
+  height: 40px; /* Altura consistente com os campos */
+  padding: 8px; /* Padding consistente */
+  text-align: center; /* Centraliza o ícone */
 }
 
-.removeEquipmentButton:hover {
+
+.equipmentRow .removeEquipmentButton:hover {
   background-color: #b22222;
 }
 .noTrainingsMessage {
@@ -235,10 +285,64 @@ textarea.descricaoGeral {
   color: #555;
   margin-top: 20px;
 }
-/* Disposição horizontal dos filtros */
 .filtersContainer {
+  display: flex; /* Disposição lado a lado */
+  flex-wrap: wrap; /* Permite quebra de linha se necessário */
+  justify-content: flex-start; /* Alinha à esquerda */
+  gap: 20px; /* Espaçamento horizontal e vertical */
+  margin-top: 30px; /* Espaçamento da barra superior */
+  padding: 10px; /* Espaçamento interno, opcional */
+}
+
+.filtersContainer label {
   display: flex;
-  justify-content: center;
-  gap: 15px;
-  margin-bottom: 20px;
+  flex-direction: column; /* Label acima do campo */
+  gap: 8px; /* Espaçamento entre label e campo */
+  flex: 1; /* Todos os filtros ocupam o mesmo espaço */
+  min-width: 180px; /* Largura mínima para evitar deformações */
+}
+
+.filtersContainer input,
+.filtersContainer select {
+  height: 40px; /* Define a altura dos campos */
+  padding: 8px; /* Espaçamento interno */
+  border: 1px solid #ccc; /* Borda fina */
+  border-radius: 5px; /* Bordas arredondadas */
+  font-size: 14px; /* Tamanho da fonte */
+  box-sizing: border-box; /* Inclui padding e border no tamanho */
+}
+
+.filtersContainer button {
+  height: 40px; /* Mesma altura dos campos */
+  padding: 10px 20px; /* Ajuste de espaçamento interno */
+  border-radius: 8px;
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  cursor: pointer;
+  font-size: 14px;
+  margin-top: 26px
+}
+
+.filtersContainer button:hover {
+  background-color: #0056b3;
+}
+.required {
+  color: red;
+  margin-left: 5px;
+  font-size: 1.5em; /* Tamanho maior para destacar o asterisco */
+}
+input[readonly],
+select:disabled,
+textarea[disabled] {
+  background-color: #f5f5f5;
+  color: black; /* Define a cor do texto como preto */
+  cursor: not-allowed; /* Indica visualmente que o campo não é editável */
+}
+
+input[readonly]:focus,
+select:disabled:focus,
+textarea[disabled]:focus {
+  border-color: #ccc; /* Muda a cor da borda para garantir que o campo tenha foco visível, se necessário */
+  outline: none; /* Remove o contorno de foco, se necessário */
 }
