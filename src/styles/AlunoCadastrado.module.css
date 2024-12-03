@@ -1,5 +1,5 @@
-/* Estilos para a página de Alunos Cadastrados */
-.page {
+ /* Estilos para a página de Alunos Cadastrados */
+ .page {
   padding: 20px;
   background-color: #fff; /* Fundo branco */
   min-height: 100vh;
@@ -227,20 +227,53 @@ button:hover {
 }
 .filters {
   display: flex;
-  justify-content: center;
-  gap: 20px; /* Espaçamento entre os filtros */
+  flex-wrap: wrap; /* Permite quebra de linha em telas menores */
+  gap: 25px; /* Espaçamento entre os filtros */
+  justify-content: flex-start; /* Alinha os filtros ao início */
   margin-bottom: 20px;
 }
+.filterItem,
+.filterItemm {
+  display: flex;
+  flex-direction: column; /* Rótulo acima do campo */
+  width: 234px; /* Largura consistente para cada filtro */
+  margin-top: -5px; /* Reduz o espaço acima do botão */
+}
+
+.filterItem label{
+  font-size: 16px; /* Ajusta o tamanho do texto do label */
+  font-weight: bold; /* Destaca os rótulos */
+  margin-bottom: 0px; /* Espaço negativo abaixo do rótulo */
+}
+.filterItemm label {
+  font-size: 16px; /* Ajusta o tamanho do texto do label */
+  font-weight: bold; /* Destaca os rótulos */
+  margin-bottom: -20px; /* Espaço negativo abaixo do rótulo */
+}
+.filterItem input,
+.filterItem select,
+.filterItemm input,
+.filterItemm select {
+  padding: 10px; /* Ajusta o preenchimento interno */
+  width: 100%; /* Ocupa toda a largura disponível */
+  border: 1px solid #ddd; /* Define a borda */
+  border-radius: 8px; /* Bordas arredondadas */
+}
+.filters input[type="date"] {
+  width: 100%; /* Ajusta os campos de data para o layout */
+}
+
 .generateButton {
-  padding: 12px 20px;
+  padding: 5px 20px; /* Ajusta o preenchimento interno */
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  color: white;
-  margin-left: 10px;
-  transition: background-color 0.3s ease;
-  height: 40px;
-  margin-top: 18px;
+  height: 45px;
+  font-size: 14px; /* Tamanho do texto consistente */
+  display: flex;
+  align-items: center;
+  gap: 5px; /* Espaço entre o ícone e o texto */
+  margin-top: 10px; /* Reduz o espaço acima do botão */
 }
 
 .pdfButton {
@@ -256,4 +289,3 @@ button:hover {
 .pdfButton:hover {
   background-color: #e69500; /* Laranja mais escuro no hover */
 }
-
