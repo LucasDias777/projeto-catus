@@ -16,10 +16,25 @@ const RelatorioTreinoGeral = () => {
   const [dataFim, setDataFim] = useState('');
   const [statusTreino, setStatusTreino] = useState('');
   const [alunos, setAlunos] = useState([]);
+  const [isLoading, setIsLoading] = useState(false); // Estado para controlar o carregamento.
 
   const db = getFirestore(app);
   const navigate = useNavigate();
   const { currentUser } = useAuth();
+
+  const carregarAlunos = async () => {
+    try {
+      console.log('Carregando lista de alunos...');
+      const alunosSnapshot = await getDocs(collection(db, 'Alunos'));
+      const alunosData = alunosSnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+      setAlunos(alunosData);
+    } catch (error) {
+      console.error('Erro ao carregar lista de alunos:', error);
+    }
+  };
 
   const formatarTempo = (segundos) => {
     const horas = String(Math.floor(segundos / 3600)).padStart(2, '0');
@@ -31,37 +46,44 @@ const RelatorioTreinoGeral = () => {
   const fetchAlunosVinculados = async () => {
     try {
       if (currentUser) {
+        const treinosSnapshot = await getDocs(
+          query(collection(db, 'Treino'), where('id_professor', '==', currentUser.uid))
+        );
+        const alunosIds = new Set(treinosSnapshot.docs.map((doc) => doc.data().id_aluno));
         const alunosQuery = query(
           collection(db, 'Pessoa'),
           where('id_professor', '==', currentUser.uid),
           where('tipo_pessoa', '==', 'aluno')
         );
         const alunosSnapshot = await getDocs(alunosQuery);
-        const alunosData = alunosSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          nome_completo: doc.data().nome_completo,
-        }));
-  
+        const alunosData = alunosSnapshot.docs
+          .filter((doc) => alunosIds.has(doc.id))
+          .map((doc) => ({
+            id: doc.id,
+            nome_completo: doc.data().nome_completo,
+          }));
         setAlunos(alunosData);
       }
     } catch (error) {
       console.error('Erro ao buscar alunos vinculados:', error);
     }
   };
+
   
   const fetchRelatorio = async () => {
     try {
       if (!currentUser) return;
   
+    
       // Inicializar a consulta com filtro pelo professor
       let treinosQuery = query(
-        collection(db, 'Treino'),
-        where('id_professor', '==', currentUser.uid)
+        collection(db, "Treino"),
+        where("id_professor", "==", currentUser.uid)
       );
   
       // Filtro por aluno específico
       if (filtroAluno) {
-        treinosQuery = query(treinosQuery, where('id_aluno', '==', filtroAluno));
+        treinosQuery = query(treinosQuery, where("id_aluno", "==", filtroAluno));
       }
   
       // Filtros de data
@@ -77,12 +99,13 @@ const RelatorioTreinoGeral = () => {
       });
   
       // Mapear IDs de alunos para nomes
-      const alunosIds = new Set(treinosData.map((doc) => doc.data().id_aluno));
+      const alunosIds = Array.from(new Set(treinosData.map((doc) => doc.data().id_aluno)));
       const alunoIdToNome = alunos.reduce((map, aluno) => {
         map[aluno.id] = aluno.nome_completo;
         return map;
       }, {});
   
+      // Inicializar estatísticas dos alunos
       const alunoStats = {};
   
       // Processar cada treino
@@ -92,7 +115,7 @@ const RelatorioTreinoGeral = () => {
   
         if (!alunoStats[alunoId]) {
           alunoStats[alunoId] = {
-            nome: alunoIdToNome[alunoId] || 'Aluno não identificado',
+            nome: alunoIdToNome[alunoId] || "Aluno não identificado",
             naoIniciado: 0,
             iniciado: 0,
             concluido: 0,
@@ -102,9 +125,9 @@ const RelatorioTreinoGeral = () => {
         }
   
         const treinoTempoQuery = query(
-          collection(db, 'Treino_Tempo'),
-          where('id_treino', '==', treinoDoc.id),
-          ...(statusTreino && statusTreino !== 'Todos' ? [where('status', '==', statusTreino)] : [])
+          collection(db, "Treino_Tempo"),
+          where("id_treino", "==", treinoDoc.id),
+          ...(statusTreino && statusTreino !== "Todos" ? [where("status", "==", statusTreino)] : [])
         );
   
         const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
@@ -112,9 +135,9 @@ const RelatorioTreinoGeral = () => {
           const tempoData = tempoDoc.data();
           const status = tempoData.status;
   
-          if (status === 'Não Iniciado') alunoStats[alunoId].naoIniciado++;
-          if (status === 'Iniciado') alunoStats[alunoId].iniciado++;
-          if (status === 'Concluído') {
+          if (status === "Não Iniciado") alunoStats[alunoId].naoIniciado++;
+          if (status === "Iniciado") alunoStats[alunoId].iniciado++;
+          if (status === "Concluído") {
             alunoStats[alunoId].concluido++;
             const inicio = tempoData.data_inicio?.toDate();
             const termino = tempoData.data_termino?.toDate();
@@ -132,7 +155,7 @@ const RelatorioTreinoGeral = () => {
         const tempoMedio =
           stats.treinosConcluidos > 0
             ? formatarTempo(Math.round(stats.tempoTotal / stats.treinosConcluidos))
-            : 'N/A';
+            : "N/A";
   
         return {
           aluno: stats.nome,
@@ -150,13 +173,10 @@ const RelatorioTreinoGeral = () => {
         )
       );
     } catch (error) {
-      console.error('Erro ao buscar relatórios:', error);
+      console.error("Erro ao buscar relatórios:", error);
     }
   };
   
-  
-  
-
 
 const gerarPDF = () => {
     const doc = new jsPDF();
