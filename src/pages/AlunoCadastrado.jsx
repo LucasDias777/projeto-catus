@@ -278,7 +278,7 @@ const generatePDF = () => {
             <th>Telefone</th>
             <th>Cidade</th>
             <th>UF</th>
-            <th>Data de Criação</th>
+            <th>Data do Cadastro</th>
           </tr>
         </thead>
         <tbody>

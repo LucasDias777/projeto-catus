@@ -15,8 +15,16 @@ const VisualizarTreino = () => {
   const [statusFilter, setStatusFilter] = useState('');
   const [inProgress, setInProgress] = useState(null);
   const [filteredTreinos, setFilteredTreinos] = useState([]);
+  const [treinoData, setTreinoData] = useState(null);
+
   const { currentUser } = useAuth();
   const navigate = useNavigate();
+
+  const formatDateForInput = (date) => {
+    const d = new Date(date);
+    return d.toISOString().split('T')[0]; // Converte para o formato 'YYYY-MM-DD'
+  };
+ 
 
   useEffect(() => {
     const fetchTreinos = async () => {
@@ -25,44 +33,68 @@ const VisualizarTreino = () => {
       try {
         const alunoId = currentUser.uid;
   
-        const treinosQuery = query(collection(db, 'Treino'), where('id_aluno', '==', alunoId));
+        // Definição do filtro de data baseado na data_criacao
+        const dataInicioFilter = dataInicio ? new Date(`${dataInicio}T00:00:00`) : null;
+        const dataFimFilter = dataFim ? new Date(`${dataFim}T23:59:59`) : null;
+  
+        // Consulta inicial da coleção Treino com filtro pelo aluno
+        let treinosQuery = query(collection(db, 'Treino'), where('id_aluno', '==', alunoId));
         const querySnapshot = await getDocs(treinosQuery);
   
         const treinosDetalhados = await Promise.all(
           querySnapshot.docs.map(async (docTreino) => {
             const treinoData = docTreino.data();
   
+            // Obtenção e conversão da data_criacao
+            const dataCriacao = treinoData.data_criacao
+              ? treinoData.data_criacao.toDate
+                ? treinoData.data_criacao.toDate()
+                : new Date(treinoData.data_criacao)
+              : null;
+  
+            // Aplicar filtro de data_criacao
+            if (
+              dataCriacao &&
+              ((dataInicioFilter && dataCriacao < dataInicioFilter) ||
+                (dataFimFilter && dataCriacao > dataFimFilter))
+            ) {
+              return null; // Ignora treinos fora do intervalo
+            }
+            
+  
+            // Consulta à coleção Treino_Tempo relacionada ao treino
             const treinoTempoQuery = query(
               collection(db, 'Treino_Tempo'),
               where('id_treino', '==', docTreino.id)
             );
             const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
   
+            // Mapeamento de data_inicio e data_termino da coleção Treino_Tempo
+            const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => {
+              const tempoData = tempoDoc.data();
+              const dataInicio = tempoData.data_inicio
+                ? tempoData.data_inicio.toDate
+                  ? tempoData.data_inicio.toDate()
+                  : new Date(tempoData.data_inicio)
+                : null;
+              const dataTermino = tempoData.data_termino
+                ? tempoData.data_termino.toDate
+                  ? tempoData.data_termino.toDate()
+                  : new Date(tempoData.data_termino)
+                : null;
+  
+              return { dataInicio, dataTermino };
+            });
+  
             const treinoTempoData = treinoTempoSnapshot.empty
               ? null
               : treinoTempoSnapshot.docs[0].data();
-  
-            const dataCriacao = treinoData.data_criacao
-              ? typeof treinoData.data_criacao === 'string'
-                ? new Date(treinoData.data_criacao).toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })
-                : new Date(treinoData.data_criacao.seconds * 1000).toLocaleString('pt-BR', {
-                    day: '2-digit',
-                    month: '2-digit',
-                    year: 'numeric',
-                  })
-              : 'Data não disponível';
   
             const status = treinoTempoData?.status || 'Não Iniciado';
             if (status === 'Iniciado') {
               setInProgress(docTreino.id); // Sincroniza o estado inProgress
             }
   
-  
-            // Buscar detalhes dos equipamentos, séries e repetições
             const equipamentosDetalhados = await Promise.all(
               (treinoData.equipamentos || []).map(async (equipamento) => {
                 const equipDoc = await getDoc(doc(db, 'Equipamento', equipamento.id_equipamento));
@@ -98,46 +130,80 @@ const VisualizarTreino = () => {
               serie: seriesDetalhadas.join(', '),
               repeticao: repeticoesDetalhadas.join(', '),
               tipo: tipoDoc?.exists() ? tipoDoc.data().nome : 'Tipo não encontrado',
-              data_criacao: dataCriacao,
+              data_criacao: dataCriacao
+    ? dataCriacao.toISOString().split('T')[0] // "YYYY-MM-DD" para simplificar comparações
+    : null,
+              tempos, // Adicionado para mapear tempos de treino
             };
           })
         );
   
+        // Remove os treinos nulos após o filtro de datas
+        const treinosFiltrados = treinosDetalhados.filter((treino) => treino !== null);
+  
         // Aplicar a lógica de mesclagem de treinos
         setTreinos((prevTreinos) => {
           const treinoMap = new Map();
-          [...prevTreinos, ...treinosDetalhados].forEach((treino) => {
+          [...prevTreinos, ...treinosFiltrados].forEach((treino) => {
             treinoMap.set(treino.id, treino); // Mantém o mais recente
           });
           return Array.from(treinoMap.values());
         });
   
         // Atualizar os tipos de treino
-        fetchTrainingTypesFromTreinos(treinosDetalhados);
+        fetchTrainingTypesFromTreinos(treinosFiltrados);
       } catch (error) {
         console.error('Erro ao buscar treinos:', error);
       }
     };
   
     fetchTreinos();
-  }, [currentUser]);
-
+  }, [currentUser, dataInicio, dataFim]);
+  
   useEffect(() => {
-    const result = treinos.filter((treino) => {
+    // Função para validar a data
+    const isValidDate = (date) => !isNaN(new Date(date).getTime());
+  
+    // Ajustando a data de início e a data de fim com base na data de criação
+    const dataCriacao = treinoData?.data_criacao
+      ? treinoData.data_criacao.toDate
+        ? treinoData.data_criacao.toDate()
+        : new Date(treinoData.data_criacao)
+      : null;
+  
+    if (dataCriacao) {
+      setDataInicio(formatDateForInput(dataCriacao)); // Ajusta a data de criação como data inicial
+      setDataFim(formatDateForInput(new Date(dataCriacao.setDate(dataCriacao.getDate() + 7)))); // Exemplo de data final
+    }
+  
+    // Filtra os treinos com base nos filtros aplicados
+    const filtered = treinos.filter((treino) => {
+      const treinoDataCriacao = treino.data_criacao
+        ? new Date(treino.data_criacao.split('/').reverse().join('-')) // Converte "DD/MM/YYYY" para "YYYY-MM-DD"
+        : null;
+  
       const matchesTipo = tipoTreinoFilter ? treino.id_tipo === tipoTreinoFilter : true;
       const matchesStatus = statusFilter ? treino.status === statusFilter : true;
+  
       const matchesDataInicio = dataInicio
-        ? new Date(treino.data_criacao) >= new Date(dataInicio)
+        ? treinoDataCriacao &&
+          isValidDate(treinoDataCriacao) &&
+          treinoDataCriacao >= new Date(`${dataInicio}T00:00:00`)
         : true;
+  
       const matchesDataFim = dataFim
-        ? new Date(treino.data_criacao) <= new Date(dataFim)
+        ? treinoDataCriacao &&
+          isValidDate(treinoDataCriacao) &&
+          treinoDataCriacao <= new Date(`${dataFim}T23:59:59`)
         : true;
-
+  
       return matchesTipo && matchesStatus && matchesDataInicio && matchesDataFim;
     });
-
-    setFilteredTreinos(result);
-  }, [treinos, tipoTreinoFilter, statusFilter, dataInicio, dataFim]);
+  
+    setFilteredTreinos(filtered);
+  }, [treinos, tipoTreinoFilter, statusFilter, dataInicio, dataFim, treinoData]);
+  
+  
   
 
   const fetchTrainingTypesFromTreinos = async (treinosDetalhados) => {
@@ -196,18 +262,6 @@ const VisualizarTreino = () => {
         filters = query(filters, where('id_tipo', '==', tipoTreinoFilter));
       }
   
-      // Aplicar filtro por data de início
-      if (dataInicio) {
-        const startTimestamp = new Date(`${dataInicio}T00:00:00`);
-        filters = query(filters, where('data_criacao', '>=', startTimestamp));
-      }
-  
-      // Aplicar filtro por data de término
-      if (dataFim) {
-        const endTimestamp = new Date(`${dataFim}T23:59:59`);
-        filters = query(filters, where('data_criacao', '<=', endTimestamp));
-      }
-  
       // Buscar treinos com os filtros aplicados
       const treinosSnapshot = await getDocs(filters);
   
@@ -215,18 +269,9 @@ const VisualizarTreino = () => {
       const treinosDetalhados = treinosSnapshot.docs.map((docTreino) => {
         const treino = docTreino.data();
   
-        // Verificar e converter `data_criacao`
-        let dataCriacao = null;
-        if (typeof treino.data_criacao === 'string') {
-          dataCriacao = new Date(treino.data_criacao).toLocaleDateString('pt-BR');
-        } else if (treino.data_criacao?.seconds) {
-          dataCriacao = new Date(treino.data_criacao.seconds * 1000).toLocaleDateString('pt-BR');
-        }
-  
         return {
           id: docTreino.id,
           ...treino,
-          data_criacao: dataCriacao, // Data convertida para exibição no card
         };
       });
   
@@ -242,7 +287,6 @@ const VisualizarTreino = () => {
       console.error('Erro ao aplicar filtros:', error);
     }
   };
-  
   
 
   const iniciarTreino = async (treinoId) => {
@@ -392,7 +436,12 @@ const VisualizarTreino = () => {
     filteredTreinos.map((treino) => (
       <div key={treino.id} className={styles.treinoCard}>
         <div>
-          <strong>Data de Criação:</strong> {treino.data_criacao || 'Data não disponível'}
+        <strong>Data do Treino:</strong>{' '}
+{new Date(treino.data_criacao).toLocaleDateString('pt-BR', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+})}
         </div>
         <div>
           <strong>Tipo de Treino:</strong> {treino.tipo}

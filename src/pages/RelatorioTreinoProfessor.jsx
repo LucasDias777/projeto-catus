@@ -294,7 +294,7 @@ const gerarExcel = () => {
       <th>Data de Início</th>
       <th>Data de Término</th>
       <th>Duração</th>
-      <th>Data de Criação</th>
+      <th>Data do Treino</th>
     </tr>
   </thead>
   <tbody>
