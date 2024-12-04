@@ -44,14 +44,24 @@ const VisualizarTreino = () => {
         const treinosDetalhados = await Promise.all(
           querySnapshot.docs.map(async (docTreino) => {
             const treinoData = docTreino.data();
-  
-            // Obtenção e conversão da data_criacao
-            const dataCriacao = treinoData.data_criacao
-              ? treinoData.data_criacao.toDate
-                ? treinoData.data_criacao.toDate()
-                : new Date(treinoData.data_criacao)
+        
+            // Obtenção e formatação direta da data de criação
+            const dataCriacao = treinoData.data_criacao?.toDate
+              ? treinoData.data_criacao.toDate() // Se for um Timestamp, converte para Date
+              : treinoData.data_criacao instanceof Date
+              ? treinoData.data_criacao // Já é uma instância de Date
               : null;
-  
+        
+            // Adiciona um dia à data de criação
+            if (dataCriacao) {
+              dataCriacao.setDate(dataCriacao.getDate() + 1);
+            }
+        
+            // Formata a data como 'YYYY-MM-DD'
+            const formattedDataCriacao = dataCriacao
+              ? dataCriacao.toISOString().split('T')[0]
+              : null;
+        
             // Aplicar filtro de data_criacao
             if (
               dataCriacao &&
@@ -60,15 +70,14 @@ const VisualizarTreino = () => {
             ) {
               return null; // Ignora treinos fora do intervalo
             }
-            
-  
-            // Consulta à coleção Treino_Tempo relacionada ao treino
+        
+            // Resto do código permanece o mesmo
             const treinoTempoQuery = query(
               collection(db, 'Treino_Tempo'),
               where('id_treino', '==', docTreino.id)
             );
             const treinoTempoSnapshot = await getDocs(treinoTempoQuery);
-  
+        
             // Mapeamento de data_inicio e data_termino da coleção Treino_Tempo
             const tempos = treinoTempoSnapshot.docs.map((tempoDoc) => {
               const tempoData = tempoDoc.data();
@@ -82,44 +91,44 @@ const VisualizarTreino = () => {
                   ? tempoData.data_termino.toDate()
                   : new Date(tempoData.data_termino)
                 : null;
-  
+        
               return { dataInicio, dataTermino };
             });
-  
+        
             const treinoTempoData = treinoTempoSnapshot.empty
               ? null
               : treinoTempoSnapshot.docs[0].data();
-  
+        
             const status = treinoTempoData?.status || 'Não Iniciado';
             if (status === 'Iniciado') {
               setInProgress(docTreino.id); // Sincroniza o estado inProgress
             }
-  
+        
             const equipamentosDetalhados = await Promise.all(
               (treinoData.equipamentos || []).map(async (equipamento) => {
                 const equipDoc = await getDoc(doc(db, 'Equipamento', equipamento.id_equipamento));
                 return equipDoc.exists() ? equipDoc.data().nome : 'Equipamento não encontrado';
               })
             );
-  
+        
             const seriesDetalhadas = await Promise.all(
               (treinoData.equipamentos || []).map(async (equipamento) => {
                 const serieDoc = await getDoc(doc(db, 'Serie', equipamento.id_serie));
                 return serieDoc.exists() ? serieDoc.data().nome : 'Série não encontrada';
               })
             );
-  
+        
             const repeticoesDetalhadas = await Promise.all(
               (treinoData.equipamentos || []).map(async (equipamento) => {
                 const repeticaoDoc = await getDoc(doc(db, 'Repeticao', equipamento.id_repeticao));
                 return repeticaoDoc.exists() ? repeticaoDoc.data().nome : 'Repetição não encontrada';
               })
             );
-  
+        
             const tipoDoc = treinoData.id_tipo
               ? await getDoc(doc(db, 'Tipo', treinoData.id_tipo))
               : null;
-  
+        
             return {
               id: docTreino.id,
               ...treinoData,
@@ -130,9 +139,7 @@ const VisualizarTreino = () => {
               serie: seriesDetalhadas.join(', '),
               repeticao: repeticoesDetalhadas.join(', '),
               tipo: tipoDoc?.exists() ? tipoDoc.data().nome : 'Tipo não encontrado',
-              data_criacao: dataCriacao
-    ? dataCriacao.toISOString().split('T')[0] // "YYYY-MM-DD" para simplificar comparações
-    : null,
+              data_criacao: formattedDataCriacao,
               tempos, // Adicionado para mapear tempos de treino
             };
           })
@@ -179,29 +186,27 @@ const VisualizarTreino = () => {
     // Filtra os treinos com base nos filtros aplicados
     const filtered = treinos.filter((treino) => {
       const treinoDataCriacao = treino.data_criacao
-        ? new Date(treino.data_criacao.split('/').reverse().join('-')) // Converte "DD/MM/YYYY" para "YYYY-MM-DD"
-        : null;
+      ? new Date(`${treino.data_criacao}T00:00:00`) // Assume que `data_criacao` está no formato ISO ou Date
+      : null;
+
   
       const matchesTipo = tipoTreinoFilter ? treino.id_tipo === tipoTreinoFilter : true;
       const matchesStatus = statusFilter ? treino.status === statusFilter : true;
-  
       const matchesDataInicio = dataInicio
-        ? treinoDataCriacao &&
-          isValidDate(treinoDataCriacao) &&
-          treinoDataCriacao >= new Date(`${dataInicio}T00:00:00`)
-        : true;
-  
+      ? treinoDataCriacao &&
+      treinoDataCriacao >= new Date(`${dataInicio}T00:00:00`)
+      : true;
+
       const matchesDataFim = dataFim
-        ? treinoDataCriacao &&
-          isValidDate(treinoDataCriacao) &&
-          treinoDataCriacao <= new Date(`${dataFim}T23:59:59`)
-        : true;
+      ? treinoDataCriacao &&
+      treinoDataCriacao <= new Date(`${dataFim}T23:59:59`)
+      : true;
   
       return matchesTipo && matchesStatus && matchesDataInicio && matchesDataFim;
-    });
+      });
   
-    setFilteredTreinos(filtered);
-  }, [treinos, tipoTreinoFilter, statusFilter, dataInicio, dataFim, treinoData]);
+      setFilteredTreinos(filtered);
+      }, [treinos, tipoTreinoFilter, statusFilter, dataInicio, dataFim, treinoData]);
   
   
   
@@ -326,6 +331,52 @@ const VisualizarTreino = () => {
       setInProgress(treinoId);
     } catch (error) {
       console.error('Erro ao iniciar o treino:', error);
+    }
+  };
+
+  const estornarTreino = async (treinoId) => {
+    if (!currentUser) return;
+  
+    // Exibe o alert de confirmação
+    const confirmacao = window.confirm("Você tem certeza de que deseja estornar este treino?");
+    if (!confirmacao) {
+      // Se o usuário cancelar, interrompe a execução da função
+      return;
+    }
+  
+    try {
+      const treinoTempoQuery = query(
+        collection(db, "Treino_Tempo"),
+        where("id_treino", "==", treinoId)
+      );
+      const querySnapshot = await getDocs(treinoTempoQuery);
+  
+      if (querySnapshot.empty) {
+        console.error("Documento correspondente em Treino_Tempo não encontrado.");
+        return;
+      }
+  
+      const treinoTempoDoc = querySnapshot.docs[0];
+      const treinoTempoRef = doc(db, "Treino_Tempo", treinoTempoDoc.id);
+  
+      // Atualiza o documento no Firestore
+      await updateDoc(treinoTempoRef, {
+        data_inicio: null,
+        status: "Não Iniciado",
+      });
+  
+      // Atualiza o estado local
+      setTreinos((prevTreinos) =>
+        prevTreinos.map((treino) =>
+          treino.id === treinoId
+            ? { ...treino, status: "Não Iniciado", data_inicio: null }
+            : treino
+        )
+      );
+  
+      setInProgress(null);
+    } catch (error) {
+      console.error("Erro ao estornar o treino:", error);
     }
   };
 
@@ -459,31 +510,37 @@ const VisualizarTreino = () => {
           <strong>Descrição Geral:</strong> {treino.descricao}
         </div>
         <div>
-          {treino.status === 'Concluído' ? (
-            <span>
-              <i className="fa-solid fa-check"></i> Treino Concluído
-            </span>
-          ) : treino.status === 'Iniciado' ? (
-            <>
-              {treino.status === 'Iniciado' && (
-              <button onClick={terminarTreino} className={styles.terminateButton}>
-                <i className="fa-solid fa-medal"></i> Terminar Treino
-              </button>
-              )}
-              <span>
-                <i className="fa-solid fa-spinner fa-spin"></i> Em Progresso
-              </span>
-            </>
-          ) : (
-            <button
-              onClick={() => iniciarTreino(treino.id)}
-              disabled={inProgress && inProgress !== treino.id}
-              className={styles.startButton}
-            >
-              <i className="fa-solid fa-play"></i> Iniciar Treino
-            </button>
-          )}
-        </div>
+  {treino.status === 'Concluído' ? (
+    <span>
+      <i className="fa-solid fa-check"></i> Treino Concluído
+    </span>
+  ) : treino.status === 'Iniciado' ? (
+    <>
+      {treino.status === 'Iniciado' && (
+        <button onClick={terminarTreino} className={styles.terminateButton}>
+          <i className="fa-solid fa-medal"></i> Terminar Treino
+        </button>
+      )}
+      <button
+        onClick={() => estornarTreino(treino.id)}
+        className={styles.estornarButton}
+      >
+        <i className="fa-solid fa-clock-rotate-left"></i> Estornar Treino
+      </button>
+      <span>
+        <i className="fa-solid fa-spinner fa-spin"></i> Em Progresso
+      </span>
+    </>
+  ) : (
+    <button
+      onClick={() => iniciarTreino(treino.id)}
+      disabled={inProgress && inProgress !== treino.id}
+      className={styles.startButton}
+    >
+      <i className="fa-solid fa-play"></i> Iniciar Treino
+    </button>
+  )}
+</div>
       </div>
     ))
   )}
