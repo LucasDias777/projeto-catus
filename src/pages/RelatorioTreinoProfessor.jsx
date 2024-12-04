@@ -57,11 +57,15 @@ const RelatorioTreinoProfessor = () => {
     try {
       if (!currentUser) return;
   
-      let treinosQuery = collection(db, 'Treino');
+      // Inicializar a consulta com filtro pelo professor
+      let treinosQuery = query(
+        collection(db, "Treino"),
+        where("id_professor", "==", currentUser.uid)
+      );
   
-      // Filtro pelo aluno
+      // Filtro por aluno específico
       if (filtroAluno) {
-        treinosQuery = query(treinosQuery, where('id_aluno', '==', filtroAluno));
+        treinosQuery = query(treinosQuery, where("id_aluno", "==", filtroAluno));
       }
   
       const dataInicioFilter = dataInicio ? new Date(`${dataInicio}T00:00:00`) : null;
