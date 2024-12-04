@@ -53,29 +53,51 @@
     background-color: #45a049;
 }
 
-/* Barra de filtro de pesquisa */
-.searchContainer {
-    width: 100%;
-    max-width: 800px;
-    margin: 20px auto;
-    padding: 10px;
-    border-radius: 8px;
-    background-color: transparent;
-    box-shadow: none;
+/* Container de filtros */
+.filtersContainer {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Centraliza os filtros horizontalmente */
+    gap: 20px; /* Espaçamento entre os filtros */
+    margin-top: 30px; /* Distância da barra superior */
+    padding: 10px 0;
 }
 
-/* Campo de pesquisa */
-.searchInput {
-    width: 100%;
-    padding: 10px;
-    font-size: 16px;
+.filtersContainer label {
+    display: flex;
+    flex-direction: column; /* Alinha rótulo e campo verticalmente */
+    align-items: center;
+    text-align: center;
+    font-size: 18px;
     color: #000;
+    gap: 5px; /* Espaçamento entre o rótulo e o campo */
+}
+
+.filtersContainer input,
+.filtersContainer select {
+    width: 230px; /* Largura padrão dos campos */
+    padding: 8px;
+    font-size: 14px;
     border: 1px solid #ccc;
     border-radius: 8px;
 }
 
-.searchInput::placeholder {
-    color: #666;
+.applyFilterButton {
+    padding: 10px 15px;
+    font-size: 16px;
+    background-color: blue;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    height: 45px; /* Ajuste conforme necessário */
+    margin-top: 20px;
+}
+
+.applyFilterButton:hover,
+.applyFilterButton:focus {
+    background-color: darkblue; /* Cor ao passar o mouse ou focar */
 }
 
 /* Container para os treinos */
@@ -86,7 +108,7 @@
     gap: 20px;
     justify-content: center;
     width: 100%;
-    max-width: 1200px;
+    max-width: 100%;
     padding-bottom: 20px;
     overflow: hidden; /* Remove rolagem do container de treinos */
 }

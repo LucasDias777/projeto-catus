@@ -196,11 +196,11 @@ const DashboardAluno = () => {
         <div className={styles.contentArea}>
           <div className={styles.row}>
             <div className={styles.chartContainer}>
-              <h3>Quantidade de Treinos por Tipo</h3>
+              <h3>Total de Treinos Criados por Tipo de Treino</h3>
               <canvas id="barChart"></canvas>
             </div>
             <div className={styles.chartContainer}>
-              <h3>Total de Treinos</h3>
+              <h3>Total de Treinos Criados</h3>
               <canvas id="pieChart"></canvas>
             </div>
           </div>
