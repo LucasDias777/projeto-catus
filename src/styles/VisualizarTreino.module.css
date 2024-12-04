@@ -122,24 +122,76 @@
     width: 300px;
     box-sizing: border-box;
     border: 1px solid #ddd;
-}
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
 
 /* Estilo para texto dentro dos cards de treino */
 .treinoCard div {
     margin-bottom: 10px;
     color: #000;
 }
-
-.estornarButton {
-    background-color: #f4a261;
-    color: #fff;
+.buttonsContainer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-top: 10px;
+  }
+  .progressoStatus {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 10px;
+    color: #ff9800;
+    font-size: 18px;
+  }
+  .startButton {
+    display: block;
+    width: 100%;
+    margin: 0 auto;
+    background-color: #4CAF50;
+    color: white;
     border: none;
     border-radius: 5px;
-    padding: 8px 12px;
+    padding: 10px;
+    font-size: 16px;
     cursor: pointer;
-    margin-left: 8px;
+    text-align: center;
+  }
+  
+  .startButton:hover {
+    background-color: #45a049;
+  }
+  
+.estornarButton {
+    background-color: #e74c3c; /* Cor vermelha */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 5px 10px; /* Menor do que o botão de terminar */
+    cursor: pointer;
+    width: 40%;
+    font-size: 14px; /* Fonte um pouco menor */
   }
   
   .estornarButton:hover {
-    background-color: #e76f51;
+    background-color: #c0392b; /* Cor vermelha mais escura */
   }
+  .terminateButton {
+    background-color: #3498db; /* Cor azul */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 13px 10px; /* Maior do que o botão de estornar */
+    cursor: pointer;
+    width: 70%;
+    font-size: 14px; /* Fonte maior para o botão de terminar */
+    
+  }
+  
+  .terminateButton:hover {
+    background-color: #2980b9; /* Cor azul mais escura */
+  }
+  

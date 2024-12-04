@@ -34,8 +34,12 @@ const VisualizarTreino = () => {
         const alunoId = currentUser.uid;
   
         // Definição do filtro de data baseado na data_criacao
-        const dataInicioFilter = dataInicio ? new Date(`${dataInicio}T00:00:00`) : null;
-        const dataFimFilter = dataFim ? new Date(`${dataFim}T23:59:59`) : null;
+        const dataInicioFilter = dataInicio
+        ? new Date(new Date(`${dataInicio}T00:00:00`).setDate(new Date(`${dataInicio}T00:00:00`).getDate() + 1))
+        : null;
+        const dataFimFilter = dataFim
+        ? new Date(new Date(`${dataFim}T23:59:59`).setDate(new Date(`${dataFim}T23:59:59`).getDate() + 1))
+        : null;
   
         // Consulta inicial da coleção Treino com filtro pelo aluno
         let treinosQuery = query(collection(db, 'Treino'), where('id_aluno', '==', alunoId));
@@ -194,12 +198,12 @@ const VisualizarTreino = () => {
       const matchesStatus = statusFilter ? treino.status === statusFilter : true;
       const matchesDataInicio = dataInicio
       ? treinoDataCriacao &&
-      treinoDataCriacao >= new Date(`${dataInicio}T00:00:00`)
+      treinoDataCriacao >= new Date(new Date(`${dataInicio}T00:00:00`).setDate(new Date(`${dataInicio}T00:00:00`).getDate() + 1))
       : true;
 
       const matchesDataFim = dataFim
       ? treinoDataCriacao &&
-      treinoDataCriacao <= new Date(`${dataFim}T23:59:59`)
+      treinoDataCriacao <= new Date(new Date(`${dataFim}T23:59:59`).setDate(new Date(`${dataFim}T23:59:59`).getDate() + 1))
       : true;
   
       return matchesTipo && matchesStatus && matchesDataInicio && matchesDataFim;
@@ -486,62 +490,54 @@ const VisualizarTreino = () => {
   ) : (
     filteredTreinos.map((treino) => (
       <div key={treino.id} className={styles.treinoCard}>
-        <div>
-        <strong>Data do Treino:</strong>{' '}
-{new Date(treino.data_criacao).toLocaleDateString('pt-BR', {
-  day: '2-digit',
-  month: '2-digit',
-  year: 'numeric',
-})}
-        </div>
-        <div>
-          <strong>Tipo de Treino:</strong> {treino.tipo}
-        </div>
-        <div>
-          <strong>Equipamentos:</strong> {treino.equipamento}
-        </div>
-        <div>
-          <strong>Séries:</strong> {treino.serie}
-        </div>
-        <div>
-          <strong>Repetições:</strong> {treino.repeticao}
-        </div>
-        <div>
-          <strong>Descrição Geral:</strong> {treino.descricao}
-        </div>
-        <div>
-  {treino.status === 'Concluído' ? (
-    <span>
-      <i className="fa-solid fa-check"></i> Treino Concluído
-    </span>
-  ) : treino.status === 'Iniciado' ? (
-    <>
-      {treino.status === 'Iniciado' && (
-        <button onClick={terminarTreino} className={styles.terminateButton}>
-          <i className="fa-solid fa-medal"></i> Terminar Treino
-        </button>
-      )}
-      <button
-        onClick={() => estornarTreino(treino.id)}
-        className={styles.estornarButton}
-      >
-        <i className="fa-solid fa-clock-rotate-left"></i> Estornar Treino
-      </button>
+  <div>
+    <strong>Data do Treino:</strong> {new Date(treino.data_criacao).toLocaleDateString('pt-BR', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    })}
+  </div>
+  <div>
+    <strong>Tipo de Treino:</strong> {treino.tipo}
+  </div>
+  <div>
+    <strong>Equipamentos:</strong> {treino.equipamento}
+  </div>
+  <div>
+    <strong>Séries:</strong> {treino.serie}
+  </div>
+  <div>
+    <strong>Repetições:</strong> {treino.repeticao}
+  </div>
+  <div>
+    <strong>Descrição Geral:</strong> {treino.descricao}
+  </div>
+  <div>
+    {treino.status === 'Concluído' ? (
       <span>
-        <i className="fa-solid fa-spinner fa-spin"></i> Em Progresso
+        <i className="fa-solid fa-check"></i> Treino Concluído
       </span>
-    </>
-  ) : (
-    <button
-      onClick={() => iniciarTreino(treino.id)}
-      disabled={inProgress && inProgress !== treino.id}
-      className={styles.startButton}
-    >
-      <i className="fa-solid fa-play"></i> Iniciar Treino
-    </button>
-  )}
+    ) : treino.status === 'Iniciado' ? (
+      <>
+        <span className={styles.progressoStatus}>
+          <i className="fa-solid fa-spinner fa-spin"></i> Em Progresso
+        </span>
+        <div className={styles.buttonsContainer}>
+          <button onClick={terminarTreino} className={styles.terminateButton}>
+            <i className="fa-solid fa-medal"></i> Terminar Treino
+          </button>
+          <button onClick={() => estornarTreino(treino.id)} className={styles.estornarButton}>
+            <i className="fa-solid fa-clock-rotate-left"></i> Estornar Treino
+          </button>
+        </div>
+      </>
+    ) : (
+      <button onClick={() => iniciarTreino(treino.id)} disabled={inProgress && inProgress !== treino.id} className={styles.startButton}>
+        <i className="fa-solid fa-play"></i> Iniciar Treino
+      </button>
+    )}
+  </div>
 </div>
-      </div>
     ))
   )}
 </div>
