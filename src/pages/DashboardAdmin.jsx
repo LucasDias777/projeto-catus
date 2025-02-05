@@ -134,22 +134,33 @@ const DashboardAdmin = () => {
   const handleBackup = async () => {
     try {
         const backupData = {};
+
         for (const col of collections) {
             const snapshot = await getDocs(collection(db, col));
             backupData[col] = snapshot.docs.map((doc) => {
                 const data = doc.data();
-                
-                // Verifica e converte campos de data para formato ISO
-                if (data.data_criacao && data.data_criacao.toDate) {
-                    data.data_criacao = data.data_criacao.toDate().toISOString();
+
+                // Converte campos de data para o formato desejado
+                const formatDate = (firebaseTimestamp) => {
+                    if (!firebaseTimestamp || !firebaseTimestamp.toDate) return null;
+                    const dateObj = firebaseTimestamp.toDate();
+                    return dateObj.toLocaleDateString('pt-BR', {
+                        day: 'numeric', month: 'long', year: 'numeric',
+                        hour: 'numeric', minute: 'numeric', second: 'numeric',
+                        timeZoneName: 'short'
+                    });
+                };
+
+                if (data.data_criacao) {
+                    data.data_criacao = formatDate(data.data_criacao);
                 }
-                if (data.data_inicio && data.data_inicio.toDate) {
-                    data.data_inicio = data.data_inicio.toDate().toISOString();
+                if (data.data_inicio) {
+                    data.data_inicio = formatDate(data.data_inicio);
                 }
-                if (data.data_termino && data.data_termino.toDate) {
-                    data.data_termino = data.data_termino.toDate().toISOString();
+                if (data.data_termino) {
+                    data.data_termino = formatDate(data.data_termino);
                 }
-                
+
                 return { id: doc.id, ...data };
             });
         }
