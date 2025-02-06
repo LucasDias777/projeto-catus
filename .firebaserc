@@ -1,5 +1,15 @@
 {
   "projects": {
     "default": "banco-striveflow-feaef"
-  }
+  },
+  "targets": {
+    "banco-striveflow-feaef": {
+      "hosting": {
+        "meu-site": [
+          "projetostrivefflow"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }
