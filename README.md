@@ -99,5 +99,5 @@ Acesse a aplicação em [http://localhost:3000](http://localhost:3000).
 
 Agora, o **StriveFlow** está hospedado utilizando o Firebase Hosting, permitindo acesso ao site publicado diretamente pelo link:
 
-- **Frontend Publicado**: [https://projetostriveflow.web.app](https://projetostriveflow.web.app)
+- **Frontend Publicado**: [https://projetostrivefflow.web.app](https://projetostrivefflow.web.app)
 
